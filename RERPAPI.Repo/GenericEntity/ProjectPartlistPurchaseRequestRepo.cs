@@ -538,8 +538,8 @@ namespace RERPAPI.Repo.GenericEntity
 
             var ds = SQLHelper<object>.ProcedureToList(
                 "spLoadNewCodeRTC",
-                new[] { "@GroupCode" },
-                new object[] { groupCode });
+                new[] { "@Group" },
+                new object[] { productGroupId });
 
             var ds0 = SQLHelper<object>.GetListData(ds, 0);
 

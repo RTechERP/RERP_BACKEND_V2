@@ -2,6 +2,7 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.IdentityModel.Tokens;
 using RERPAPI.Model.Common;
+using RERPAPI.Model.DTO;
 using RERPAPI.Model.DTO.HRM;
 using RERPAPI.Model.Entities;
 using RERPAPI.Model.Param;
@@ -29,6 +30,11 @@ namespace RERPAPI.Controllers.KHOAHOC
         private readonly CourseKPIEmployeeTeamMapRepo _course_KPIEmployeeTeamMapRepo;
 
         private readonly CourseKPIEmployeeTeamRepo _course_KPIEmployeeTeamRepo;
+        private readonly CourseExamRepo _courseExamRepo;
+        private readonly CourseQuestionRepo _courseQuestionRepo;
+        private readonly CourseAnswerRepo _courseAnswerRepo;
+        private readonly CourseRightAnswerRepo _courseRightAnswerRepo;
+        private readonly CurrentUser _currentUser;
 
         public CourseController(
             CourseCatalogRepo courseCatalogRepo,
@@ -41,7 +47,12 @@ namespace RERPAPI.Controllers.KHOAHOC
             ConfigSystemRepo configSystemRepo,
             CourseFilesRepo courseFilesRepo,
            CourseKPIEmployeeTeamMapRepo course_KPIEmployeeTeamMapRepo,
-           CourseKPIEmployeeTeamRepo course_KPIEmployeeTeamRepo
+           CourseKPIEmployeeTeamRepo course_KPIEmployeeTeamRepo,
+           CourseExamRepo courseExamRepo,
+           CourseQuestionRepo courseQuestionRepo,
+           CourseAnswerRepo courseAnswerRepo,
+           CourseRightAnswerRepo courseRightAnswerRepo,
+           CurrentUser currentUser
             )
         {
             _courseCatalogRepo = courseCatalogRepo;
@@ -56,6 +67,11 @@ namespace RERPAPI.Controllers.KHOAHOC
             //_course_KPIPositionTypeRepo = course_KPIPositionTypeRepo;
             _course_KPIEmployeeTeamMapRepo = course_KPIEmployeeTeamMapRepo;
             _course_KPIEmployeeTeamRepo = course_KPIEmployeeTeamRepo;
+            _courseExamRepo = courseExamRepo;
+            _courseQuestionRepo = courseQuestionRepo;
+            _courseAnswerRepo = courseAnswerRepo;
+            _courseRightAnswerRepo = courseRightAnswerRepo;
+            _currentUser = currentUser;
         }
 
         [HttpGet("get-course-summary")]
@@ -378,6 +394,1051 @@ namespace RERPAPI.Controllers.KHOAHOC
             {
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
+        }
+
+        [HttpGet("copy-course-catalog-preview")]
+        public IActionResult GetCopyCourseCatalogPreview(int sourceCatalogId)
+        {
+            try
+            {
+                var graph = LoadCopySourceGraph(sourceCatalogId);
+                var preview = new CopyCourseCatalogPreview
+                {
+                    SourceCatalog = new CopyCourseCatalogSource
+                    {
+                        ID = graph.Catalog.ID,
+                        Code = graph.Catalog.Code,
+                        Name = graph.Catalog.Name,
+                        DepartmentID = graph.Catalog.DepartmentID,
+                        CatalogType = graph.Catalog.CatalogType,
+                        ProjectTypeIDs = graph.CatalogProjectTypes.Where(x => x.ProjectTypeID.HasValue).Select(x => x.ProjectTypeID!.Value).Distinct().ToList()
+                    },
+                    Counts = BuildCopyCounts(graph)
+                };
+                return Ok(ApiResponseFactory.Success(preview, ""));
+            }
+            catch (KeyNotFoundException ex)
+            {
+                return NotFound(ApiResponseFactory.Fail(null, ex.Message));
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
+            }
+        }
+
+        [HttpPost("copy-course-catalog-full")]
+        public IActionResult CopyCourseCatalogFull([FromBody] CopyCourseCatalogRequest model)
+        {
+            try
+            {
+                var claims = User.Claims.ToDictionary(x => x.Type, x => x.Value);
+                var currentUser = ObjectMapper.GetCurrentUser(claims);
+                var result = CopyCourseCatalog(model, currentUser);
+                return Ok(ApiResponseFactory.Success(result, "Sao chép toàn bộ danh mục khóa học thành công"));
+            }
+            catch (KeyNotFoundException ex)
+            {
+                return NotFound(ApiResponseFactory.Fail(null, ex.Message));
+            }
+            catch (ArgumentException ex)
+            {
+                return BadRequest(ApiResponseFactory.Fail(null, ex.Message));
+            }
+            catch (InvalidOperationException ex)
+            {
+                return Conflict(ApiResponseFactory.Fail(null, ex.Message));
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, ApiResponseFactory.Fail(ex, "Không thể sao chép danh mục khóa học."));
+            }
+        }
+
+        [HttpGet("copy-course-preview")]
+        public IActionResult GetCopyCoursePreview(int sourceCourseId)
+        {
+            try
+            {
+                var graph = LoadCopyCourseGraph(sourceCourseId);
+                var preview = new CopyCoursePreview
+                {
+                    SourceCourse = new CopyCourseSource
+                    {
+                        ID = graph.Course.ID,
+                        Code = graph.Course.Code,
+                        NameCourse = graph.Course.NameCourse,
+                        CourseCatalogID = graph.Course.CourseCatalogID,
+                        CourseCatalogName = graph.CatalogName,
+                        CatalogType = graph.CatalogType
+                    },
+                    Counts = new CopyCourseCounts
+                    {
+                        Lessons = graph.Lessons.Count,
+                        CourseFiles = graph.CourseFiles.Count,
+                        Exams = graph.Exams.Count,
+                        Questions = graph.Questions.Count,
+                        Answers = graph.Answers.Count,
+                        RightAnswers = graph.RightAnswers.Count
+                    }
+                };
+                return Ok(ApiResponseFactory.Success(preview, ""));
+            }
+            catch (KeyNotFoundException ex)
+            {
+                return NotFound(ApiResponseFactory.Fail(null, ex.Message));
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
+            }
+        }
+
+        [HttpPost("copy-course")]
+        public IActionResult CopyCourse([FromBody] CopyCourseRequest model)
+        {
+            try
+            {
+                var claims = User.Claims.ToDictionary(x => x.Type, x => x.Value);
+                var currentUser = ObjectMapper.GetCurrentUser(claims);
+                var result = ExecuteCopyCourse(model, currentUser);
+                return Ok(ApiResponseFactory.Success(result, "Sao chép khóa học thành công"));
+            }
+            catch (KeyNotFoundException ex)
+            {
+                return NotFound(ApiResponseFactory.Fail(null, ex.Message));
+            }
+            catch (ArgumentException ex)
+            {
+                return BadRequest(ApiResponseFactory.Fail(null, ex.Message));
+            }
+            catch (InvalidOperationException ex)
+            {
+                return Conflict(ApiResponseFactory.Fail(null, ex.Message));
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, ApiResponseFactory.Fail(ex, "Không thể sao chép khóa học."));
+            }
+        }
+
+        [HttpGet("copy-lesson-preview")]
+        public IActionResult GetCopyLessonPreview(int sourceLessonId)
+        {
+            try
+            {
+                var graph = LoadCopyLessonGraph(sourceLessonId);
+                var preview = new CopyLessonPreview
+                {
+                    SourceLesson = new CopyLessonSource
+                    {
+                        ID = graph.Lesson.ID,
+                        Code = graph.Lesson.Code,
+                        LessonTitle = graph.Lesson.LessonTitle,
+                        LessonContent = graph.Lesson.LessonContent,
+                        CourseID = graph.Lesson.CourseID,
+                        CourseName = graph.CourseName,
+                        Duration = graph.Lesson.Duration,
+                        VideoURL = graph.Lesson.VideoURL,
+                        UrlPDF = graph.Lesson.UrlPDF
+                    },
+                    Counts = new CopyLessonCounts
+                    {
+                        Files = graph.CourseFiles.Count,
+                        Exams = graph.Exams.Count,
+                        Questions = graph.Questions.Count,
+                        Answers = graph.Answers.Count,
+                        RightAnswers = graph.RightAnswers.Count
+                    }
+                };
+                return Ok(ApiResponseFactory.Success(preview, ""));
+            }
+            catch (KeyNotFoundException ex)
+            {
+                return NotFound(ApiResponseFactory.Fail(null, ex.Message));
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
+            }
+        }
+
+        [HttpPost("copy-lesson")]
+        public IActionResult CopyLesson([FromBody] CopyLessonRequest model)
+        {
+            try
+            {
+                var claims = User.Claims.ToDictionary(x => x.Type, x => x.Value);
+                var currentUser = ObjectMapper.GetCurrentUser(claims);
+                var result = ExecuteCopyLesson(model, currentUser);
+                return Ok(ApiResponseFactory.Success(result, "Sao chép bài học thành công"));
+            }
+            catch (KeyNotFoundException ex)
+            {
+                return NotFound(ApiResponseFactory.Fail(null, ex.Message));
+            }
+            catch (ArgumentException ex)
+            {
+                return BadRequest(ApiResponseFactory.Fail(null, ex.Message));
+            }
+            catch (InvalidOperationException ex)
+            {
+                return Conflict(ApiResponseFactory.Fail(null, ex.Message));
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, ApiResponseFactory.Fail(ex, "Không thể sao chép bài học."));
+            }
+        }
+
+        [HttpGet("move-course-catalog-preview")]
+        public IActionResult GetMoveCourseCatalogPreview(int sourceCatalogId)
+        {
+            try
+            {
+                var graph = LoadCopySourceGraph(sourceCatalogId);
+                var preview = new MoveCourseCatalogPreview
+                {
+                    SourceCatalog = new MoveCourseCatalogSource
+                    {
+                        ID = graph.Catalog.ID,
+                        Code = graph.Catalog.Code,
+                        Name = graph.Catalog.Name,
+                        DepartmentID = graph.Catalog.DepartmentID,
+                        CatalogType = graph.Catalog.CatalogType,
+                        ProjectTypeIDs = graph.CatalogProjectTypes.Where(x => x.ProjectTypeID.HasValue).Select(x => x.ProjectTypeID!.Value).Distinct().ToList()
+                    },
+                    Counts = new MoveCourseCatalogCounts
+                    {
+                        CatalogProjectTypes = graph.CatalogProjectTypes.Count,
+                        Courses = graph.Courses.Count,
+                        CourseKpiMaps = graph.CourseKpiMaps.Count,
+                        Lessons = graph.Lessons.Count,
+                        CourseFiles = graph.CourseFiles.Count,
+                        Exams = graph.Exams.Count,
+                        Questions = graph.Questions.Count,
+                        Answers = graph.Answers.Count,
+                        RightAnswers = graph.RightAnswers.Count
+                    }
+                };
+                return Ok(ApiResponseFactory.Success(preview, ""));
+            }
+            catch (KeyNotFoundException ex)
+            {
+                return NotFound(ApiResponseFactory.Fail(null, ex.Message));
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
+            }
+        }
+
+        [HttpPost("move-course-catalog")]
+        public IActionResult MoveCourseCatalog([FromBody] MoveCourseCatalogRequest model)
+        {
+            try
+            {
+                var claims = User.Claims.ToDictionary(x => x.Type, x => x.Value);
+                var currentUser = ObjectMapper.GetCurrentUser(claims);
+                var result = ExecuteMoveCourseCatalog(model);
+                return Ok(ApiResponseFactory.Success(result, "Di chuyển danh mục khóa học thành công"));
+            }
+            catch (KeyNotFoundException ex)
+            {
+                return NotFound(ApiResponseFactory.Fail(null, ex.Message));
+            }
+            catch (ArgumentException ex)
+            {
+                return BadRequest(ApiResponseFactory.Fail(null, ex.Message));
+            }
+            catch (InvalidOperationException ex)
+            {
+                return Conflict(ApiResponseFactory.Fail(null, ex.Message));
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, ApiResponseFactory.Fail(ex, "Không thể di chuyển danh mục khóa học."));
+            }
+        }
+
+        private MoveCourseCatalogResult ExecuteMoveCourseCatalog(MoveCourseCatalogRequest request)
+        {
+            NormalizeMoveRequest(request);
+            var graph = LoadCopySourceGraph(request.SourceCatalogId);
+
+            // Check if same department and catalog type
+            if (graph.Catalog.DepartmentID == request.TargetDepartmentId && graph.Catalog.CatalogType == request.TargetCatalogType)
+            {
+                throw new InvalidOperationException("Không thể di chuyển vào chính danh mục nguồn.");
+            }
+
+            // Update Code with MV- prefix
+            var newCode = $"MV-{graph.Catalog.Code}";
+            var normalizedCode = newCode.ToUpper();
+            
+            // Handle duplicate code
+            var existingCode = _courseCatalogRepo.GetAll(x => 
+                x.ID != request.SourceCatalogId && 
+                x.IsDeleted != true && 
+                x.Code != null && 
+                x.Code.ToUpper() == normalizedCode
+            ).FirstOrDefault();
+
+            if (existingCode != null)
+            {
+                var suffix = 1;
+                while (_courseCatalogRepo.GetAll(x => 
+                    x.Code != null && 
+                    x.Code.ToUpper() == $"{normalizedCode}-{suffix}"
+                ).Any())
+                {
+                    suffix++;
+                }
+                newCode = $"{normalizedCode}-{suffix}";
+            }
+
+            // Update CourseCatalog
+            graph.Catalog.Code = newCode;
+            graph.Catalog.DepartmentID = request.TargetDepartmentId;
+            graph.Catalog.CatalogType = request.TargetCatalogType;
+            _courseCatalogRepo.Update(graph.Catalog);
+
+            // Update or Create CourseCatalogProjectTypes
+            var newProjectTypeIds = request.ProjectTypeIds.Where(x => x > 0).Distinct().ToList();
+            
+            // Remove existing project types
+            foreach (var existingPT in graph.CatalogProjectTypes)
+            {
+                existingPT.IsDeleted = true;
+                _courseCatalogProjectTypeRepo.Update(existingPT);
+            }
+            
+            // Create new project types
+            foreach (var projectTypeId in newProjectTypeIds)
+            {
+                var newPT = new CourseCatalogProjectType
+                {
+                    CourseCatalogID = graph.Catalog.ID,
+                    ProjectTypeID = projectTypeId,
+                    IsDeleted = false
+                };
+                _courseCatalogProjectTypeRepo.Create(newPT);
+            }
+
+            // Update all Courses - CourseCatalogID không đổi vì chỉ có 1 danh mục
+            // STT sẽ được giữ nguyên
+
+            // Counts
+            return new MoveCourseCatalogResult
+            {
+                MovedCatalogId = graph.Catalog.ID,
+                Counts = new MoveCourseCatalogCounts
+                {
+                    CatalogProjectTypes = newProjectTypeIds.Count,
+                    Courses = graph.Courses.Count,
+                    CourseKpiMaps = graph.CourseKpiMaps.Count,
+                    Lessons = graph.Lessons.Count,
+                    CourseFiles = graph.CourseFiles.Count,
+                    Exams = graph.Exams.Count,
+                    Questions = graph.Questions.Count,
+                    Answers = graph.Answers.Count,
+                    RightAnswers = graph.RightAnswers.Count
+                }
+            };
+        }
+
+        private static void NormalizeMoveRequest(MoveCourseCatalogRequest request)
+        {
+            request.ProjectTypeIds ??= new List<int>();
+            if (request.SourceCatalogId <= 0) throw new ArgumentException("Danh mục nguồn không hợp lệ.");
+            if (request.TargetDepartmentId <= 0 || request.TargetCatalogType is < 1 or > 2) 
+                throw new ArgumentException("Phòng ban hoặc loại danh mục không hợp lệ.");
+        }
+
+        [HttpGet("move-course-preview")]
+        public IActionResult GetMoveCoursePreview(int sourceCourseId)
+        {
+            try
+            {
+                var graph = LoadCopyCourseGraph(sourceCourseId);
+                var catalog = graph.CatalogId.HasValue ? _courseCatalogRepo.GetAll(x => x.ID == graph.CatalogId).FirstOrDefault() : null;
+                var preview = new MoveCoursePreview
+                {
+                    SourceCourse = new MoveCourseSource
+                    {
+                        ID = graph.Course.ID,
+                        Code = graph.Course.Code,
+                        NameCourse = graph.Course.NameCourse,
+                        CourseCatalogID = graph.Course.CourseCatalogID,
+                        DepartmentID = catalog?.DepartmentID,
+                        CatalogType = catalog?.CatalogType
+                    },
+                    Counts = new MoveCourseCounts
+                    {
+                        CourseKpiMaps = graph.CourseKpiMaps.Count,
+                        Lessons = graph.Lessons.Count,
+                        CourseFiles = graph.CourseFiles.Count,
+                        Exams = graph.Exams.Count,
+                        Questions = graph.Questions.Count,
+                        Answers = graph.Answers.Count,
+                        RightAnswers = graph.RightAnswers.Count
+                    }
+                };
+                return Ok(ApiResponseFactory.Success(preview, ""));
+            }
+            catch (KeyNotFoundException ex)
+            {
+                return NotFound(ApiResponseFactory.Fail(null, ex.Message));
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
+            }
+        }
+
+        [HttpPost("move-course")]
+        public IActionResult MoveCourse([FromBody] MoveCourseRequest model)
+        {
+            try
+            {
+                var claims = User.Claims.ToDictionary(x => x.Type, x => x.Value);
+                var currentUser = ObjectMapper.GetCurrentUser(claims);
+                var result = ExecuteMoveCourse(model);
+                return Ok(ApiResponseFactory.Success(result, "Di chuyển khóa học thành công"));
+            }
+            catch (KeyNotFoundException ex)
+            {
+                return NotFound(ApiResponseFactory.Fail(null, ex.Message));
+            }
+            catch (ArgumentException ex)
+            {
+                return BadRequest(ApiResponseFactory.Fail(null, ex.Message));
+            }
+            catch (InvalidOperationException ex)
+            {
+                return Conflict(ApiResponseFactory.Fail(null, ex.Message));
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, ApiResponseFactory.Fail(ex, "Không thể di chuyển khóa học."));
+            }
+        }
+
+        private MoveCourseResult ExecuteMoveCourse(MoveCourseRequest request)
+        {
+            request.ProjectTypeIds ??= new List<int>();
+            if (request.SourceCourseId <= 0) throw new ArgumentException("Khóa học nguồn không hợp lệ.");
+            if (request.TargetCatalogId <= 0) throw new ArgumentException("Danh mục đích không hợp lệ.");
+
+            var graph = LoadCopyCourseGraph(request.SourceCourseId);
+
+            if (graph.Course.CourseCatalogID == request.TargetCatalogId)
+            {
+                throw new InvalidOperationException("Không thể di chuyển vào chính danh mục nguồn.");
+            }
+
+            var targetCatalog = _courseCatalogRepo.GetAll(x => x.ID == request.TargetCatalogId && x.IsDeleted != true).FirstOrDefault()
+                ?? throw new KeyNotFoundException("Danh mục đích không tồn tại.");
+
+            graph.Course.CourseCatalogID = request.TargetCatalogId;
+            //graph.Course.DepartmentID = targetCatalog.DepartmentID;
+            _courseRepo.Update(graph.Course);
+
+            return new MoveCourseResult
+            {
+                MovedCourseId = graph.Course.ID,
+                Counts = new MoveCourseCounts
+                {
+                    CourseKpiMaps = graph.CourseKpiMaps.Count,
+                    Lessons = graph.Lessons.Count,
+                    CourseFiles = graph.CourseFiles.Count,
+                    Exams = graph.Exams.Count,
+                    Questions = graph.Questions.Count,
+                    Answers = graph.Answers.Count,
+                    RightAnswers = graph.RightAnswers.Count
+                }
+            };
+        }
+
+        [HttpGet("move-lesson-preview")]
+        public IActionResult GetMoveLessonPreview(int sourceLessonId)
+        {
+            try
+            {
+                var graph = LoadCopyLessonGraph(sourceLessonId);
+                var course = graph.CourseId.HasValue ? _courseRepo.GetAll(x => x.ID == graph.CourseId && x.DeleteFlag == true).FirstOrDefault() : null;
+                var catalog = course?.CourseCatalogID.HasValue == true ? _courseCatalogRepo.GetAll(x => x.ID == course.CourseCatalogID).FirstOrDefault() : null;
+                var preview = new MoveLessonPreview
+                {
+                    SourceLesson = new MoveLessonSource
+                    {
+                        ID = graph.Lesson.ID,
+                        Code = graph.Lesson.Code,
+                        LessonTitle = graph.Lesson.LessonTitle,
+                        CourseID = graph.Lesson.CourseID,
+                        DepartmentID = catalog?.DepartmentID,
+                        CatalogType = catalog?.CatalogType
+                    },
+                    Counts = new MoveLessonCounts
+                    {
+                        CourseFiles = graph.CourseFiles.Count,
+                        Exams = graph.Exams.Count,
+                        Questions = graph.Questions.Count,
+                        Answers = graph.Answers.Count,
+                        RightAnswers = graph.RightAnswers.Count
+                    }
+                };
+                return Ok(ApiResponseFactory.Success(preview, ""));
+            }
+            catch (KeyNotFoundException ex)
+            {
+                return NotFound(ApiResponseFactory.Fail(null, ex.Message));
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
+            }
+        }
+
+        [HttpPost("move-lesson")]
+        public IActionResult MoveLesson([FromBody] MoveLessonRequest model)
+        {
+            try
+            {
+                var claims = User.Claims.ToDictionary(x => x.Type, x => x.Value);
+                var currentUser = ObjectMapper.GetCurrentUser(claims);
+                var result = ExecuteMoveLesson(model);
+                return Ok(ApiResponseFactory.Success(result, "Di chuyển bài học thành công"));
+            }
+            catch (KeyNotFoundException ex)
+            {
+                return NotFound(ApiResponseFactory.Fail(null, ex.Message));
+            }
+            catch (ArgumentException ex)
+            {
+                return BadRequest(ApiResponseFactory.Fail(null, ex.Message));
+            }
+            catch (InvalidOperationException ex)
+            {
+                return Conflict(ApiResponseFactory.Fail(null, ex.Message));
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, ApiResponseFactory.Fail(ex, "Không thể di chuyển bài học."));
+            }
+        }
+
+        private MoveLessonResult ExecuteMoveLesson(MoveLessonRequest request)
+        {
+            request.ProjectTypeIds ??= new List<int>();
+            if (request.SourceLessonId <= 0) throw new ArgumentException("Bài học nguồn không hợp lệ.");
+            if (request.TargetCourseId <= 0) throw new ArgumentException("Khóa học đích không hợp lệ.");
+
+            var graph = LoadCopyLessonGraph(request.SourceLessonId);
+
+            if (graph.Lesson.CourseID == request.TargetCourseId)
+            {
+                throw new InvalidOperationException("Không thể di chuyển vào chính khóa học nguồn.");
+            }
+
+            var targetCourse = _courseRepo.GetAll(x => x.ID == request.TargetCourseId && x.DeleteFlag == true).FirstOrDefault()
+                ?? throw new KeyNotFoundException("Khóa học đích không tồn tại.");
+
+            graph.Lesson.CourseID = request.TargetCourseId;
+            _courseLessonRepo.Update(graph.Lesson);
+
+            return new MoveLessonResult
+            {
+                MovedLessonId = graph.Lesson.ID,
+                Counts = new MoveLessonCounts
+                {
+                    CourseFiles = graph.CourseFiles.Count,
+                    Exams = graph.Exams.Count,
+                    Questions = graph.Questions.Count,
+                    Answers = graph.Answers.Count,
+                    RightAnswers = graph.RightAnswers.Count
+                }
+            };
+        }
+
+        private CopySourceGraph LoadCopySourceGraph(int sourceCatalogId)
+        {
+            var catalog = _courseCatalogRepo.GetAll(x => x.ID == sourceCatalogId && x.IsDeleted != true).FirstOrDefault()
+                ?? throw new KeyNotFoundException("Danh mục nguồn không tồn tại hoặc đã bị xóa.");
+            var catalogProjectTypes = _courseCatalogProjectTypeRepo.GetAll(x => x.CourseCatalogID == sourceCatalogId && x.IsDeleted != true);
+            var courses = _courseRepo.GetAll(x => x.CourseCatalogID == sourceCatalogId && x.DeleteFlag == true);
+            var courseIds = courses.Select(x => x.ID).ToList();
+            var courseKpiMaps = _course_KPIEmployeeTeamMapRepo.GetAll(x => courseIds.Contains(x.CourseID) && x.IsDeleted != true);
+            var lessons = _courseLessonRepo.GetAll(x => x.CourseID.HasValue && courseIds.Contains(x.CourseID.Value) && x.IsDeleted != true);
+            var lessonIds = lessons.Select(x => x.ID).ToList();
+            var courseFiles = _courseFilesRepo.GetAll(x => x.IsDeleted != true &&
+                ((x.CourseID.HasValue && courseIds.Contains(x.CourseID.Value)) || (x.LessonID.HasValue && lessonIds.Contains(x.LessonID.Value))));
+            var exams = _courseExamRepo.GetAll(x =>
+                (x.CourseId.HasValue && courseIds.Contains(x.CourseId.Value)) || (x.LessonID.HasValue && lessonIds.Contains(x.LessonID.Value)));
+            var examIds = exams.Select(x => x.ID).ToList();
+            var questions = _courseQuestionRepo.GetAll(x => x.CourseExamId.HasValue && examIds.Contains(x.CourseExamId.Value));
+            var questionIds = questions.Select(x => x.ID).ToList();
+            var answers = _courseAnswerRepo.GetAll(x => x.CourseQuestionId.HasValue && questionIds.Contains(x.CourseQuestionId.Value));
+            var answerIds = answers.Select(x => x.ID).ToList();
+            var rightAnswers = _courseRightAnswerRepo.GetAll(x =>
+                x.CourseQuestionID.HasValue && questionIds.Contains(x.CourseQuestionID.Value) &&
+                x.CourseAnswerID.HasValue && answerIds.Contains(x.CourseAnswerID.Value));
+
+            return new CopySourceGraph(catalog, catalogProjectTypes, courses, courseKpiMaps, lessons, courseFiles, exams, questions, answers, rightAnswers);
+        }
+
+        private CopyCourseCatalogResult CopyCourseCatalog(CopyCourseCatalogRequest request, CurrentUser currentUser)
+        {
+            NormalizeCopyRequest(request);
+            var graph = LoadCopySourceGraph(request.SourceCatalogId);
+            var normalizedCode = request.NewCode.ToUpper();
+            if (_courseCatalogRepo.GetAll(x => x.ID != request.SourceCatalogId && x.IsDeleted != true && x.Code != null && x.Code.ToUpper() == normalizedCode).Any())
+                throw new InvalidOperationException("Mã danh mục đã tồn tại! Vui lòng kiểm tra lại.");
+
+            var nextCatalogOrder = (_courseCatalogRepo.GetAll(x => x.IsDeleted != true && x.DepartmentID == request.DepartmentId && x.CatalogType == request.CatalogType).Max(x => x.STT) ?? 0) + 1;
+            var newCatalog = new CourseCatalog
+            {
+                Code = request.NewCode, Name = request.NewName, DepartmentID = request.DepartmentId,
+                CatalogType = request.CatalogType, STT = nextCatalogOrder, IsDeleted = false, DeleteFlag = true
+            };
+            _courseCatalogRepo.Create(newCatalog);
+
+            var projectTypeIds = request.ProjectTypeIds.Where(x => x > 0).Distinct().ToList();
+            var newProjectTypes = projectTypeIds.Select(projectTypeId => new CourseCatalogProjectType
+            {
+                CourseCatalogID = newCatalog.ID, ProjectTypeID = projectTypeId, IsDeleted = false
+            }).ToList();
+            if (newProjectTypes.Count > 0) _courseCatalogProjectTypeRepo.CreateRange(newProjectTypes);
+
+            var usedCourseCodes = new HashSet<string>(_courseRepo.GetAll(x => x.Code != null).Select(x => x.Code!), StringComparer.OrdinalIgnoreCase);
+            var courseMap = new Dictionary<int, Course>();
+            foreach (var sourceCourse in graph.Courses.OrderBy(x => x.STT).ThenBy(x => x.ID))
+            {
+                var newCourse = new Course
+                {
+                    STT = sourceCourse.STT, Code = GenerateCopyCode(sourceCourse.Code, request.NewCode, usedCourseCodes),
+                    NameCourse = sourceCourse.NameCourse, Instructor = sourceCourse.Instructor, CourseCatalogID = newCatalog.ID,
+                    FileCourseID = sourceCourse.FileCourseID, IsPractice = sourceCourse.IsPractice, QuestionCount = sourceCourse.QuestionCount,
+                    QuestionDuration = sourceCourse.QuestionDuration, LeadTime = sourceCourse.LeadTime, CourseCopyID = sourceCourse.ID,
+                    CourseTypeID = sourceCourse.CourseTypeID, EmployeeID = sourceCourse.EmployeeID, DeleteFlag = true
+                };
+                _courseRepo.Create(newCourse);
+                courseMap[sourceCourse.ID] = newCourse;
+            }
+
+            var newKpiMaps = graph.CourseKpiMaps.Where(x => courseMap.ContainsKey(x.CourseID))
+                .GroupBy(x => new { x.CourseID, x.KPIEmployeeTeamID }).Select(x => x.First())
+                .Select(x => new CourseKPIEmployeeTeamMap { CourseID = courseMap[x.CourseID].ID, KPIEmployeeTeamID = x.KPIEmployeeTeamID, IsDeleted = false }).ToList();
+            if (newKpiMaps.Count > 0) _course_KPIEmployeeTeamMapRepo.CreateRange(newKpiMaps);
+
+            var usedLessonCodes = new HashSet<string>(_courseLessonRepo.GetAll(x => x.Code != null).Select(x => x.Code!), StringComparer.OrdinalIgnoreCase);
+            var lessonMap = new Dictionary<int, CourseLesson>();
+            foreach (var sourceLesson in graph.Lessons.OrderBy(x => x.STT).ThenBy(x => x.ID))
+            {
+                if (!sourceLesson.CourseID.HasValue || !courseMap.TryGetValue(sourceLesson.CourseID.Value, out var newParentCourse))
+                    throw new InvalidOperationException($"Bài học {sourceLesson.ID} không thuộc graph danh mục nguồn.");
+                var newLesson = new CourseLesson
+                {
+                    Code = GenerateCopyCode(sourceLesson.Code, request.NewCode, usedLessonCodes), LessonTitle = sourceLesson.LessonTitle,
+                    LessonContent = sourceLesson.LessonContent, Duration = sourceLesson.Duration, VideoURL = sourceLesson.VideoURL,
+                    STT = sourceLesson.STT, CourseID = newParentCourse.ID, FileCourseID = sourceLesson.FileCourseID, UrlPDF = sourceLesson.UrlPDF,
+                    LessonCopyID = sourceLesson.ID, IsDeleted = false, EmployeeID = sourceLesson.EmployeeID,
+                    RequiredWatchedPercent = sourceLesson.RequiredWatchedPercent, Chapters = sourceLesson.Chapters
+                };
+                _courseLessonRepo.Create(newLesson);
+                lessonMap[sourceLesson.ID] = newLesson;
+            }
+
+            var newFiles = new List<CourseFile>();
+            foreach (var sourceFile in graph.CourseFiles)
+            {
+                int? newCourseId = sourceFile.CourseID.HasValue && courseMap.TryGetValue(sourceFile.CourseID.Value, out var mappedCourse) ? mappedCourse.ID : null;
+                int? newLessonId = sourceFile.LessonID.HasValue && lessonMap.TryGetValue(sourceFile.LessonID.Value, out var mappedLesson) ? mappedLesson.ID : null;
+                if (!newCourseId.HasValue && !newLessonId.HasValue) throw new InvalidOperationException($"File khóa học {sourceFile.ID} không thuộc graph danh mục nguồn.");
+                newFiles.Add(new CourseFile { NameFile = sourceFile.NameFile, CourseID = newCourseId, LessonID = newLessonId, OriginPath = sourceFile.OriginPath, ServerPath = sourceFile.ServerPath, IsDeleted = false });
+            }
+            if (newFiles.Count > 0) _courseFilesRepo.CreateRange(newFiles);
+
+            var examMap = new Dictionary<int, CourseExam>();
+            foreach (var sourceExam in graph.Exams.OrderBy(x => x.ID))
+            {
+                int? newCourseId;
+                int? newLessonId;
+                if (sourceExam.LessonID > 0)
+                {
+                    if (!lessonMap.TryGetValue(sourceExam.LessonID.Value, out var mappedLesson)) throw new InvalidOperationException($"Đề thi {sourceExam.ID} trỏ tới bài học ngoài graph danh mục nguồn.");
+                    newLessonId = mappedLesson.ID;
+                    newCourseId = sourceExam.CourseId > 0 && courseMap.TryGetValue(sourceExam.CourseId.Value, out var lessonExamCourse) ? lessonExamCourse.ID : sourceExam.CourseId;
+                }
+                else if (sourceExam.CourseId > 0 && courseMap.TryGetValue(sourceExam.CourseId.Value, out var mappedCourse))
+                {
+                    newCourseId = mappedCourse.ID; newLessonId = sourceExam.LessonID;
+                }
+                else throw new InvalidOperationException($"Đề thi {sourceExam.ID} không thuộc graph danh mục nguồn.");
+                var newExam = new CourseExam { CourseId = newCourseId, LessonID = newLessonId, NameExam = sourceExam.NameExam, CodeExam = sourceExam.CodeExam, Goal = sourceExam.Goal, TestTime = sourceExam.TestTime, ExamType = sourceExam.ExamType };
+                _courseExamRepo.Create(newExam);
+                examMap[sourceExam.ID] = newExam;
+            }
+
+            var questionMap = new Dictionary<int, CourseQuestion>();
+            foreach (var sourceQuestion in graph.Questions.OrderBy(x => x.ID))
+            {
+                if (!sourceQuestion.CourseExamId.HasValue || !examMap.TryGetValue(sourceQuestion.CourseExamId.Value, out var newExam)) throw new InvalidOperationException($"Câu hỏi {sourceQuestion.ID} không thuộc graph danh mục nguồn.");
+                var newQuestion = new CourseQuestion { QuestionText = sourceQuestion.QuestionText, STT = sourceQuestion.STT, CourseExamId = newExam.ID, CheckInput = sourceQuestion.CheckInput, Marks = sourceQuestion.Marks, Image = sourceQuestion.Image };
+                _courseQuestionRepo.Create(newQuestion);
+                questionMap[sourceQuestion.ID] = newQuestion;
+            }
+
+            var answerMap = new Dictionary<int, CourseAnswer>();
+            foreach (var sourceAnswer in graph.Answers.OrderBy(x => x.ID))
+            {
+                if (!sourceAnswer.CourseQuestionId.HasValue || !questionMap.TryGetValue(sourceAnswer.CourseQuestionId.Value, out var newQuestion)) throw new InvalidOperationException($"Đáp án {sourceAnswer.ID} không thuộc graph danh mục nguồn.");
+                var newAnswer = new CourseAnswer { AnswerText = sourceAnswer.AnswerText, CourseQuestionId = newQuestion.ID, AnswerNumber = sourceAnswer.AnswerNumber };
+                _courseAnswerRepo.Create(newAnswer);
+                answerMap[sourceAnswer.ID] = newAnswer;
+            }
+
+            var newRightAnswers = new List<CourseRightAnswer>();
+            foreach (var sourceRightAnswer in graph.RightAnswers)
+            {
+                if (!sourceRightAnswer.CourseQuestionID.HasValue || !sourceRightAnswer.CourseAnswerID.HasValue || !questionMap.TryGetValue(sourceRightAnswer.CourseQuestionID.Value, out var newQuestion) || !answerMap.TryGetValue(sourceRightAnswer.CourseAnswerID.Value, out var newAnswer)) throw new InvalidOperationException($"Đáp án đúng {sourceRightAnswer.ID} có liên kết nguồn không hợp lệ.");
+                newRightAnswers.Add(new CourseRightAnswer { CourseQuestionID = newQuestion.ID, CourseAnswerID = newAnswer.ID });
+            }
+            if (newRightAnswers.Count > 0) _courseRightAnswerRepo.CreateRange(newRightAnswers);
+
+            return new CopyCourseCatalogResult
+            {
+                NewCatalogId = newCatalog.ID,
+                Counts = new CopyCourseCatalogCounts { CatalogProjectTypes = newProjectTypes.Count, Courses = courseMap.Count, CourseKpiMaps = newKpiMaps.Count, Lessons = lessonMap.Count, CourseFiles = newFiles.Count, Exams = examMap.Count, Questions = questionMap.Count, Answers = answerMap.Count, RightAnswers = newRightAnswers.Count }
+            };
+        }
+
+        private static void NormalizeCopyRequest(CopyCourseCatalogRequest request)
+        {
+            request.NewCode = request.NewCode.Trim();
+            request.NewName = request.NewName.Trim();
+            request.ProjectTypeIds ??= new List<int>();
+            if (request.SourceCatalogId <= 0) throw new ArgumentException("Danh mục nguồn không hợp lệ.");
+            if (string.IsNullOrWhiteSpace(request.NewCode) || request.NewCode.Length > 50) throw new ArgumentException("Mã danh mục mới phải có từ 1 đến 50 ký tự.");
+            if (string.IsNullOrWhiteSpace(request.NewName) || request.NewName.Length > 100) throw new ArgumentException("Tên danh mục mới phải có từ 1 đến 100 ký tự.");
+            if (request.DepartmentId <= 0 || request.CatalogType is < 1 or > 2) throw new ArgumentException("Phòng ban hoặc loại danh mục không hợp lệ.");
+        }
+
+        private static string GenerateCopyCode(string? sourceCode, string catalogCode, ISet<string> usedCodes)
+        {
+            var baseCode = FitCopyCode($"{(string.IsNullOrWhiteSpace(sourceCode) ? "COPY" : sourceCode.Trim())}-{catalogCode.Trim()}", 20);
+            var candidate = baseCode;
+            var sequence = 2;
+            while (!usedCodes.Add(candidate))
+            {
+                var suffix = $"-{sequence++}";
+                candidate = FitCopyCode(baseCode, 20 - suffix.Length) + suffix;
+            }
+            return candidate;
+        }
+
+        private static string FitCopyCode(string value, int maxLength) => value.Length <= maxLength ? value : value[..maxLength];
+
+        private static CopyCourseCatalogCounts BuildCopyCounts(CopySourceGraph graph) => new()
+        {
+            CatalogProjectTypes = graph.CatalogProjectTypes.Count, Courses = graph.Courses.Count, CourseKpiMaps = graph.CourseKpiMaps.Count,
+            Lessons = graph.Lessons.Count, CourseFiles = graph.CourseFiles.Count, Exams = graph.Exams.Count,
+            Questions = graph.Questions.Count, Answers = graph.Answers.Count, RightAnswers = graph.RightAnswers.Count
+        };
+
+        private sealed record CopySourceGraph(CourseCatalog Catalog, List<CourseCatalogProjectType> CatalogProjectTypes, List<Course> Courses, List<CourseKPIEmployeeTeamMap> CourseKpiMaps, List<CourseLesson> Lessons, List<CourseFile> CourseFiles, List<CourseExam> Exams, List<CourseQuestion> Questions, List<CourseAnswer> Answers, List<CourseRightAnswer> RightAnswers);
+        private sealed record CopyCourseGraph(Course Course, int? CatalogId, string? CatalogName, int? CatalogType, List<CourseLesson> Lessons, List<CourseFile> CourseFiles, List<CourseExam> Exams, List<CourseQuestion> Questions, List<CourseAnswer> Answers, List<CourseRightAnswer> RightAnswers, List<CourseKPIEmployeeTeamMap> CourseKpiMaps);
+        private sealed record CopyLessonGraph(CourseLesson Lesson, int? CourseId, string? CourseName, List<CourseFile> CourseFiles, List<CourseExam> Exams, List<CourseQuestion> Questions, List<CourseAnswer> Answers, List<CourseRightAnswer> RightAnswers);
+
+        private CopyCourseGraph LoadCopyCourseGraph(int sourceCourseId)
+        {
+            var course = _courseRepo.GetAll(x => x.ID == sourceCourseId && x.DeleteFlag == true).FirstOrDefault()
+                ?? throw new KeyNotFoundException("Khóa học nguồn không tồn tại hoặc đã bị xóa.");
+
+            var catalog = _courseCatalogRepo.GetAll(x => x.ID == course.CourseCatalogID && x.IsDeleted != true).FirstOrDefault();
+
+            var lessons = _courseLessonRepo.GetAll(x => x.CourseID == sourceCourseId && x.IsDeleted != true);
+            var lessonIds = lessons.Select(x => x.ID).ToList();
+
+            var courseFiles = _courseFilesRepo.GetAll(x => x.IsDeleted != true &&
+                ((x.CourseID.HasValue && x.CourseID.Value == sourceCourseId) || (x.LessonID.HasValue && lessonIds.Contains(x.LessonID.Value))));
+
+            var exams = _courseExamRepo.GetAll(x =>
+                (x.CourseId.HasValue && x.CourseId.Value == sourceCourseId) || (x.LessonID.HasValue && lessonIds.Contains(x.LessonID.Value)));
+            var examIds = exams.Select(x => x.ID).ToList();
+
+            var questions = _courseQuestionRepo.GetAll(x => x.CourseExamId.HasValue && examIds.Contains(x.CourseExamId.Value));
+            var questionIds = questions.Select(x => x.ID).ToList();
+
+            var answers = _courseAnswerRepo.GetAll(x => x.CourseQuestionId.HasValue && questionIds.Contains(x.CourseQuestionId.Value));
+            var answerIds = answers.Select(x => x.ID).ToList();
+
+            var rightAnswers = _courseRightAnswerRepo.GetAll(x =>
+                x.CourseQuestionID.HasValue && questionIds.Contains(x.CourseQuestionID.Value) &&
+                x.CourseAnswerID.HasValue && answerIds.Contains(x.CourseAnswerID.Value));
+
+            var courseKpiMaps = _course_KPIEmployeeTeamMapRepo.GetAll(x => x.CourseID == sourceCourseId && x.IsDeleted != true);
+
+            return new CopyCourseGraph(course, catalog?.ID, catalog?.Name, catalog?.CatalogType, lessons, courseFiles, exams, questions, answers, rightAnswers, courseKpiMaps);
+        }
+
+        private CopyLessonGraph LoadCopyLessonGraph(int sourceLessonId)
+        {
+            var lesson = _courseLessonRepo.GetAll(x => x.ID == sourceLessonId && x.IsDeleted != true).FirstOrDefault()
+                ?? throw new KeyNotFoundException("Bài học nguồn không tồn tại hoặc đã bị xóa.");
+
+            var course = _courseRepo.GetAll(x => x.ID == lesson.CourseID && x.DeleteFlag == true).FirstOrDefault();
+
+            var courseFiles = _courseFilesRepo.GetAll(x => x.IsDeleted != true && x.LessonID == sourceLessonId);
+
+            var exams = _courseExamRepo.GetAll(x => x.LessonID.HasValue && x.LessonID.Value == sourceLessonId);
+            var examIds = exams.Select(x => x.ID).ToList();
+
+            var questions = _courseQuestionRepo.GetAll(x => x.CourseExamId.HasValue && examIds.Contains(x.CourseExamId.Value));
+            var questionIds = questions.Select(x => x.ID).ToList();
+
+            var answers = _courseAnswerRepo.GetAll(x => x.CourseQuestionId.HasValue && questionIds.Contains(x.CourseQuestionId.Value));
+            var answerIds = answers.Select(x => x.ID).ToList();
+
+            var rightAnswers = _courseRightAnswerRepo.GetAll(x =>
+                x.CourseQuestionID.HasValue && questionIds.Contains(x.CourseQuestionID.Value) &&
+                x.CourseAnswerID.HasValue && answerIds.Contains(x.CourseAnswerID.Value));
+
+            return new CopyLessonGraph(lesson, course?.ID, course?.NameCourse, courseFiles, exams, questions, answers, rightAnswers);
+        }
+
+        private CopyCourseResult ExecuteCopyCourse(CopyCourseRequest request, CurrentUser currentUser)
+        {
+            if (request.SourceCourseId <= 0) throw new ArgumentException("Khóa học nguồn không hợp lệ.");
+            if (string.IsNullOrWhiteSpace(request.NewCode)) throw new ArgumentException("Mã khóa học mới không được trống.");
+            if (request.TargetCatalogId <= 0) throw new ArgumentException("Danh mục đích không hợp lệ.");
+
+            var targetCatalog = _courseCatalogRepo.GetAll(x => x.ID == request.TargetCatalogId && x.IsDeleted != true).FirstOrDefault()
+                ?? throw new KeyNotFoundException("Danh mục đích không tồn tại hoặc đã bị xóa.");
+
+            var graph = LoadCopyCourseGraph(request.SourceCourseId);
+            var normalizedCode = request.NewCode.ToUpper();
+            if (_courseRepo.GetAll(x => x.ID != request.SourceCourseId && x.DeleteFlag == true && x.Code != null && x.Code.ToUpper() == normalizedCode).Any())
+                throw new InvalidOperationException("Mã khóa học đã tồn tại! Vui lòng kiểm tra lại.");
+
+            var nextCourseOrder = (_courseRepo.GetAll(x => x.CourseCatalogID == request.TargetCatalogId && x.DeleteFlag == true).Max(x => x.STT) ?? 0) + 1;
+            var newCourse = new Course
+            {
+                STT = nextCourseOrder,
+                Code = request.NewCode,
+                NameCourse = request.NewName,
+                CourseCatalogID = request.TargetCatalogId,
+                CourseCopyID = request.SourceCourseId,
+                Instructor = graph.Course.Instructor,
+                FileCourseID = graph.Course.FileCourseID,
+                IsPractice = graph.Course.IsPractice,
+                QuestionCount = graph.Course.QuestionCount,
+                QuestionDuration = graph.Course.QuestionDuration,
+                LeadTime = graph.Course.LeadTime,
+                CourseTypeID = graph.Course.CourseTypeID,
+                EmployeeID = graph.Course.EmployeeID,
+                DeleteFlag = true
+            };
+            _courseRepo.Create(newCourse);
+
+            var usedLessonCodes = new HashSet<string>(_courseLessonRepo.GetAll(x => x.Code != null).Select(x => x.Code!), StringComparer.OrdinalIgnoreCase);
+            var lessonMap = new Dictionary<int, CourseLesson>();
+            foreach (var sourceLesson in graph.Lessons.OrderBy(x => x.STT).ThenBy(x => x.ID))
+            {
+                var newLesson = new CourseLesson
+                {
+                    Code = GenerateCopyCode(sourceLesson.Code, request.NewCode, usedLessonCodes),
+                    LessonTitle = sourceLesson.LessonTitle,
+                    LessonContent = sourceLesson.LessonContent,
+                    Duration = sourceLesson.Duration,
+                    VideoURL = sourceLesson.VideoURL,
+                    STT = sourceLesson.STT,
+                    CourseID = newCourse.ID,
+                    FileCourseID = sourceLesson.FileCourseID,
+                    UrlPDF = sourceLesson.UrlPDF,
+                    LessonCopyID = sourceLesson.ID,
+                    IsDeleted = false,
+                    EmployeeID = sourceLesson.EmployeeID,
+                    RequiredWatchedPercent = sourceLesson.RequiredWatchedPercent,
+                    Chapters = sourceLesson.Chapters
+                };
+                _courseLessonRepo.Create(newLesson);
+                lessonMap[sourceLesson.ID] = newLesson;
+            }
+
+            var newFiles = new List<CourseFile>();
+            foreach (var sourceFile in graph.CourseFiles)
+            {
+                int? newCourseId = sourceFile.CourseID.HasValue && sourceFile.CourseID.Value == request.SourceCourseId ? newCourse.ID : null;
+                int? newLessonId = sourceFile.LessonID.HasValue && lessonMap.TryGetValue(sourceFile.LessonID.Value, out var mappedLesson) ? mappedLesson.ID : null;
+                if (!newCourseId.HasValue && !newLessonId.HasValue) continue;
+                newFiles.Add(new CourseFile { NameFile = sourceFile.NameFile, CourseID = newCourseId, LessonID = newLessonId, OriginPath = sourceFile.OriginPath, ServerPath = sourceFile.ServerPath, IsDeleted = false });
+            }
+            if (newFiles.Count > 0) _courseFilesRepo.CreateRange(newFiles);
+
+            var examMap = new Dictionary<int, CourseExam>();
+            foreach (var sourceExam in graph.Exams.OrderBy(x => x.ID))
+            {
+                int? newCourseId;
+                int? newLessonId;
+                if (sourceExam.LessonID > 0)
+                {
+                    if (!lessonMap.TryGetValue(sourceExam.LessonID.Value, out var mappedLesson)) continue;
+                    newLessonId = mappedLesson.ID;
+                    newCourseId = sourceExam.CourseId > 0 ? newCourse.ID : null;
+                }
+                else if (sourceExam.CourseId > 0 && sourceExam.CourseId.Value == request.SourceCourseId)
+                {
+                    newCourseId = newCourse.ID;
+                    newLessonId = sourceExam.LessonID;
+                }
+                else continue;
+
+                var newExam = new CourseExam { CourseId = newCourseId, LessonID = newLessonId, NameExam = sourceExam.NameExam, CodeExam = sourceExam.CodeExam, Goal = sourceExam.Goal, TestTime = sourceExam.TestTime, ExamType = sourceExam.ExamType };
+                _courseExamRepo.Create(newExam);
+                examMap[sourceExam.ID] = newExam;
+            }
+
+            var questionMap = new Dictionary<int, CourseQuestion>();
+            foreach (var sourceQuestion in graph.Questions.OrderBy(x => x.ID))
+            {
+                if (!sourceQuestion.CourseExamId.HasValue || !examMap.TryGetValue(sourceQuestion.CourseExamId.Value, out var newExam)) continue;
+                var newQuestion = new CourseQuestion { QuestionText = sourceQuestion.QuestionText, STT = sourceQuestion.STT, CourseExamId = newExam.ID, CheckInput = sourceQuestion.CheckInput, Marks = sourceQuestion.Marks, Image = sourceQuestion.Image };
+                _courseQuestionRepo.Create(newQuestion);
+                questionMap[sourceQuestion.ID] = newQuestion;
+            }
+
+            var answerMap = new Dictionary<int, CourseAnswer>();
+            foreach (var sourceAnswer in graph.Answers.OrderBy(x => x.ID))
+            {
+                if (!sourceAnswer.CourseQuestionId.HasValue || !questionMap.TryGetValue(sourceAnswer.CourseQuestionId.Value, out var newQuestion)) continue;
+                var newAnswer = new CourseAnswer { CourseQuestionId = newQuestion.ID, AnswerText = sourceAnswer.AnswerText, AnswerNumber = sourceAnswer.AnswerNumber };
+                _courseAnswerRepo.Create(newAnswer);
+                answerMap[sourceAnswer.ID] = newAnswer;
+            }
+
+            foreach (var sourceRightAnswer in graph.RightAnswers)
+            {
+                if (!sourceRightAnswer.CourseQuestionID.HasValue || !questionMap.TryGetValue(sourceRightAnswer.CourseQuestionID.Value, out var newQuestion)) continue;
+                if (!sourceRightAnswer.CourseAnswerID.HasValue || !answerMap.TryGetValue(sourceRightAnswer.CourseAnswerID.Value, out var newAnswer)) continue;
+                var newRightAnswer = new CourseRightAnswer { CourseQuestionID = newQuestion.ID, CourseAnswerID = newAnswer.ID };
+                _courseRightAnswerRepo.Create(newRightAnswer);
+            }
+
+            return new CopyCourseResult
+            {
+                NewCourseId = newCourse.ID,
+                Counts = new CopyCourseCounts
+                {
+                    Lessons = lessonMap.Count,
+                    CourseFiles = newFiles.Count,
+                    Exams = examMap.Count,
+                    Questions = questionMap.Count,
+                    Answers = answerMap.Count,
+                    RightAnswers = graph.RightAnswers.Count
+                }
+            };
+        }
+
+        private CopyLessonResult ExecuteCopyLesson(CopyLessonRequest request, CurrentUser currentUser)
+        {
+            if (request.SourceLessonId <= 0) throw new ArgumentException("Bài học nguồn không hợp lệ.");
+            if (string.IsNullOrWhiteSpace(request.NewCode)) throw new ArgumentException("Mã bài học mới không được trống.");
+            if (request.TargetCourseId <= 0) throw new ArgumentException("Khóa học đích không hợp lệ.");
+
+            var targetCourse = _courseRepo.GetAll(x => x.ID == request.TargetCourseId && x.DeleteFlag == true).FirstOrDefault()
+                ?? throw new KeyNotFoundException("Khóa học đích không tồn tại hoặc đã bị xóa.");
+
+            var graph = LoadCopyLessonGraph(request.SourceLessonId);
+            var normalizedCode = request.NewCode.ToUpper();
+            if (_courseLessonRepo.GetAll(x => x.ID != request.SourceLessonId && x.IsDeleted != true && x.Code != null && x.Code.ToUpper() == normalizedCode).Any())
+                throw new InvalidOperationException("Mã bài học đã tồn tại! Vui lòng kiểm tra lại.");
+
+            var nextLessonOrder = (_courseLessonRepo.GetAll(x => x.CourseID == request.TargetCourseId && x.IsDeleted != true).Max(x => x.STT) ?? 0) + 1;
+            var newLesson = new CourseLesson
+            {
+                STT = nextLessonOrder,
+                Code = request.NewCode,
+                LessonTitle = request.NewName,
+                LessonContent = graph.Lesson.LessonContent,
+                Duration = graph.Lesson.Duration,
+                VideoURL = graph.Lesson.VideoURL,
+                CourseID = request.TargetCourseId,
+                FileCourseID = graph.Lesson.FileCourseID,
+                UrlPDF = graph.Lesson.UrlPDF,
+                LessonCopyID = request.SourceLessonId,
+                IsDeleted = false,
+                EmployeeID = graph.Lesson.EmployeeID,
+                RequiredWatchedPercent = graph.Lesson.RequiredWatchedPercent,
+                Chapters = graph.Lesson.Chapters
+            };
+            _courseLessonRepo.Create(newLesson);
+
+            var newFiles = graph.CourseFiles.Select(sourceFile => new CourseFile
+            {
+                NameFile = sourceFile.NameFile,
+                LessonID = newLesson.ID,
+                OriginPath = sourceFile.OriginPath,
+                ServerPath = sourceFile.ServerPath,
+                IsDeleted = false
+            }).ToList();
+            if (newFiles.Count > 0) _courseFilesRepo.CreateRange(newFiles);
+
+            var examMap = new Dictionary<int, CourseExam>();
+            foreach (var sourceExam in graph.Exams)
+            {
+                var newExam = new CourseExam
+                {
+                    CourseId = request.TargetCourseId,
+                    LessonID = newLesson.ID,
+                    NameExam = sourceExam.NameExam,
+                    CodeExam = sourceExam.CodeExam,
+                    Goal = sourceExam.Goal,
+                    TestTime = sourceExam.TestTime,
+                    ExamType = sourceExam.ExamType
+                };
+                _courseExamRepo.Create(newExam);
+                examMap[sourceExam.ID] = newExam;
+            }
+
+            var questionMap = new Dictionary<int, CourseQuestion>();
+            foreach (var sourceQuestion in graph.Questions.OrderBy(x => x.ID))
+            {
+                if (!sourceQuestion.CourseExamId.HasValue || !examMap.TryGetValue(sourceQuestion.CourseExamId.Value, out var newExam)) continue;
+                var newQuestion = new CourseQuestion { QuestionText = sourceQuestion.QuestionText, STT = sourceQuestion.STT, CourseExamId = newExam.ID, CheckInput = sourceQuestion.CheckInput, Marks = sourceQuestion.Marks, Image = sourceQuestion.Image };
+                _courseQuestionRepo.Create(newQuestion);
+                questionMap[sourceQuestion.ID] = newQuestion;
+            }
+
+            var answerMap = new Dictionary<int, CourseAnswer>();
+            foreach (var sourceAnswer in graph.Answers.OrderBy(x => x.ID))
+            {
+                if (!sourceAnswer.CourseQuestionId.HasValue || !questionMap.TryGetValue(sourceAnswer.CourseQuestionId.Value, out var newQuestion)) continue;
+                var newAnswer = new CourseAnswer { CourseQuestionId = newQuestion.ID, AnswerText = sourceAnswer.AnswerText, AnswerNumber = sourceAnswer.AnswerNumber };
+                _courseAnswerRepo.Create(newAnswer);
+                answerMap[sourceAnswer.ID] = newAnswer;
+            }
+
+            foreach (var sourceRightAnswer in graph.RightAnswers)
+            {
+                if (!sourceRightAnswer.CourseQuestionID.HasValue || !questionMap.TryGetValue(sourceRightAnswer.CourseQuestionID.Value, out var newQuestion)) continue;
+                if (!sourceRightAnswer.CourseAnswerID.HasValue || !answerMap.TryGetValue(sourceRightAnswer.CourseAnswerID.Value, out var newAnswer)) continue;
+                var newRightAnswer = new CourseRightAnswer { CourseQuestionID = newQuestion.ID, CourseAnswerID = newAnswer.ID };
+                _courseRightAnswerRepo.Create(newRightAnswer);
+            }
+
+            return new CopyLessonResult
+            {
+                NewLessonId = newLesson.ID,
+                Counts = new CopyLessonCounts
+                {
+                    Files = newFiles.Count,
+                    Exams = examMap.Count,
+                    Questions = questionMap.Count,
+                    Answers = answerMap.Count,
+                    RightAnswers = graph.RightAnswers.Count
+                }
+            };
         }
 
         // Thêm sửa xóa danh mục khóa học

@@ -568,6 +568,7 @@ namespace RERPAPI.Model.DTO.KPISale
     public class KPISaleTeamWeightItemDto
     {
         public int KpiIndexID { get; set; }
+        public int? ParentIndexID { get; set; }
         public string? IndexCode { get; set; }
         public string? IndexName { get; set; }
 

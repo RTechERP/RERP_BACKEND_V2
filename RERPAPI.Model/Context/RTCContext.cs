@@ -110,6 +110,8 @@ public partial class RTCContext : DbContext
 
     public virtual DbSet<BillExportDetail> BillExportDetails { get; set; }
 
+    public virtual DbSet<BillExportDetailFile> BillExportDetailFiles { get; set; }
+
     public virtual DbSet<BillExportDetailSerialNumber> BillExportDetailSerialNumbers { get; set; }
 
     public virtual DbSet<BillExportDetailSerialNumberModulaLocation> BillExportDetailSerialNumberModulaLocations { get; set; }
@@ -2231,6 +2233,17 @@ public partial class RTCContext : DbContext
             entity.Property(e => e.TotalQty)
                 .HasComment("Tổng số lượng")
                 .HasColumnType("decimal(18, 2)");
+            entity.Property(e => e.UpdatedBy).HasMaxLength(150);
+            entity.Property(e => e.UpdatedDate).HasColumnType("datetime");
+        });
+
+        modelBuilder.Entity<BillExportDetailFile>(entity =>
+        {
+            entity.HasKey(e => e.ID).HasName("PK__BillExpo__3214EC2721291AB0");
+
+            entity.Property(e => e.CreatedBy).HasMaxLength(150);
+            entity.Property(e => e.CreatedDate).HasColumnType("datetime");
+            entity.Property(e => e.FileName).HasMaxLength(550);
             entity.Property(e => e.UpdatedBy).HasMaxLength(150);
             entity.Property(e => e.UpdatedDate).HasColumnType("datetime");
         });
@@ -8988,9 +9001,12 @@ public partial class RTCContext : DbContext
             entity.Property(e => e.ApprovalStatus).HasMaxLength(20);
             entity.Property(e => e.ApprovedBy).HasMaxLength(100);
             entity.Property(e => e.ApprovedDate).HasColumnType("datetime");
+            entity.Property(e => e.BoardApprovedBy).HasMaxLength(100);
+            entity.Property(e => e.BoardApprovedDate).HasColumnType("datetime");
             entity.Property(e => e.CreatedBy).HasMaxLength(100);
             entity.Property(e => e.CreatedDate).HasDefaultValueSql("(sysdatetime())");
             entity.Property(e => e.GoalValue).HasColumnType("decimal(18, 4)");
+            entity.Property(e => e.IsBoardApproved).HasDefaultValue(false);
             entity.Property(e => e.ProposedGoalValue).HasColumnType("decimal(18, 2)");
             entity.Property(e => e.ProposedWeightPercent).HasColumnType("decimal(18, 2)");
             entity.Property(e => e.RejectedBy).HasMaxLength(100);
@@ -9875,6 +9891,7 @@ public partial class RTCContext : DbContext
             entity.Property(e => e.FedexAccount).HasMaxLength(50);
             entity.Property(e => e.GroupID).HasMaxLength(150);
             entity.Property(e => e.IsApproved).HasComment("trạng thái duyệt");
+            entity.Property(e => e.IsDeleted).HasDefaultValue(false);
             entity.Property(e => e.Note)
                 .HasMaxLength(500)
                 .HasComment("Ghi chú");

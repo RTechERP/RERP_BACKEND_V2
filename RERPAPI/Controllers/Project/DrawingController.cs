@@ -17,6 +17,7 @@ namespace RERPAPI.Controllers.Project
         private readonly ConfigSystemRepo _configSystemRepo;
         private readonly EmployeeRepo _employeeRepo;
         private readonly ProjectTypeRepo _projectTypeRepo;
+        private readonly ProjectRepo _projectRepo;
         private readonly DrawingLogRepo _drawingLogRepo;
 
         public DrawingController(
@@ -24,12 +25,14 @@ namespace RERPAPI.Controllers.Project
             ConfigSystemRepo configSystemRepo,
             EmployeeRepo employeeRepo,
             ProjectTypeRepo projectTypeRepo,
+            ProjectRepo projectRepo,
             DrawingLogRepo drawingLogRepo)
         {
             _drawingRepo = drawingRepo;
             _configSystemRepo = configSystemRepo;
             _employeeRepo = employeeRepo;
             _projectTypeRepo = projectTypeRepo;
+            _projectRepo = projectRepo;
             _drawingLogRepo = drawingLogRepo;
         }
 
@@ -378,14 +381,35 @@ namespace RERPAPI.Controllers.Project
                 if (drawing == null || drawing.IsDeleted == true)
                     return BadRequest(ApiResponseFactory.Fail(null, "Không tìm thấy bản vẽ"));
 
+                // Bắt buộc phải có danh mục (ProjectTypeID) để build path theo cấu trúc chuẩn
+                if (drawing.ProjectTypeID == null || drawing.ProjectTypeID <= 0)
+                    return BadRequest(ApiResponseFactory.Fail(null, "Bản vẽ chưa có danh mục, vui lòng khai báo trước khi upload"));
+
+                if (drawing.ProjectID == null || drawing.ProjectID <= 0)
+                    return BadRequest(ApiResponseFactory.Fail(null, "Bản vẽ chưa gắn với dự án, không thể upload"));
+
+                var project = _projectRepo.GetByID(drawing.ProjectID.Value);
+                if (project == null || project.IsDeleted == true)
+                    return BadRequest(ApiResponseFactory.Fail(null, "Không tìm thấy dự án tương ứng với bản vẽ"));
+
+                var projectType = _projectTypeRepo.GetByID(drawing.ProjectTypeID.Value);
+                if (projectType == null || projectType.IsDeleted == true)
+                    return BadRequest(ApiResponseFactory.Fail(null, "Không tìm thấy danh mục bản vẽ"));
+
                 var uploadPath = _configSystemRepo.GetUploadPathByKey(key);
 
                 if (string.IsNullOrWhiteSpace(uploadPath))
                     return BadRequest(ApiResponseFactory.Fail(null, $"Không tìm thấy cấu hình đường dẫn cho key: {key}"));
 
-                string targetFolder = uploadPath;
+                // Build folder đích theo cấu trúc chuẩn:
+                //   {DRAWING_PATH}\{yyyy}\{ProjectCode}\THIETKE.{TypeNamePascal}\Draw\
+                // DRAWING_PATH đã được cấu hình sẵn trỏ tới "...\Projects", nên KHÔNG ghép thêm "Projects".
+                string targetFolder = BuildDrawingFolderPath(uploadPath, project, projectType, drawing);
 
-                if (!string.IsNullOrWhiteSpace(subPathRaw))
+                // Nếu client gửi subPath (vd: từ flow khác) mà KHÔNG phải key DRAWING_PATH,
+                // giữ nguyên hành vi cũ: ghép subPath dưới uploadPath.
+                if (!string.Equals(key, "DRAWING_PATH", StringComparison.OrdinalIgnoreCase)
+                    && !string.IsNullOrWhiteSpace(subPathRaw))
                 {
                     var separator = Path.DirectorySeparatorChar;
 
@@ -405,10 +429,6 @@ namespace RERPAPI.Controllers.Project
 
                     if (segments.Length > 0)
                         targetFolder = Path.Combine(uploadPath, Path.Combine(segments));
-                }
-                else
-                {
-                    targetFolder = Path.Combine(uploadPath, "Drawing", drawing.ProjectID.ToString(), drawing.ID.ToString());
                 }
 
                 if (!Directory.Exists(targetFolder))
@@ -461,6 +481,49 @@ namespace RERPAPI.Controllers.Project
             {
                 return BadRequest(ApiResponseFactory.Fail(ex, $"Lỗi upload file: {ex.Message}"));
             }
+        }
+
+        /// <summary>
+        /// Build đường dẫn folder đích cho file PDF bản vẽ theo cấu trúc chuẩn:
+        ///   {basePath}\{yyyy}\{ProjectCode}\THIETKE.{TypeNamePascal}\Draw\
+        /// Trong đó basePath = DRAWING_PATH (đã bao gồm "...\Projects").
+        /// </summary>
+        private static string BuildDrawingFolderPath(
+            string basePath,
+            RERPAPI.Model.Entities.Project project,
+            ProjectType projectType,
+            Drawing drawing)
+        {
+            int year = project.CreatedDate?.Year ?? DateTime.Now.Year;
+
+            string rawProjectCode = (project.ProjectCode ?? string.Empty).Trim();
+            string projectCode = SanitizeFolderSegment(string.IsNullOrEmpty(rawProjectCode)
+                ? $"Project_{project.ID}"
+                : rawProjectCode);
+
+            string typeFolder = "THIETKE." + FolderNameHelper.ToPascalCaseNoDiacritics(projectType.ProjectTypeName);
+
+            return Path.Combine(
+                basePath,
+                year.ToString(),
+                projectCode,
+                typeFolder,
+                "Draw");
+        }
+
+        /// <summary>
+        /// Lọc ký tự không hợp lệ trong tên folder, loại ".." để chống path traversal.
+        /// </summary>
+        private static string SanitizeFolderSegment(string segment)
+        {
+            if (string.IsNullOrWhiteSpace(segment))
+                return "Unknown";
+
+            var invalidChars = Path.GetInvalidFileNameChars();
+            var cleaned = new string(segment.Where(c => !invalidChars.Contains(c)).ToArray());
+            cleaned = cleaned.Replace("..", "").Trim();
+
+            return string.IsNullOrEmpty(cleaned) ? "Unknown" : cleaned;
         }
 
         #endregion Upload PDF
