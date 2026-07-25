@@ -739,6 +739,7 @@ builder.Services.AddScoped<SalaryIncreaseRepo>();
 builder.Services.AddScoped<SalaryIncreaseDetailRepo>();
 builder.Services.AddScoped<HotelBookingEmployeeRepo>();
 builder.Services.AddScoped<TravelRegistrationRepo>();
+builder.Services.AddScoped<BillExportDetailFilesRepo>();
 #region DI LOG
 
 builder.Services.AddScoped<POKHLogRepo>();

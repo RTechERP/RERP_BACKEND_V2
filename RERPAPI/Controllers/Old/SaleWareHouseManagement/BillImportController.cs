@@ -1819,7 +1819,7 @@ namespace RERPAPI.Controllers.Old.SaleWareHouseManagement
                 string message = "";
                 BillImport billImp = _billImportRepo.GetByID(id);
 
-                PathStaticFile pathStaticFile = _pathStaticFiles.Where(x => x.PathName == "Software").FirstOrDefault() ?? new PathStaticFile();
+                PathStaticFile pathStaticFile = _pathStaticFiles.Where(x => x.PathName == "WebData").FirstOrDefault() ?? new PathStaticFile();
                 if (!Path.Exists(pathStaticFile.PathFull))
                 {
                     message = $"Thư mục ảnh chữ ký không tồn tại!\n{pathStaticFile.PathName}: {pathStaticFile.PathFull}";
@@ -1828,7 +1828,7 @@ namespace RERPAPI.Controllers.Old.SaleWareHouseManagement
                 Employee emDeliver = _employeeRepo.GetByID((int)billImp.DeliverID); // Người giao
                 Employee emReciver = _employeeRepo.GetByID((int)billImp.ReciverID); // Người nhận
 
-                string pathImage = Path.Combine(pathStaticFile.PathFull, @"Test\signnonback");
+                string pathImage = Path.Combine(pathStaticFile.PathFull, "03. Signature");
                 string picDeliver = Path.Combine(pathImage, $@"{emDeliver.Code.Trim()}.png");
                 string picReciver = Path.Combine(pathImage, $@"{emReciver.Code.Trim()}.png");
                 //string picDeliver = Path.Combine(pathImage, $@"test.png");
