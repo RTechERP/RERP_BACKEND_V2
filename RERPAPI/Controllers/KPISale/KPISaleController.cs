@@ -2093,8 +2093,8 @@ namespace RERPAPI.Controllers.KPISale
                 if (target == null)
                     return BadRequest(ApiResponseFactory.Fail(null, "Không tìm thấy mục tiêu"));
 
-                if (target.ApprovalStatus == "Approved")
-                    return BadRequest(ApiResponseFactory.Fail(null, "Mục tiêu đã duyệt, không thể hủy"));
+                if (target.IsBoardApproved == true)
+                    return BadRequest(ApiResponseFactory.Fail(null, "Mục tiêu đã được ban giám đốc duyệt, không thể hủy"));
 
                 target.ApprovalStatus = "Rejected";
                 target.RejectedBy = currentUser.LoginName;
@@ -3053,6 +3053,7 @@ namespace RERPAPI.Controllers.KPISale
                 var items = indexes.Select(idx => new KPISaleTeamWeightItemDto
                 {
                     KpiIndexID = idx.ID,
+                    ParentIndexID = idx.ParentID,
                     IndexCode = idx.IndexCode,
                     IndexName = idx.IndexName,
                     IndexType = idx.IndexType,
@@ -3246,6 +3247,410 @@ namespace RERPAPI.Controllers.KPISale
                     : "Reset trọng số Team về mặc định";
 
                 return Ok(ApiResponseFactory.Success(new { removedCount }, msg));
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
+            }
+        }
+
+        #endregion
+
+        #region Team Target Summary (cho màn kpi-target-tab)
+
+        /// <summary>
+        /// Lấy mục tiêu tổng hợp của team = SUM(GoalValue) từ các thành viên đã SM duyệt.
+        /// Chỉ tính tạm trên BE, không lưu DB.
+        /// </summary>
+        [HttpGet("teams/{teamId:int}/team-targets")]
+        public async Task<IActionResult> GetTeamTargets(int teamId, [FromQuery] int periodId, [FromQuery] int templateId)
+        {
+            try
+            {
+                if (teamId <= 0)
+                    return BadRequest(ApiResponseFactory.Fail(null, "teamId không hợp lệ"));
+                if (periodId <= 0)
+                    return BadRequest(ApiResponseFactory.Fail(null, "periodId không hợp lệ"));
+                if (templateId <= 0)
+                    return BadRequest(ApiResponseFactory.Fail(null, "templateId không hợp lệ"));
+
+                var team = await _kpiSaleRepo.KPISaleTeams.AsNoTracking()
+                    .FirstOrDefaultAsync(t => t.ID == teamId);
+                if (team == null)
+                    return BadRequest(ApiResponseFactory.Fail(null, "Team không tồn tại"));
+
+                var period = await _kpiSaleRepo.KPISalePeriods.AsNoTracking()
+                    .FirstOrDefaultAsync(p => p.ID == periodId);
+                if (period == null)
+                    return BadRequest(ApiResponseFactory.Fail(null, "Kỳ KPI không tồn tại"));
+
+                var template = await _kpiSaleRepo.KPISaleTemplates.AsNoTracking()
+                    .FirstOrDefaultAsync(t => t.ID == templateId);
+                if (template == null)
+                    return BadRequest(ApiResponseFactory.Fail(null, "Mẫu KPI không tồn tại"));
+
+                // Lấy danh sách member IDs trong team
+                var memberIds = await _kpiSaleRepo.KPISaleTeamMembers.AsNoTracking()
+                    .Where(m => m.TeamID == teamId)
+                    .Select(m => m.EmployeeID)
+                    .ToListAsync();
+
+                if (memberIds.Count == 0)
+                    return Ok(ApiResponseFactory.Success(new
+                    {
+                        teamId,
+                        teamCode = team.TeamCode,
+                        teamName = team.TeamName,
+                        periodId,
+                        periodCode = period.PeriodCode,
+                        templateId,
+                        templateCode = template.TemplateCode,
+                        totalMembers = 0,
+                        approvedMembers = 0,
+                        boardApprovedMembers = 0,
+                        items = Array.Empty<object>(),
+                        totalTeamGoal = 0m,
+                        totalTeamProposed = 0m
+                    }, "Team không có thành viên"));
+
+                // Lấy danh sách KPI indexes trong template
+                var indexes = await _kpiSaleRepo.KPISaleIndices.AsNoTracking()
+                    .Where(x => x.TemplateID == templateId && x.IsActive)
+                    .OrderBy(x => x.SortOrder)
+                    .ThenBy(x => x.ID)
+                    .ToListAsync();
+
+                var indexIds = indexes.Select(i => i.ID).ToList();
+
+                // Xác định periodId cần query (bao gồm child periods nếu là QUARTER/YEAR)
+                var periodIdsToQuery = new HashSet<int> { periodId };
+                if (period.PeriodType == "QUARTER")
+                {
+                    var childMonths = await _kpiSaleRepo.KPISalePeriods.AsNoTracking()
+                        .Where(p => p.PeriodType == "MONTH" && p.ParentPeriodID == periodId)
+                        .ToListAsync();
+                    foreach (var m in childMonths)
+                        periodIdsToQuery.Add(m.ID);
+                }
+                else if (period.PeriodType == "YEAR")
+                {
+                    var childQuarters = await _kpiSaleRepo.KPISalePeriods.AsNoTracking()
+                        .Where(p => p.PeriodType == "QUARTER" && p.ParentPeriodID == periodId)
+                        .ToListAsync();
+                    var quarterIds = childQuarters.Select(q => q.ID).ToHashSet();
+                    var childMonths = await _kpiSaleRepo.KPISalePeriods.AsNoTracking()
+                        .Where(p => p.PeriodType == "MONTH" && p.ParentPeriodID != null && quarterIds.Contains(p.ParentPeriodID.Value))
+                        .ToListAsync();
+                    foreach (var m in childMonths)
+                        periodIdsToQuery.Add(m.ID);
+                }
+
+                // Lấy employee info để hiển thị tên
+                var employeeIds = memberIds.Distinct().ToList();
+                var employeesRaw = await Task.Run(() =>
+                    _userRepo.GetAll()
+                        .Where(e => employeeIds.Contains(e.ID))
+                        .Select(e => new { e.ID, e.Code, e.FullName })
+                        .ToList()
+                );
+                var employees = employeesRaw.ToDictionary(e => e.ID, e => new { e.Code, e.FullName });
+
+                // Lấy tất cả targets của các member trong team
+                var allTargets = await _kpiSaleRepo.KPISaleTargets.AsNoTracking()
+                    .Where(t => memberIds.Contains(t.EmployeeID)
+                        && periodIdsToQuery.Contains(t.PeriodID)
+                        && indexIds.Contains(t.KpiIndexID))
+                    .ToListAsync();
+
+                // Đếm số member đã có target với approvalStatus = 'Approved'
+                var membersWithApprovedTargets = allTargets
+                    .Where(t => t.ApprovalStatus == "Approved")
+                    .Select(t => t.EmployeeID)
+                    .Distinct()
+                    .Count();
+
+                // Đếm số member đã có target với IsBoardApproved = true
+                var membersWithBoardApprovedTargets = allTargets
+                    .Where(t => t.IsBoardApproved == true)
+                    .Select(t => t.EmployeeID)
+                    .Distinct()
+                    .Count();
+
+                // Build items theo từng KPI index
+                var items = indexes.Select(idx =>
+                {
+                    var indexTargets = allTargets.Where(t => t.KpiIndexID == idx.ID).ToList();
+                    var indexType = NormalizeOptionalCode(idx.IndexType, "DETAIL");
+
+                    // Team Goal = SUM(GoalValue) của các member đã SM duyệt
+                    var approvedTargets = indexTargets.Where(t => t.ApprovalStatus == "Approved").ToList();
+                    decimal teamGoalValue = approvedTargets.Sum(t => t.GoalValue);
+                    decimal teamProposedValue = approvedTargets.Sum(t => t.ProposedGoalValue ?? 0);
+
+                    // Member breakdown
+                    var memberTargets = memberIds.Select(empId =>
+                    {
+                        var empTargets = indexTargets.Where(t => t.EmployeeID == empId).ToList();
+                        var latestTarget = empTargets.OrderByDescending(t => t.PeriodID).FirstOrDefault();
+                        employees.TryGetValue(empId, out var emp);
+                        return new
+                        {
+                            employeeId = empId,
+                            employeeCode = emp?.Code ?? "",
+                            employeeName = emp?.FullName ?? $"Nhân viên #{empId}",
+                            goalValue = latestTarget?.GoalValue ?? 0,
+                            proposedGoalValue = latestTarget?.ProposedGoalValue ?? 0,
+                            approvalStatus = latestTarget?.ApprovalStatus ?? "",
+                            isApproved = latestTarget?.ApprovalStatus == "Approved"
+                        };
+                    }).ToList();
+
+                    return new
+                    {
+                        kpiIndexId = idx.ID,
+                        indexCode = idx.IndexCode,
+                        indexName = idx.IndexName,
+                        indexType,
+                        unitType = idx.UnitType,
+                        teamGoalValue,
+                        teamProposedValue,
+                        memberCount = memberTargets.Count(m => m.goalValue > 0 || m.proposedGoalValue > 0),
+                        memberTargets
+                    };
+                }).ToList();
+
+                decimal totalTeamGoal = items.Sum(i => i.teamGoalValue);
+                decimal totalTeamProposed = items.Sum(i => i.teamProposedValue);
+
+                return Ok(ApiResponseFactory.Success(new
+                {
+                    teamId,
+                    teamCode = team.TeamCode,
+                    teamName = team.TeamName,
+                    periodId,
+                    periodCode = period.PeriodCode,
+                    templateId,
+                    templateCode = template.TemplateCode,
+                    totalMembers = memberIds.Count,
+                    approvedMembers = membersWithApprovedTargets,
+                    boardApprovedMembers = membersWithBoardApprovedTargets,
+                    items,
+                    totalTeamGoal,
+                    totalTeamProposed
+                }));
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
+            }
+        }
+
+        /// <summary>
+        /// Ban GD duyệt hàng loạt tất cả targets đã SM duyệt của team.
+        /// Set IsBoardApproved = true cho các target đã Approved của các member.
+        /// </summary>
+        [HttpPost("teams/{teamId:int}/approve-targets")]
+        public async Task<IActionResult> ApproveTeamTargets(int teamId, [FromBody] ApproveTeamTargetsRequest request)
+        {
+            try
+            {
+                if (teamId <= 0)
+                    return BadRequest(ApiResponseFactory.Fail(null, "teamId không hợp lệ"));
+                if (request == null || request.PeriodId <= 0 || request.TemplateId <= 0)
+                    return BadRequest(ApiResponseFactory.Fail(null, "periodId và templateId không hợp lệ"));
+
+                var team = await _kpiSaleRepo.KPISaleTeams.AsNoTracking()
+                    .FirstOrDefaultAsync(t => t.ID == teamId);
+                if (team == null)
+                    return BadRequest(ApiResponseFactory.Fail(null, "Team không tồn tại"));
+
+                var period = await _kpiSaleRepo.KPISalePeriods.AsNoTracking()
+                    .FirstOrDefaultAsync(p => p.ID == request.PeriodId);
+                if (period == null)
+                    return BadRequest(ApiResponseFactory.Fail(null, "Kỳ KPI không tồn tại"));
+
+                // Lấy danh sách member IDs trong team
+                var memberIds = await _kpiSaleRepo.KPISaleTeamMembers.AsNoTracking()
+                    .Where(m => m.TeamID == teamId)
+                    .Select(m => m.EmployeeID)
+                    .ToListAsync();
+
+                if (memberIds.Count == 0)
+                    return BadRequest(ApiResponseFactory.Fail(null, "Team không có thành viên"));
+
+                // Xác định periodId cần query (bao gồm child periods)
+                var periodIdsToQuery = new HashSet<int> { request.PeriodId };
+                if (period.PeriodType == "QUARTER")
+                {
+                    var childMonths = await _kpiSaleRepo.KPISalePeriods.AsNoTracking()
+                        .Where(p => p.PeriodType == "MONTH" && p.ParentPeriodID == request.PeriodId)
+                        .ToListAsync();
+                    foreach (var m in childMonths)
+                        periodIdsToQuery.Add(m.ID);
+                }
+                else if (period.PeriodType == "YEAR")
+                {
+                    var childQuarters = await _kpiSaleRepo.KPISalePeriods.AsNoTracking()
+                        .Where(p => p.PeriodType == "QUARTER" && p.ParentPeriodID == request.PeriodId)
+                        .ToListAsync();
+                    var quarterIds = childQuarters.Select(q => q.ID).ToHashSet();
+                    var childMonths = await _kpiSaleRepo.KPISalePeriods.AsNoTracking()
+                        .Where(p => p.PeriodType == "MONTH" && p.ParentPeriodID != null && quarterIds.Contains(p.ParentPeriodID.Value))
+                        .ToListAsync();
+                    foreach (var m in childMonths)
+                        periodIdsToQuery.Add(m.ID);
+                }
+
+                // Lấy index IDs trong template
+                var indexIds = await _kpiSaleRepo.KPISaleIndices.AsNoTracking()
+                    .Where(x => x.TemplateID == request.TemplateId)
+                    .Select(x => x.ID)
+                    .ToListAsync();
+
+                // Lấy targets cần duyệt: đã SM duyệt và chưa BoardApproved
+                var targetsToApprove = await _kpiSaleRepo.KPISaleTargets
+                    .Where(t => memberIds.Contains(t.EmployeeID)
+                        && periodIdsToQuery.Contains(t.PeriodID)
+                        && indexIds.Contains(t.KpiIndexID)
+                        && t.ApprovalStatus == "Approved"
+                        && t.IsBoardApproved != true)
+                    .ToListAsync();
+
+                if (targetsToApprove.Count == 0)
+                    return Ok(ApiResponseFactory.Success(new
+                    {
+                        approvedCount = 0,
+                        teamName = team.TeamName,
+                        periodCode = period.PeriodCode
+                    }, "Không có target nào cần duyệt"));
+
+                var currentUser = GetCurrentUser();
+                var userName = currentUser?.LoginName ?? "System";
+                var now = DateTime.Now;
+
+                foreach (var target in targetsToApprove)
+                {
+                    target.IsBoardApproved = true;
+                    target.BoardApprovedBy = userName;
+                    target.BoardApprovedDate = now;
+                    target.UpdatedBy = userName;
+                    target.UpdatedDate = now;
+                }
+
+                await _kpiSaleRepo.SaveChangesAsync();
+
+                return Ok(ApiResponseFactory.Success(new
+                {
+                    approvedCount = targetsToApprove.Count,
+                    teamName = team.TeamName,
+                    periodCode = period.PeriodCode
+                }, $"Đã duyệt {targetsToApprove.Count} mục tiêu của team {team.TeamName}"));
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
+            }
+        }
+
+        /// <summary>
+        /// Ban GD hủy duyệt hàng loạt tất cả targets đã BGD duyệt của team.
+        /// Set IsBoardApproved = false cho các target đã BoardApproved của các member.
+        /// </summary>
+        [HttpPost("teams/{teamId:int}/unapprove-targets")]
+        public async Task<IActionResult> UnapproveTeamTargets(int teamId, [FromBody] ApproveTeamTargetsRequest request)
+        {
+            try
+            {
+                if (teamId <= 0)
+                    return BadRequest(ApiResponseFactory.Fail(null, "teamId không hợp lệ"));
+                if (request == null || request.PeriodId <= 0 || request.TemplateId <= 0)
+                    return BadRequest(ApiResponseFactory.Fail(null, "periodId và templateId không hợp lệ"));
+
+                var team = await _kpiSaleRepo.KPISaleTeams.AsNoTracking()
+                    .FirstOrDefaultAsync(t => t.ID == teamId);
+                if (team == null)
+                    return BadRequest(ApiResponseFactory.Fail(null, "Team không tồn tại"));
+
+                var period = await _kpiSaleRepo.KPISalePeriods.AsNoTracking()
+                    .FirstOrDefaultAsync(p => p.ID == request.PeriodId);
+                if (period == null)
+                    return BadRequest(ApiResponseFactory.Fail(null, "Kỳ KPI không tồn tại"));
+
+                // Lấy danh sách member IDs trong team
+                var memberIds = await _kpiSaleRepo.KPISaleTeamMembers.AsNoTracking()
+                    .Where(m => m.TeamID == teamId)
+                    .Select(m => m.EmployeeID)
+                    .ToListAsync();
+
+                if (memberIds.Count == 0)
+                    return BadRequest(ApiResponseFactory.Fail(null, "Team không có thành viên"));
+
+                // Xác định periodId cần query (bao gồm child periods)
+                var periodIdsToQuery = new HashSet<int> { request.PeriodId };
+                if (period.PeriodType == "QUARTER")
+                {
+                    var childMonths = await _kpiSaleRepo.KPISalePeriods.AsNoTracking()
+                        .Where(p => p.PeriodType == "MONTH" && p.ParentPeriodID == request.PeriodId)
+                        .ToListAsync();
+                    foreach (var m in childMonths)
+                        periodIdsToQuery.Add(m.ID);
+                }
+                else if (period.PeriodType == "YEAR")
+                {
+                    var childQuarters = await _kpiSaleRepo.KPISalePeriods.AsNoTracking()
+                        .Where(p => p.PeriodType == "QUARTER" && p.ParentPeriodID == request.PeriodId)
+                        .ToListAsync();
+                    var quarterIds = childQuarters.Select(q => q.ID).ToHashSet();
+                    var childMonths = await _kpiSaleRepo.KPISalePeriods.AsNoTracking()
+                        .Where(p => p.PeriodType == "MONTH" && p.ParentPeriodID != null && quarterIds.Contains(p.ParentPeriodID.Value))
+                        .ToListAsync();
+                    foreach (var m in childMonths)
+                        periodIdsToQuery.Add(m.ID);
+                }
+
+                // Lấy index IDs trong template
+                var indexIds = await _kpiSaleRepo.KPISaleIndices.AsNoTracking()
+                    .Where(x => x.TemplateID == request.TemplateId)
+                    .Select(x => x.ID)
+                    .ToListAsync();
+
+                // Lấy targets cần hủy duyệt: đã BGD duyệt
+                var targetsToUnapprove = await _kpiSaleRepo.KPISaleTargets
+                    .Where(t => memberIds.Contains(t.EmployeeID)
+                        && periodIdsToQuery.Contains(t.PeriodID)
+                        && indexIds.Contains(t.KpiIndexID)
+                        && t.IsBoardApproved == true)
+                    .ToListAsync();
+
+                if (targetsToUnapprove.Count == 0)
+                    return Ok(ApiResponseFactory.Success(new
+                    {
+                        unapprovedCount = 0,
+                        teamName = team.TeamName,
+                        periodCode = period.PeriodCode
+                    }, "Không có target nào để hủy duyệt"));
+
+                var currentUser = GetCurrentUser();
+                var userName = currentUser?.LoginName ?? "System";
+                var now = DateTime.Now;
+
+                foreach (var target in targetsToUnapprove)
+                {
+                    target.IsBoardApproved = false;
+                    target.BoardApprovedBy = null;
+                    target.BoardApprovedDate = null;
+                    target.UpdatedBy = userName;
+                    target.UpdatedDate = now;
+                }
+
+                await _kpiSaleRepo.SaveChangesAsync();
+
+                return Ok(ApiResponseFactory.Success(new
+                {
+                    unapprovedCount = targetsToUnapprove.Count,
+                    teamName = team.TeamName,
+                    periodCode = period.PeriodCode
+                }, $"Đã hủy duyệt {targetsToUnapprove.Count} mục tiêu của team {team.TeamName}"));
             }
             catch (Exception ex)
             {
@@ -7561,6 +7966,12 @@ FROM (
             public int PeriodID { get; set; }
             public string? Note { get; set; }
             public string? PerformedBy { get; set; }
+        }
+
+        public class ApproveTeamTargetsRequest
+        {
+            public int PeriodId { get; set; }
+            public int TemplateId { get; set; }
         }
 
         /// <summary>
