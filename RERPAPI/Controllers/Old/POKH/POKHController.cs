@@ -8,6 +8,7 @@ using RERPAPI.Model.DTO;
 using RERPAPI.Model.Entities;
 using RERPAPI.Repo.GenericEntity;
 using System.Data;
+using System.Text;
 
 // For more information on enabling Web API for empty projects, visit https://go.microsoft.com/fwlink/?LinkID=397860
 
@@ -1347,8 +1348,16 @@ namespace RERPAPI.Controllers.Old.POKH
                     ? string.Join(",", emails)
                     : "";
 
+                //string emailTo = "tech62@rtc.edu.vn";
+                //string emailCc = "tech62@rtc.edu.vn";
+
                 var tableRows = "";
                 int stt = 1;
+                string ids = string.Join(",", dto.productSaleIDs);
+                string token = Convert.ToBase64String(Encoding.UTF8.GetBytes(ids))
+                        .Replace('+', '-')
+                        .Replace('/', '_')
+                        .TrimEnd('=');
 
                 foreach (var productSaleID in dto.productSaleIDs)
                 {
@@ -1407,11 +1416,10 @@ namespace RERPAPI.Controllers.Old.POKH
 
                     <p>
                         Vui lòng đăng nhập hệ thống <strong>R-ERP</strong> và truy cập
-                        <strong>Kho → Sản phẩm kho Sale → TBP duyệt</strong>
-                        để thực hiện phê duyệt.
-                        <a href='https://erp.rtc.edu.vn/rerpweb/product-sale'
+                        theo đường dẫn sau:  
+                        <a href='https://erp.rtc.edu.vn/rerpweb/product-sale-new-approved?ids={token}'
                            target='_blank'>
-                            Truy cập ngay!
+                            Duyệt sản phẩm!
                         </a>.
                     </p>
                 </div>";
@@ -1444,7 +1452,7 @@ namespace RERPAPI.Controllers.Old.POKH
                 var empList = data as List<dynamic>;
 
                 var approvers = empList
-                    .Where(x => x.ID != 54 &&
+                    .Where(x => x.ID != 547 &&
                                 !string.IsNullOrWhiteSpace((string)x.EmailCongTy))
                     .Select(x => new
                     {
