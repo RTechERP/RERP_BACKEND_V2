@@ -335,11 +335,11 @@ namespace RERPAPI.Controllers.Old.SaleWareHouseManagement
                 var inventories = _inventoryRepo
                     .GetAll(x => ids.Contains(x.ID));
 
-                foreach (var item in inventories)
-                {
-                    item.IsApproved = dict[item.ID].IsApproved;
-                    item.ApprovedID = currentUser.ID;
-                }
+                //foreach (var item in inventories)
+                //{
+                //    item.IsApproved = dict[item.ID].IsApproved;
+                //    item.ApprovedID = currentUser.ID;
+                //}
 
                 await _inventoryRepo.UpdateRangeAsync_Binh(inventories);
 
