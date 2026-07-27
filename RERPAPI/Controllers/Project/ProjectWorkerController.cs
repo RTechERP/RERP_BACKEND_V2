@@ -116,7 +116,7 @@ namespace RERPAPI.Controllers.Project
             try
             {
                 var rs = projectTypeRepo.GetAll(x => x.IsDeleted == false
-                //&& x.IsProject == false
+                && x.IsProject == false
                 );
                 return Ok(ApiResponseFactory.Success(rs, "Lấy dữ liệu thành công"));
             }
