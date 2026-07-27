@@ -696,7 +696,7 @@ namespace RERPAPI.Controllers.Old.SaleWareHouseManagement
                     CreatedBy = currentUser.LoginName,
                     CreatedDate = now,
                     IsDeleted = false,
-
+                    
                     DeliveryTime = DateTime.Now,
                     IsAfterHours = currentTime < TimeSpan.FromHours(8) || currentTime >= TimeSpan.FromHours(16)
                 };
@@ -710,6 +710,7 @@ namespace RERPAPI.Controllers.Old.SaleWareHouseManagement
                 int stt = 1;
                 foreach (var row in model.DataDetails)
                 {
+                    string note = model.Note + (string.IsNullOrWhiteSpace(row.Note) ? "" : $" - {row.Note}");
                     var billExportDetail = new BillExportDetail
                     {
                         BillID = billExport.ID,
@@ -720,7 +721,8 @@ namespace RERPAPI.Controllers.Old.SaleWareHouseManagement
                         ProductFullName = row.ExportProductName,
                         CreatedBy = currentUser.LoginName,
                         CreatedDate = now,
-                        IsDeleted = false
+                        IsDeleted = false,
+                        Note = note
                     };
 
                     await _billExportDetailRepo.CreateAsync(billExportDetail);
@@ -762,8 +764,8 @@ namespace RERPAPI.Controllers.Old.SaleWareHouseManagement
                     IsDeleted = false,
                     Deliver = model.DeliverImportText,
                     Reciver = model.ReciverImportText,
-                    KhoType = model.ProductGroupText
-
+                    KhoType = model.ProductGroupText,
+                    
                 };
 
                 await _billImportRepo.CreateAsync(billImport);
@@ -774,6 +776,7 @@ namespace RERPAPI.Controllers.Old.SaleWareHouseManagement
                 stt = 1;
                 foreach (var row in model.DataDetails)
                 {
+                    string note = model.Note + (string.IsNullOrWhiteSpace(row.Note) ? "" : $" - {row.Note}");
                     var billImportDetail = new BillImportDetail
                     {
                         BillImportID = billImport.ID,
@@ -783,7 +786,8 @@ namespace RERPAPI.Controllers.Old.SaleWareHouseManagement
                         STT = stt++,
                         CreatedBy = currentUser.LoginName,
                         CreatedDate = now,
-                        IsDeleted = false
+                        IsDeleted = false,
+                        Note = note
                     };
 
                     var prd = _productsaleRepo.GetByID((int)billImportDetail.ProductID);
