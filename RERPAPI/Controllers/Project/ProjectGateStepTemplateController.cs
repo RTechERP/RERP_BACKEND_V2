@@ -34,7 +34,7 @@ namespace RERPAPI.Controllers.Project
         {
             try
             {
-                var data = _templateRepo.GetAll().OrderBy(x => x.Code).ToList();
+                var data = _templateRepo.GetAll(x => x.IsDeleted != true).OrderBy(x => x.Code).ToList();
                 return Ok(ApiResponseFactory.Success(data, "Lấy dữ liệu thành công"));
             }
             catch (Exception ex)
@@ -51,7 +51,7 @@ namespace RERPAPI.Controllers.Project
         {
             try
             {
-                var data = _templateRepo.GetAll(x => x.ProjectTypeDepartmentID == projectTypeDepartmentId).OrderBy(x => x.Code).ToList();
+                var data = _templateRepo.GetAll(x => x.ProjectTypeDepartmentID == projectTypeDepartmentId && x.IsDeleted != true).OrderBy(x => x.Code).ToList();
                 return Ok(ApiResponseFactory.Success(data, "Lấy dữ liệu thành công"));
             }
             catch (Exception ex)

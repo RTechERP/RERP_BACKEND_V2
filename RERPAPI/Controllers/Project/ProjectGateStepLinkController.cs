@@ -166,7 +166,7 @@ namespace RERPAPI.Controllers.Project
                                         projectItem.PlanStartDate = planStart;
                                         projectItem.PlanEndDate = planEnd;
                                         projectItem.Deadline = planEnd;
-                                        projectItem.EstimatedTime = (int)step.DayCount.Value;
+                                        projectItem.EstimatedTime = (int)(step.DayCount.Value * 8);
                                         projectItem.UserID = step.Workers.First().EmployeeID;
                                         projectItem.IsDeleted = false;
                                         projectItem.EmployeeIDRequest = _currentUser.EmployeeID;
@@ -188,7 +188,7 @@ namespace RERPAPI.Controllers.Project
                                         Status = 0,
                                         ItemLate = 0,
                                         Code = _projectItemRepo.GenerateProjectItemCode(request.ProjectID),
-                                        EstimatedTime = (int)step.DayCount.Value,
+                                        EstimatedTime = (int)(step.DayCount.Value * 8),
                                         UserID = step.Workers.First().EmployeeID,
                                         STT = _projectItemRepo.GetMaxSTT(request.ProjectID),
                                         IsDeleted = false,
@@ -262,10 +262,10 @@ namespace RERPAPI.Controllers.Project
                                         Status = 0,
                                         ItemLate = 0,
                                         NeedApprove = true,
-                                        Priority = 1,
+                                        Priority = 1, 
                                         Deadline = planEnd,
                                         Code = _projectItemRepo.GenerateProjectItemCode(request.ProjectID),
-                                        EstimatedTime = (int)step.DayCount.Value,
+                                        EstimatedTime = (int)(step.DayCount.Value * 8),
                                         UserID = step.Workers.First().EmployeeID,
                                         STT = _projectItemRepo.GetMaxSTT(request.ProjectID),
                                         IsDeleted = false,
@@ -383,10 +383,11 @@ namespace RERPAPI.Controllers.Project
 
         private async Task SyncProjectTaskEmployees(int projectTaskId, List<ProjectGateStepWorkerDto> workers)
         {
-            var existing = _taskEmployeeRepo.GetAll(x => x.ProjectTaskID == projectTaskId && x.IsDeleted != true).ToList();
+            // Chỉ lấy các nhân viên có Type == 1 (Người nhận việc) để đồng bộ với workers
+            var existingWorkers = _taskEmployeeRepo.GetAll(x => x.ProjectTaskID == projectTaskId && x.Type == 1 && x.IsDeleted != true).ToList();
 
-            // Xóa các nhân viên không còn nằm trong danh sách
-            foreach (var ext in existing)
+            // Xóa các nhân viên nhận việc (Type == 1) không còn nằm trong danh sách workers
+            foreach (var ext in existingWorkers)
             {
                 if (workers == null || !workers.Any(w => w.EmployeeID == ext.EmployeeID))
                 {
@@ -395,15 +396,15 @@ namespace RERPAPI.Controllers.Project
                 }
             }
 
-            // Thêm nhân viên mới hoặc kích hoạt lại các nhân viên đã bị xóa mềm
+            // Thêm nhân viên nhận việc mới hoặc kích hoạt lại các nhân viên đã bị xóa mềm
             if (workers != null)
             {
                 foreach (var w in workers)
                 {
-                    var ext = existing.FirstOrDefault(x => x.EmployeeID == w.EmployeeID);
+                    var ext = existingWorkers.FirstOrDefault(x => x.EmployeeID == w.EmployeeID);
                     if (ext == null)
                     {
-                        var deletedEmp = _taskEmployeeRepo.GetAll(x => x.ProjectTaskID == projectTaskId && x.EmployeeID == w.EmployeeID && x.IsDeleted == true).FirstOrDefault();
+                        var deletedEmp = _taskEmployeeRepo.GetAll(x => x.ProjectTaskID == projectTaskId && x.EmployeeID == w.EmployeeID && x.Type == 1 && x.IsDeleted == true).FirstOrDefault();
                         if (deletedEmp != null)
                         {
                             deletedEmp.IsDeleted = false;
@@ -420,6 +421,44 @@ namespace RERPAPI.Controllers.Project
                                 IsDeleted = false
                             };
                             await _taskEmployeeRepo.CreateAsync(newEmp);
+                        }
+                    }
+                }
+            }
+
+            // Tự động gán Leader (Người liên quan - Type 2) nếu công việc chưa có người liên quan
+            var hasRelated = _taskEmployeeRepo.GetAll(x => x.ProjectTaskID == projectTaskId && x.Type == 2 && x.IsDeleted != true).Any();
+            if (!hasRelated && _currentUser != null && _currentUser.ID > 0)
+            {
+                var param2 = new { p_UserID = _currentUser.ID };
+                var listLeader = await SqlDapper<UserTeam>.ProcedureToListTAsync("spGetAllLeaderTeam", param2);
+                if (listLeader != null && listLeader.Any())
+                {
+                    foreach (var leader in listLeader)
+                    {
+                        if (leader.LeaderID.HasValue && leader.LeaderID.Value > 0)
+                        {
+                            var existingLeaderRelate = _taskEmployeeRepo.GetAll(x => x.ProjectTaskID == projectTaskId && x.EmployeeID == leader.LeaderID.Value && x.Type == 2).FirstOrDefault();
+                            if (existingLeaderRelate != null)
+                            {
+                                if (existingLeaderRelate.IsDeleted == true)
+                                {
+                                    existingLeaderRelate.IsDeleted = false;
+                                    await _taskEmployeeRepo.UpdateAsync(existingLeaderRelate);
+                                }
+                            }
+                            else
+                            {
+                                var newEmployeeRelate = new ProjectTaskEmployee
+                                {
+                                    ProjectTaskID = projectTaskId,
+                                    EmployeeID = leader.LeaderID.Value,
+                                    Type = 2, // 2: người liên quan
+                                    CanDelete = true,
+                                    IsDeleted = false
+                                };
+                                await _taskEmployeeRepo.CreateAsync(newEmployeeRelate);
+                            }
                         }
                     }
                 }
