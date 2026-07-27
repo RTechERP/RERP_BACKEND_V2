@@ -40,4 +40,14 @@ public partial class ProjectPartListVersion
     public string? ReasonDeleted { get; set; }
 
     public bool? IsConsumable { get; set; }
+
+    public int? ProjectHistoryProblemID { get; set; }
+
+    public bool? IsProblem { get; set; }
+
+    public bool? IsApprovedTBP { get; set; }
+
+    public DateTime? ApprovedTBPDate { get; set; }
+
+    public int? ApprovedTBPID { get; set; }
 }

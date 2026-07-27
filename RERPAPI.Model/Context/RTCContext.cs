@@ -11730,12 +11730,14 @@ public partial class RTCContext : DbContext
 
             entity.HasIndex(e => e.StatusVersion, "Index_ProjectPartListVersion_StatusVersion");
 
+            entity.Property(e => e.ApprovedTBPDate).HasColumnType("datetime");
             entity.Property(e => e.Code)
                 .HasMaxLength(50)
                 .IsUnicode(false);
             entity.Property(e => e.CreatedBy).HasMaxLength(150);
             entity.Property(e => e.CreatedDate).HasColumnType("datetime");
             entity.Property(e => e.IsConsumable).HasDefaultValue(false);
+            entity.Property(e => e.IsProblem).HasDefaultValue(false);
             entity.Property(e => e.ReasonDeleted).HasMaxLength(550);
             entity.Property(e => e.UpdatedBy).HasMaxLength(150);
             entity.Property(e => e.UpdatedDate).HasColumnType("datetime");
@@ -12823,6 +12825,7 @@ public partial class RTCContext : DbContext
             entity.Property(e => e.CreatedBy).HasMaxLength(150);
             entity.Property(e => e.CreatedDate).HasColumnType("datetime");
             entity.Property(e => e.IsApprovedTBP).HasDefaultValue(false);
+            entity.Property(e => e.IsProblem).HasDefaultValue(false);
             entity.Property(e => e.UpdatedBy).HasMaxLength(150);
             entity.Property(e => e.UpdatedDate).HasColumnType("datetime");
         });
