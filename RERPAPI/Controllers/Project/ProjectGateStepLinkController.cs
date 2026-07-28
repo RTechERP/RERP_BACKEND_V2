@@ -1,5 +1,8 @@
+using Dapper;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Data.SqlClient;
+using RERPAPI.Attributes;
 using RERPAPI.Model.Common;
 using RERPAPI.Model.DTO;
 using RERPAPI.Model.Entities;
@@ -10,8 +13,6 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
-using Dapper;
-using Microsoft.Data.SqlClient;
 
 namespace RERPAPI.Controllers.Project
 {
@@ -651,43 +652,6 @@ namespace RERPAPI.Controllers.Project
         }
 
 
-
-        [HttpPost("Approve/{linkId}")]
-        public async Task<IActionResult> Approve(int linkId, [FromBody] string? comment)
-        {
-            try
-            {
-                var link = _stepLinkRepo.GetByID(linkId);
-                if (link == null)
-                    return NotFound(ApiResponseFactory.Fail(null, "Không tìm thấy bước công việc"));
-
-                // Sử dụng Dapper để kiểm tra xem có bất kỳ quy tắc bắt buộc nào chưa pass hoặc chưa được TBP duyệt không
-                using (var connection = new SqlConnection(Config.ConnectionString))
-                {
-                    string sql = @"
-                        SELECT COUNT(1) 
-                        FROM ProjectGateStepCheckListDetailLink dl
-                        INNER JOIN ProjectGateStepCheckListDetail d ON dl.ProjectGateStepCheckListDetailID = d.ID
-                        WHERE dl.ProjectGateStepLinkID = @LinkID
-                          AND d.IsCheck = 1
-                          AND (dl.IsCompleted = 0 OR (d.IsFile = 1 AND dl.IsApprovedTBP != 1))";
-
-                    int failedRequiredChecklists = await connection.ExecuteScalarAsync<int>(sql, new { LinkID = linkId });
-                    if (failedRequiredChecklists > 0)
-                    {
-                        return BadRequest(ApiResponseFactory.Fail(null, "Không thể phê duyệt: Còn quy tắc bắt buộc chưa hoàn thành hoặc chưa được phê duyệt tệp."));
-                    }
-                }
-
-                await _stepLinkRepo.UpdateAsync(link);
-                return Ok(ApiResponseFactory.Success(true, "Phê duyệt công đoạn thành công"));
-            }
-            catch (Exception ex)
-            {
-                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
-            }
-        }
-
         [HttpPost("Reject/{linkId}")]
         public async Task<IActionResult> Reject(int linkId, [FromBody] string? comment)
         {
@@ -713,7 +677,9 @@ namespace RERPAPI.Controllers.Project
         /// Nếu IsApproved=true và ForceApprove=false: kiểm tra checklist TBP chưa duyệt trước,
         /// nếu có thì trả về HasPendingTBP=true để frontend hỏi người dùng.
         /// </summary>
+
         [HttpPost("ApproveMultiple")]
+        [RequiresPermission("N110")]
         public async Task<IActionResult> ApproveMultiple([FromBody] ApproveMultipleDto request)
         {
             try
