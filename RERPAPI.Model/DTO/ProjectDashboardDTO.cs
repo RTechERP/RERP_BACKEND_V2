@@ -33,6 +33,10 @@ namespace RERPAPI.Model.DTO
         public string ProjectStatusText { get; set; } = "";
         public DateTime CreatedDate { get; set; }
         public DateTime? ExpectedPlanDate { get; set; }
+        public DateTime? ProjectExpectedPlanDate { get; set; }
+        public DateTime? ExpectedQuotationDate { get; set; }
+        public DateTime? ExpectedProjectEndDate { get; set; }
+        public DateTime? RealityPlanDate { get; set; }
         public DateTime? RealityProjectEndDate { get; set; }
         public int DepartmentID { get; set; }
         public string DepartmentName { get; set; } = "";
