@@ -115,7 +115,7 @@ namespace RERPAPI.Controllers.Old
                     return Ok(ApiResponseFactory.Success(null, null));
                 }
 
-                if (!_supplierSaleRepo.Validate(supplierSale, out string message))
+                if (!_supplierSaleRepo.Validate(supplierSale, out string message, out string warningMessage))
                 {
                     return BadRequest(ApiResponseFactory.Fail(null, message));
                 }
@@ -152,7 +152,10 @@ namespace RERPAPI.Controllers.Old
                     await _supplierSaleRepo.UpdateAsync(supplierSale);
                 }
 
-                return Ok(ApiResponseFactory.Success(supplierSale.ID, "Lưu thành công"));
+                string successMessage = string.IsNullOrWhiteSpace(warningMessage)
+                    ? "Lưu thành công"
+                    : $"Lưu thành công. {warningMessage}";
+                return Ok(ApiResponseFactory.Success(supplierSale.ID, successMessage));
             }
             catch (Exception ex)
             {
