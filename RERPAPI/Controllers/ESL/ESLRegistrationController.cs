@@ -149,7 +149,7 @@ namespace RERPAPI.Controllers.ESL
 
                 var param = new
                 {
-                    @Permistion = "N1,N32"
+                    @Permistion = "N1,N32,N85"
                 };
                 var result = await SqlDapper<object>.ProcedureToListTAsync("spGetTBPApprove", param);
                 return Ok(ApiResponseFactory.Success(new
