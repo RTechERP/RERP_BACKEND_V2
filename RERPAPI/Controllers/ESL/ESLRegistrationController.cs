@@ -333,6 +333,8 @@ namespace RERPAPI.Controllers.ESL
                 var detailExit = _detailRepo.GetAll(x => x.RegistrationID == masterID && x.IsDeleted != true);
                 if (detailExit == null || detailExit.Count() <= 0) return Ok(ApiResponseFactory.Fail(null, "Bản demo chi tiết không tồn tại"));
 
+                if (detailExit.Any(x => x.Status == 1)) return Ok(ApiResponseFactory.Fail(null, "Đăng ký đã được duyệt, không thể xóa"));
+
                 masterExist.IsDeleted = true;
 
                 _registrationRepo.Update(masterExist);
@@ -368,6 +370,8 @@ namespace RERPAPI.Controllers.ESL
 
                 var detailExit = _detailRepo.GetByID(detailID);
                 if (detailExit == null || detailExit.ID <= 0) return Ok(ApiResponseFactory.Fail(null, "Bản demo chi tiết không tồn tại"));
+
+                if (detailExit.Status == 1) return Ok(ApiResponseFactory.Fail(null, "Bản ghi đã được duyệt, không thể xóa"));
 
                 detailExit.IsDeleted = true;
                 _detailRepo.Update(detailExit);
@@ -470,7 +474,7 @@ namespace RERPAPI.Controllers.ESL
             }
         }
 
-        [RequiresPermission("N1,N32")]
+        [RequiresPermission("N1,N32,N85")]
         [HttpPost("approve")]
         public async Task<IActionResult> Approve([FromBody] ESLApproveRequest request)
         {
