@@ -1087,7 +1087,7 @@ namespace RERPAPI.Controllers.HRM.JobPerfomanceEvaluation
                     if (req.IsApprove == 1) // DUYỆT
                     {
                         record.StatusApprove = 1;
-                        record.StepName = info.curName + ": Xác nhận";
+                        record.StepName = info.cur == 4 ? "BGĐ: Phê duyệt" : info.curName + ": Xác nhận";
                         record.DateApproved = DateTime.Now;
                         record.ReasonUnApproved = null;
                         await _jobPerfomanceEvaluationApproveRepo.UpdateAsync(record);
