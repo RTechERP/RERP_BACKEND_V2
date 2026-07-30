@@ -440,6 +440,10 @@ public partial class RTCContext : DbContext
 
     public virtual DbSet<ExamTypeTest> ExamTypeTests { get; set; }
 
+    public virtual DbSet<ExpectedPayable> ExpectedPayables { get; set; }
+
+    public virtual DbSet<ExpectedPayableLog> ExpectedPayableLogs { get; set; }
+
     public virtual DbSet<FcmToken> FcmTokens { get; set; }
 
     public virtual DbSet<FilmManagement> FilmManagements { get; set; }
@@ -5590,6 +5594,60 @@ public partial class RTCContext : DbContext
                 .HasMaxLength(50)
                 .IsUnicode(false);
             entity.Property(e => e.TypeName).HasMaxLength(50);
+        });
+
+        modelBuilder.Entity<ExpectedPayable>(entity =>
+        {
+            entity.HasKey(e => e.ID).HasName("PK__Expected__3214EC2701A6FA8D");
+
+            entity.ToTable("ExpectedPayable");
+
+            entity.Property(e => e.ArisingAmount)
+                .HasComment("Tiền hàng phát sinh")
+                .HasColumnType("decimal(18, 2)");
+            entity.Property(e => e.BillImportID).HasComment("Id phiếu nhập");
+            entity.Property(e => e.CurrencyID).HasComment("Loại tiền");
+            entity.Property(e => e.DeliverID).HasComment("Nhân viên mua/ người giao");
+            entity.Property(e => e.DomesticPayable)
+                .HasComment("Công nợ trong nước")
+                .HasColumnType("decimal(18, 2)");
+            entity.Property(e => e.DueDate)
+                .HasComment("Ngày tới hạn")
+                .HasColumnType("datetime");
+            entity.Property(e => e.ForeignPayable)
+                .HasComment("Công nợ nước ngoài")
+                .HasColumnType("decimal(18, 2)");
+            entity.Property(e => e.InvoiceDate)
+                .HasComment("Ngày hóa đơn")
+                .HasColumnType("datetime");
+            entity.Property(e => e.InvoiceNumber)
+                .HasMaxLength(255)
+                .HasComment("Số hóa đơn");
+            entity.Property(e => e.Note).HasMaxLength(255);
+            entity.Property(e => e.OfficeExpense)
+                .HasComment("Chi phí văn phòng")
+                .HasColumnType("decimal(18, 2)");
+            entity.Property(e => e.PaymentPercentage)
+                .HasComment("% Thanh toán")
+                .HasColumnType("decimal(18, 2)");
+            entity.Property(e => e.SupplierSaleID).HasComment("ID nhà cung cấp");
+            entity.Property(e => e.TaxAmount)
+                .HasComment("Tiền thuế")
+                .HasColumnType("decimal(18, 2)");
+            entity.Property(e => e.UnitPrice)
+                .HasComment("Đơn giá")
+                .HasColumnType("decimal(18, 2)");
+        });
+
+        modelBuilder.Entity<ExpectedPayableLog>(entity =>
+        {
+            entity.HasKey(e => e.ID).HasName("PK__Expected__3214EC27AF7F54BF");
+
+            entity.ToTable("ExpectedPayableLog");
+
+            entity.Property(e => e.CreatedBy).HasMaxLength(255);
+            entity.Property(e => e.CreatedDate).HasColumnType("datetime");
+            entity.Property(e => e.TypeLog).HasMaxLength(255);
         });
 
         modelBuilder.Entity<FcmToken>(entity =>
