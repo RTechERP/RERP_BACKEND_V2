@@ -1831,7 +1831,10 @@ namespace RERPAPI.Controllers.KPISale
                         target.CreatedBy,
                         target.CreatedDate,
                         target.UpdatedBy,
-                        target.UpdatedDate
+                        target.UpdatedDate,
+                        target.IsBoardApproved,
+                        target.BoardApprovedBy,
+                        target.BoardApprovedDate
                     };
 
                 if (employeeId.HasValue)
@@ -1880,7 +1883,10 @@ namespace RERPAPI.Controllers.KPISale
                         x.CreatedBy,
                         x.CreatedDate,
                         x.UpdatedBy,
-                        x.UpdatedDate
+                        x.UpdatedDate,
+                        x.IsBoardApproved,
+                        x.BoardApprovedBy,
+                        x.BoardApprovedDate
                     })
                     .OrderBy(x => x.ParentPeriodCode)
                     .ThenBy(x => x.PeriodID)
