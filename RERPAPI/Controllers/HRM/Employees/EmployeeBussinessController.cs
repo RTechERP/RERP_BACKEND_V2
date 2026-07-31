@@ -385,6 +385,25 @@ namespace RERPAPI.Controllers.HRM.Employees
             }
         }
 
+        // NXL Update 27/07/2026: Lấy danh sách phiếu đặt xe trong ngày công tác cho combobox (Phòng Sale)
+        [HttpGet("get-vehicle-bookings-for-bussiness")]
+        public IActionResult GetVehicleBookingsForBussiness(int employeeId, DateTime dateStart, DateTime dateEnd)
+        {
+            try
+            {
+                var arrParamName = new string[] { "@EmployeeID", "@DateStart", "@DateEnd" };
+                var arrParamValue = new object[] { employeeId, dateStart, dateEnd };
+                var vehicleBookings = SQLHelper<object>.ProcedureToList("spGetVehicleBookingForBussiness", arrParamName, arrParamValue);
+
+                var result = SQLHelper<object>.GetListData(vehicleBookings, 0);
+                return Ok(ApiResponseFactory.Success(result, ""));
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
+            }
+        }
+
         [HttpGet("get-by-id")]
         public IActionResult GetByID(int id)
         {
