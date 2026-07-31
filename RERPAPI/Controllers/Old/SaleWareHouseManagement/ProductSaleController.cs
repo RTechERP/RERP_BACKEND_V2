@@ -696,7 +696,7 @@ namespace RERPAPI.Controllers.Old.SaleWareHouseManagement
                     CreatedBy = currentUser.LoginName,
                     CreatedDate = now,
                     IsDeleted = false,
-                    
+
                     DeliveryTime = DateTime.Now,
                     IsAfterHours = currentTime < TimeSpan.FromHours(8) || currentTime >= TimeSpan.FromHours(16)
                 };
@@ -765,7 +765,7 @@ namespace RERPAPI.Controllers.Old.SaleWareHouseManagement
                     Deliver = model.DeliverImportText,
                     Reciver = model.ReciverImportText,
                     KhoType = model.ProductGroupText,
-                    
+
                 };
 
                 await _billImportRepo.CreateAsync(billImport);
@@ -917,7 +917,7 @@ namespace RERPAPI.Controllers.Old.SaleWareHouseManagement
                             details
                                 .Select(x => pokhDict.TryGetValue((int)x.POKHID, out var code) ? code : "")
                                 .Where(x => !string.IsNullOrWhiteSpace(x))
-                                .Distinct());   
+                                .Distinct());
                     }
 
                     tableRows.Append($@"
@@ -1039,6 +1039,23 @@ namespace RERPAPI.Controllers.Old.SaleWareHouseManagement
             }
         }
 
+        [HttpGet("infor-by-product-code")]
+        public IActionResult getInforProduct(string productCode)
+        {
+            try
+            {
+                string code = productCode.Trim();
+                var product = _productsaleRepo.GetAll(x => x.ProductCode.Equals(code)).FirstOrDefault();
 
+                if (product == null) 
+                    return BadRequest(ApiResponseFactory.Fail(null, "Không tìm thấy thông tin sản phẩm/ sản phẩm không tồn tại!"));
+
+                return Ok(ApiResponseFactory.Success(product, "Lấy dữ liệu thành công!"));
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
+            }
+        }
     }
 }
