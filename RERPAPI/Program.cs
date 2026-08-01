@@ -740,6 +740,8 @@ builder.Services.AddScoped<SalaryIncreaseDetailRepo>();
 builder.Services.AddScoped<HotelBookingEmployeeRepo>();
 builder.Services.AddScoped<TravelRegistrationRepo>();
 builder.Services.AddScoped<BillExportDetailFilesRepo>();
+builder.Services.AddScoped<ExpectedPayableRepo>();
+
 #region DI LOG
 
 builder.Services.AddScoped<POKHLogRepo>();
@@ -758,6 +760,8 @@ builder.Services.AddScoped<ProjectPartListHistoryLogRepo>();
 builder.Services.AddScoped<InventoryStockLogRepo>();
 builder.Services.AddScoped<ProductSaleImportExportLogRepo>();
 builder.Services.AddScoped<ProductRTCFileRepo>();
+builder.Services.AddScoped<ExpectedPayableLogRepo>();
+
 #endregion DI LOG
 
 //Config connect databaseCourse
