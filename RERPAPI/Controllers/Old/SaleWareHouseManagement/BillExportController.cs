@@ -1586,7 +1586,7 @@ namespace RERPAPI.Controllers.Old.SaleWareHouseManagement
                 string message = "";
                 BillExport billExp = _billexportRepo.GetByID(id);
 
-                var pathStaticFile = _configSystemRepo.GetUploadPathByKey("EmployeeSignature");
+                var pathStaticFile = _configSystemRepo.GetUploadPathByKey("SIGNATURE_PATH");
                 if (string.IsNullOrWhiteSpace(pathStaticFile))
                     return BadRequest(ApiResponseFactory.Fail(null, $"Không tìm thấy cấu hình đường dẫn cho key: EmployeeSignature"));
 

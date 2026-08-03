@@ -343,7 +343,7 @@ namespace RERPAPI.Controllers.HRM
 
                 var file = fileSignature.File;
 
-                var uploadPath = _configSystemRepo.GetUploadPathByKey("EmployeeSignature");
+                var uploadPath = _configSystemRepo.GetUploadPathByKey("SIGNATURE_PATH");
                 if (string.IsNullOrWhiteSpace(uploadPath))
                     return BadRequest(ApiResponseFactory.Fail(null, $"Không tìm thấy cấu hình đường dẫn cho key: EmployeeSignature"));
 
