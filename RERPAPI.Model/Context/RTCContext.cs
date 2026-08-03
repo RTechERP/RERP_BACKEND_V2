@@ -172,6 +172,8 @@ public partial class RTCContext : DbContext
 
     public virtual DbSet<BookingRoomLog> BookingRoomLogs { get; set; }
 
+    public virtual DbSet<BusinessConfig> BusinessConfigs { get; set; }
+
     public virtual DbSet<BusinessField> BusinessFields { get; set; }
 
     public virtual DbSet<BusinessFieldLink> BusinessFieldLinks { get; set; }
@@ -2844,6 +2846,18 @@ public partial class RTCContext : DbContext
             entity.Property(e => e.CreatedDate).HasColumnType("datetime");
             entity.Property(e => e.DateLog).HasColumnType("datetime");
             entity.Property(e => e.UpdatedBy).HasMaxLength(150);
+            entity.Property(e => e.UpdatedDate).HasColumnType("datetime");
+        });
+
+        modelBuilder.Entity<BusinessConfig>(entity =>
+        {
+            entity.HasKey(e => e.ID).HasName("PK__Business__3214EC27AC432401");
+
+            entity.ToTable("BusinessConfig");
+
+            entity.Property(e => e.CreatedBy).HasMaxLength(50);
+            entity.Property(e => e.CreatedDate).HasColumnType("datetime");
+            entity.Property(e => e.UpdatedBy).HasMaxLength(50);
             entity.Property(e => e.UpdatedDate).HasColumnType("datetime");
         });
 
