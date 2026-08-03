@@ -1728,6 +1728,76 @@ namespace RERPAPI.Controllers.Old.SaleWareHouseManagement
                 });
             }
         }
+
+        [HttpPost("status-preparing")]
+        [RequiresPermission("N32")]
+        public async Task<IActionResult> updateStatusPreparing([FromBody] List<BillExport> billexports)
+        {
+            try
+            {
+                var claims = User.Claims.ToDictionary(x => x.Type, x => x.Value);
+                var currentUser = ObjectMapper.GetCurrentUser(claims);
+
+                var ids = billexports.Select(x => x.ID).ToList();
+                var dict = billexports.ToDictionary(x => x.ID);
+
+                var billexps = _billexportRepo
+                    .GetAll(x => ids.Contains(x.ID));
+
+                foreach (var item in billexps)
+                {
+                    item.IsOrderPrepared = dict[item.ID].IsOrderPrepared;
+                    item.OrderPreparedID = currentUser.ID;
+                }
+
+                await _billexportRepo.UpdateRangeAsync_Binh(billexps);
+
+                return Ok(new
+                {
+                    status = 1,
+                    data = ""
+                });
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
+            }
+        }
+
+        [HttpPost("status-receive")]
+        [RequiresPermission("N32")]
+        public async Task<IActionResult> updateStatusReceive([FromBody] List<BillExport> billexports)
+        {
+            try
+            {
+                var claims = User.Claims.ToDictionary(x => x.Type, x => x.Value);
+                var currentUser = ObjectMapper.GetCurrentUser(claims);
+
+                var ids = billexports.Select(x => x.ID).ToList();
+                var dict = billexports.ToDictionary(x => x.ID);
+
+                var billexps = _billexportRepo
+                    .GetAll(x => ids.Contains(x.ID));
+
+                foreach (var item in billexps)
+                {
+                    item.IsOrderReceived = dict[item.ID].IsOrderReceived;
+                    item.OrderReceivedID = currentUser.ID;
+                }
+
+                await _billexportRepo.UpdateRangeAsync_Binh(billexps);
+
+                return Ok(new
+                {
+                    status = 1,
+                    data = ""
+                });
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
+            }
+        }
         #endregion
     }
 }
