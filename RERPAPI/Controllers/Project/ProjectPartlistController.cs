@@ -1143,39 +1143,51 @@ namespace RERPAPI.Controllers.Project
                     var partlistOld = _projectPartlistRepo.GetSingleNoTracking(x => x.ID == partList.ID);
                     if (partlistOld == null) return BadRequest(ApiResponseFactory.Fail(null, "Không tìm thấy dữ liệu!"));
 
-                    // Nếu chuyển sang IsProblem = true → INSERT new record
-                    if (partList.IsProblem == true && partlistOld.IsProblem != true)
+                    //// Nếu chuyển sang IsProblem = true → INSERT new record
+                    //if (partList.IsProblem == true && partlistOld.IsProblem != true)
+                    //{
+                    //    partList.ID = 0;
+                    //    partList.IsApprovedPurchase = false;
+                    //    partList.IsApprovedTBP = false;
+                    //    partList.StatusPriceRequest = 0;
+                    //    partList.DatePriceRequest = null;
+                    //    partList.DeadlinePriceRequest = null;
+                    //    partList.RequestDate = null;
+                    //    partList.ExpectedReturnDate = null;
+                    //    partList.Status = 2;
+                    //    await _projectPartlistRepo.CreateAsync(partList);
+                    //    try
+                    //    {
+                    //        await _partListLogRepo.AddLog(partList.ID, "Thêm mới", $"[{currentUser.FullName}] đã thêm mới vật tư sự cố TT [{partList.TT}] - Mã [{partList.ProductCode}]", currentUser.LoginName, currentUser.EmployeeID, partList.ProjectID, partList.ProjectPartListVersionID);
+                    //    }
+                    //    catch { }
+                    //}
+                    //else
+                    //{
+                    //    await _projectPartlistRepo.UpdateAsync(partList);
+                    //    await UpdateRequestQuoteAsync(partList, partlistOld, currentUser);
+                    //    try
+                    //    {
+                    //        var diff = _partListLogRepo.BuildPartListDiff(partlistOld, partList);
+                    //        if (!string.IsNullOrEmpty(diff))
+                    //        {
+                    //            await _partListLogRepo.AddLog(partList.ID, "Cập nhật", $"[{currentUser.FullName}] đã cập nhật vật tư TT \nChi tiết thay đổi:\n{diff}", currentUser.LoginName, currentUser.EmployeeID, partList.ProjectID, partList.ProjectPartListVersionID);
+                    //        }
+                    //    }
+                    //    catch { }
+                    //}
+
+                    await _projectPartlistRepo.UpdateAsync(partList);
+                    await UpdateRequestQuoteAsync(partList, partlistOld, currentUser);
+                    try
                     {
-                        partList.ID = 0;
-                        partList.IsApprovedPurchase = false;
-                        partList.IsApprovedTBP = false;
-                        partList.StatusPriceRequest = 0;
-                        partList.DatePriceRequest = null;
-                        partList.DeadlinePriceRequest = null;
-                        partList.RequestDate = null;
-                        partList.ExpectedReturnDate = null;
-                        partList.Status = 2;
-                        await _projectPartlistRepo.CreateAsync(partList);
-                        try
+                        var diff = _partListLogRepo.BuildPartListDiff(partlistOld, partList);
+                        if (!string.IsNullOrEmpty(diff))
                         {
-                            await _partListLogRepo.AddLog(partList.ID, "Thêm mới", $"[{currentUser.FullName}] đã thêm mới vật tư sự cố TT [{partList.TT}] - Mã [{partList.ProductCode}]", currentUser.LoginName, currentUser.EmployeeID, partList.ProjectID, partList.ProjectPartListVersionID);
+                            await _partListLogRepo.AddLog(partList.ID, "Cập nhật", $"[{currentUser.FullName}] đã cập nhật vật tư TT \nChi tiết thay đổi:\n{diff}", currentUser.LoginName, currentUser.EmployeeID, partList.ProjectID, partList.ProjectPartListVersionID);
                         }
-                        catch { }
                     }
-                    else
-                    {
-                        await _projectPartlistRepo.UpdateAsync(partList);
-                        await UpdateRequestQuoteAsync(partList, partlistOld, currentUser);
-                        try
-                        {
-                            var diff = _partListLogRepo.BuildPartListDiff(partlistOld, partList);
-                            if (!string.IsNullOrEmpty(diff))
-                            {
-                                await _partListLogRepo.AddLog(partList.ID, "Cập nhật", $"[{currentUser.FullName}] đã cập nhật vật tư TT \nChi tiết thay đổi:\n{diff}", currentUser.LoginName, currentUser.EmployeeID, partList.ProjectID, partList.ProjectPartListVersionID);
-                            }
-                        }
-                        catch { }
-                    }
+                    catch { }
                 }
                 return Ok(ApiResponseFactory.Success(null, ""));
             }
