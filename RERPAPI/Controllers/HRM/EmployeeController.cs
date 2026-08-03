@@ -4,7 +4,11 @@ using RERPAPI.Attributes;
 using RERPAPI.Model.Common;
 using RERPAPI.Model.DTO;
 using RERPAPI.Model.DTO.HRM;
+using RERPAPI.Model.Entities;
 using RERPAPI.Repo.GenericEntity;
+using RERPAPI.Repo.GenericEntity.AddNewBillExport;
+using System.Net.Mime;
+using ZXing;
 
 namespace RERPAPI.Controllers.HRM
 {
@@ -19,8 +23,19 @@ namespace RERPAPI.Controllers.HRM
         private CurrentUser _currentUser;
         private readonly EmployeeApprovedRepo _approvedRepo;
         private readonly TaxCompanyRepo _taxCompanyRepo;
+        private readonly EmployeeSignatureFileRepo _employeeSignatureFileRepo;
+        private readonly ConfigSystemRepo _configSystemRepo;
 
-        public EmployeeController(IConfiguration configuration, EmployeeRepo employeeRepo, vUserGroupLinksRepo vUserGroupLinksRepo, CurrentUser currentUser, EmployeeApprovedRepo approvedRepo, TaxCompanyRepo taxCompanyRepo)
+        public EmployeeController(
+            IConfiguration configuration,
+            EmployeeRepo employeeRepo,
+            vUserGroupLinksRepo vUserGroupLinksRepo,
+            CurrentUser currentUser,
+            EmployeeApprovedRepo approvedRepo,
+            TaxCompanyRepo taxCompanyRepo,
+            EmployeeSignatureFileRepo employeeSignatureFileRepo,
+            ConfigSystemRepo configSystemRepo
+            )
         {
             _configuration = configuration;
             _employeeRepo = employeeRepo;
@@ -28,6 +43,8 @@ namespace RERPAPI.Controllers.HRM
             _currentUser = currentUser;
             _approvedRepo = approvedRepo;
             _taxCompanyRepo = taxCompanyRepo;
+            _employeeSignatureFileRepo = employeeSignatureFileRepo;
+            _configSystemRepo = configSystemRepo;
         }
 
         [HttpGet("employees")]
@@ -246,5 +263,156 @@ namespace RERPAPI.Controllers.HRM
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
+
+        #region API xử lý ảnh chữ ký cá nhân
+        [HttpGet("signature")]
+        public IActionResult GetSignature()
+        {
+            try
+            {
+                var claims = User.Claims.ToDictionary(x => x.Type, x => x.Value);
+                var currentUser = ObjectMapper.GetCurrentUser(claims);
+
+                var signature = _employeeSignatureFileRepo.GetAll(
+                    x => x.EmployeeID == currentUser.EmployeeID &&
+                         x.IsDeleted == false)
+                    .FirstOrDefault();
+
+                string path = signature != null ? Path.Combine(signature.ServerPath, signature.FileName) : null;
+
+                if (string.IsNullOrEmpty(path))
+                    return BadRequest("File path is required.");
+
+                if (!System.IO.File.Exists(path))
+                    return NotFound("File not found.");
+
+                var fileName = Path.GetFileName(path);
+
+                var fileBytes = System.IO.File.ReadAllBytes(path);
+
+                var contentType = GetContentType(path);
+
+                return File(fileBytes, contentType, fileName);
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
+            }
+        }
+
+        [HttpPost("delete-signature")]
+        public async Task<IActionResult> DeleteBillExport()
+        {
+            try
+            {
+                var claims = User.Claims.ToDictionary(x => x.Type, x => x.Value);
+                var currentUser = ObjectMapper.GetCurrentUser(claims);
+
+                var rs = _employeeSignatureFileRepo
+                    .GetAll(x => x.EmployeeID == currentUser.EmployeeID && x.IsDeleted == false)
+                    .FirstOrDefault();
+
+                if (rs == null) return BadRequest(ApiResponseFactory.Fail(null, "Không tìm thấy chữ ký"));
+                else
+                {
+                    rs.IsDeleted = true;
+                    await _employeeSignatureFileRepo.UpdateAsync(rs);
+                }
+
+                return Ok(ApiResponseFactory.Success(null, "Xóa file thành công"));
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
+            }
+        }
+
+        [HttpPost("upload-signature")]
+        [DisableRequestSizeLimit]
+        public async Task<IActionResult> UploadMultiple([FromForm] UploadSignatureRequest fileSignature)
+        {
+            try
+            {
+                if (fileSignature == null)
+                {
+                    return Ok(new { status = 0, message = "Không có file nào để tải lên." });
+                }
+
+                var claims = User.Claims.ToDictionary(x => x.Type, x => x.Value);
+                var currentUser = ObjectMapper.GetCurrentUser(claims);
+
+                var file = fileSignature.File;
+
+                var uploadPath = _configSystemRepo.GetUploadPathByKey("EmployeeSignature");
+                if (string.IsNullOrWhiteSpace(uploadPath))
+                    return BadRequest(ApiResponseFactory.Fail(null, $"Không tìm thấy cấu hình đường dẫn cho key: EmployeeSignature"));
+
+                var fileExtension = Path.GetExtension(file.FileName);
+                var uniqueFileName = $"{currentUser.Code}{fileExtension}";
+                var fullPath = Path.Combine(uploadPath, uniqueFileName);
+
+                var checkExistsFile = _employeeSignatureFileRepo.GetAll(x => x.EmployeeID == currentUser.EmployeeID && x.IsDeleted == true).FirstOrDefault();
+                if (checkExistsFile != null)
+                {
+                    using (var stream = new FileStream(fullPath, FileMode.Create))
+                    {
+                        await file.CopyToAsync(stream);
+                    }
+
+                    checkExistsFile.FileName = uniqueFileName;
+                    checkExistsFile.ServerPath = uploadPath;
+                    checkExistsFile.OriginPath = uploadPath;
+                    checkExistsFile.IsDeleted = false;
+                    checkExistsFile.EmployeeID = currentUser.EmployeeID;
+
+                    await _employeeSignatureFileRepo.UpdateAsync(checkExistsFile);
+                    return Ok(ApiResponseFactory.Success(null, "Tải file lên thành công"));
+                }
+
+                using (var stream = new FileStream(fullPath, FileMode.Create))
+                {
+                    await file.CopyToAsync(stream);
+                }
+
+                var fileUpload = new EmployeeSignatureFile
+                {
+                    FileName = uniqueFileName,
+                    OriginPath = uploadPath,
+                    ServerPath = uploadPath,
+                    IsDeleted = false,
+                    EmployeeID = currentUser.EmployeeID
+                };
+
+                await _employeeSignatureFileRepo.CreateAsync(fileUpload);
+
+                return Ok(ApiResponseFactory.Success(null, "Tải file lên thành công"));
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
+            }
+        }
+
+        private string GetContentType(string path)
+        {
+            var ext = Path.GetExtension(path).ToLowerInvariant();
+            return ext switch
+            {
+                ".txt" => MediaTypeNames.Text.Plain,
+                ".pdf" => MediaTypeNames.Application.Pdf,
+                ".xlsx" => "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+                ".xls" => "application/vnd.ms-excel",
+                ".csv" => "text/csv",
+                ".jpg" or ".jpeg" => "image/jpeg",
+                ".png" => "image/png",
+                _ => MediaTypeNames.Application.Octet
+            };
+        }
+
+        public class UploadSignatureRequest
+        {
+            public IFormFile File { get; set; }
+        }
+        #endregion
     }
 }
