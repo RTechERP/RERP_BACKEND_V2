@@ -136,4 +136,12 @@ public partial class BillExport
     public bool? IsIncurredApproved { get; set; }
 
     public int? IncurredApprovedID { get; set; }
+
+    public bool IsOrderPrepared { get; set; }
+
+    public bool IsOrderReceived { get; set; }
+
+    public int? OrderPreparedID { get; set; }
+
+    public int? OrderReceivedID { get; set; }
 }
