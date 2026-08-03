@@ -10,6 +10,7 @@ namespace RERPAPI.Model.Context
     public partial class RTCContext
     {
         public CurrentUser CurrentUser { get; set; } = new CurrentUser();
+        public virtual DbSet<ProjectGateStepForm> ProjectGateStepForm { get; set; }
 
         public RTCContext()
         {

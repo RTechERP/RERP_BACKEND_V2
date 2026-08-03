@@ -262,6 +262,7 @@ builder.Services.AddScoped<ProjectGateStepCheckListLinkRepo>();
 builder.Services.AddScoped<ProjectGateStepCheckListDetailLinkRepo>();
 builder.Services.AddScoped<ProjectGateStepCheckListDetailRepo>();
 builder.Services.AddScoped<ProjectGateStepFileRepo>();
+builder.Services.AddScoped<ProjectGateStepFormRepo>();
 builder.Services.AddScoped<ProjectWorkerTypeRepo>();
 builder.Services.AddScoped<ProjectWorkerVersionRepo>();
 builder.Services.AddScoped<ProvinceRepo>();
@@ -767,6 +768,7 @@ builder.Services.AddScoped<ProjectGateStepCheckListDetailLinkRepo>();
 builder.Services.AddScoped<ProjectGateStepCheckListDetailRepo>();
 builder.Services.AddScoped<ProjectGateStepFileRepo>();
 builder.Services.AddScoped<ProjectGateCheckListTypeRepo>();
+builder.Services.AddScoped<FileFormatRepo>();
 #region DI LOG
 
 builder.Services.AddScoped<POKHLogRepo>();

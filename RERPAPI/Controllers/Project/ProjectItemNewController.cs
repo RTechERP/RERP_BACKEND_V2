@@ -1,4 +1,4 @@
-﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using RERPAPI.Model.Common;
 using RERPAPI.Model.DTO;
@@ -80,6 +80,20 @@ namespace RERPAPI.Controllers.Project
                 return Ok(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
+        [HttpGet("get-child-project-item-code")]
+        public IActionResult GetChildProjectItemCode([FromQuery] int parentId)
+        {
+            try
+            {
+                string newCode = _projectItemRepo.GenerateChildProjectItemCode(parentId);
+                return Ok(ApiResponseFactory.Success(newCode, ""));
+            }
+            catch (Exception ex)
+            {
+                return Ok(ApiResponseFactory.Fail(ex, ex.Message));
+            }
+        }
+
         // Hàm upload file
         [HttpPost("upload")]
         public IActionResult Upload(IFormFile file)
@@ -288,7 +302,7 @@ namespace RERPAPI.Controllers.Project
                         if (item.ID <= 0)
                         {
                             item.STT = _projectItemRepo.GetMaxSTT(item.ProjectID);
-                            item.UserID = currentUser.ID;
+                            if (item.UserID == null || item.UserID <= 0) item.UserID = currentUser.ID;
                             item.ItemLate = 0;
                             _projectItemRepo.CalculateDays(item);
                             if (item.ActualEndDate.HasValue) item.IsApproved = 2;

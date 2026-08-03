@@ -21,6 +21,7 @@ namespace RERPAPI.Model.DTO
         public string? Content { get; set; }
         public List<ProjectGateStepWorkerDto> Workers { get; set; }
         public List<ProjectGateStepCheckListLinkDto> CheckLists { get; set; }
+        public List<ProjectGateStepFormDto> Forms { get; set; } = new();
         public bool? IsApproved { get; set; }
         public string? ApprovedBy { get; set; }
         public DateTime? ApprovedDate { get; set; }
@@ -200,5 +201,30 @@ namespace RERPAPI.Model.DTO
     public class ProjectGateStepPendingCheckDto
     {
         public int PendingCount { get; set; }
+    }
+
+    public class ProjectGateStepFormResultDto
+    {
+        public int ProjectGateStepLinkID { get; set; }
+        public int ID { get; set; }
+        public int ProjectGateStepID { get; set; }
+        public int? STT { get; set; }
+        public string FormName { get; set; } = string.Empty;
+        public string? FileName { get; set; }
+        public string? FilePath { get; set; }
+        public long? FileSize { get; set; }
+        public string? Description { get; set; }
+    }
+
+    public class ProjectGateStepFormDto
+    {
+        public int ID { get; set; }
+        public int ProjectGateStepID { get; set; }
+        public int? STT { get; set; }
+        public string FormName { get; set; } = string.Empty;
+        public string? FileName { get; set; }
+        public string? FilePath { get; set; }
+        public long? FileSize { get; set; }
+        public string? Description { get; set; }
     }
 }

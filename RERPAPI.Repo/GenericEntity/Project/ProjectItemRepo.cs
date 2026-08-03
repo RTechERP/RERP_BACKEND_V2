@@ -1,4 +1,4 @@
-﻿using RERPAPI.Model.Common;
+using RERPAPI.Model.Common;
 using RERPAPI.Model.DTO;
 using RERPAPI.Model.Entities;
 using System.Data.Entity.Core.Common.CommandTrees.ExpressionBuilder;
@@ -26,6 +26,34 @@ namespace RERPAPI.Repo.GenericEntity.Project
                 }
 
                 string newCode = $"{project.ProjectCode}_{projectItem.Count + 1}";
+                return newCode;
+            }
+            catch (Exception ex)
+            {
+                throw new Exception($"Lỗi: {ex.Message}\r\n{ex.ToString()}");
+            }
+        }
+
+
+
+        public string GenerateProjectItemCodeByGateStepLink(int projectId, string gateCode)
+        {
+            try
+            {
+                var project = _projectRepo.GetByID(projectId);
+                if (project == null || project.ID <= 0)
+                {
+                    throw new Exception($"Không có Project nào có ID là :{projectId}");
+                }
+
+                string prefix = string.IsNullOrWhiteSpace(gateCode)
+                    ? $"{project.ProjectCode}_"
+                    : $"{project.ProjectCode}_{gateCode.Trim()}_";
+
+                var projectItem = GetAll(x => x.ProjectID == projectId)
+                    .Where(x => (x.Code ?? "").StartsWith(prefix));
+
+                string newCode = $"{prefix}{projectItem.Count() + 1}";
                 return newCode;
             }
             catch (Exception ex)
@@ -65,7 +93,8 @@ namespace RERPAPI.Repo.GenericEntity.Project
             try
             {
                 var projectTask = GetByID(projectTaskID);
-                string prefix = projectTask.Code + ".";
+                if (projectTask == null || string.IsNullOrEmpty(projectTask.Code)) return string.Empty;
+                string prefix = projectTask.Code.Trim() + ".";
 
                 int count = GetAll()
                     .Where(x =>

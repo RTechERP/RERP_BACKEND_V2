@@ -32,6 +32,8 @@ namespace RERPAPI.Controllers.Project
         private readonly ProjectGateStepCheckListDetailLinkRepo _stepCheckListDetailLinkRepo;
         private readonly ProjectGateStepCheckListDetailRepo _stepCheckListDetailRepo;
         private readonly ProjectGateStepCheckListLinkRepo _stepCheckListLinkRepo;
+        private readonly ProjectGateStepRepo _stepRepo;
+        private readonly ProjectGateRepo _gateRepo;
 
         public ProjectGateStepLinkController(
             ProjectGateStepLinkRepo stepLinkRepo,
@@ -44,7 +46,9 @@ namespace RERPAPI.Controllers.Project
             CurrentUser currentUser,
             ProjectGateStepCheckListDetailLinkRepo stepCheckListDetailLinkRepo,
             ProjectGateStepCheckListDetailRepo stepCheckListDetailRepo,
-            ProjectGateStepCheckListLinkRepo stepCheckListLinkRepo)
+            ProjectGateStepCheckListLinkRepo stepCheckListLinkRepo,
+            ProjectGateStepRepo stepRepo,
+            ProjectGateRepo gateRepo)
         {
             _stepLinkRepo = stepLinkRepo;
             _stepWorkerRepo = stepWorkerRepo;
@@ -57,7 +61,8 @@ namespace RERPAPI.Controllers.Project
             _stepCheckListDetailLinkRepo = stepCheckListDetailLinkRepo;
             _stepCheckListDetailRepo = stepCheckListDetailRepo;
             _stepCheckListLinkRepo = stepCheckListLinkRepo;
-
+            _stepRepo = stepRepo;
+            _gateRepo = gateRepo;
         }
 
         [HttpPost("Save")]
@@ -93,6 +98,17 @@ namespace RERPAPI.Controllers.Project
                 {
                     foreach (var step in request.Steps)
                     {
+                        string gateCode = "";
+                        var gateStep = _stepRepo.GetByID(step.ProjectGateStepID);
+                        if (gateStep != null && gateStep.ProjectGateID.HasValue)
+                        {
+                            var gate = _gateRepo.GetByID(gateStep.ProjectGateID.Value);
+                            if (gate != null && !string.IsNullOrEmpty(gate.GateCode))
+                            {
+                                gateCode = gate.GateCode;
+                            }
+                        }
+
                         // Tìm link tương ứng hiện có trong DB
                         var matchingLink = existingLinks.FirstOrDefault(l =>
                             l.ProjectTypeID == step.ProjectTypeID &&
@@ -188,7 +204,7 @@ namespace RERPAPI.Controllers.Project
                                         Deadline = planEnd,
                                         Status = 0,
                                         ItemLate = 0,
-                                        Code = _projectItemRepo.GenerateProjectItemCode(request.ProjectID),
+                                        Code = _projectItemRepo.GenerateProjectItemCodeByGateStepLink(request.ProjectID, gateCode),
                                         EstimatedTime = (int)(step.DayCount.Value * 8),
                                         UserID = step.Workers.First().EmployeeID,
                                         STT = _projectItemRepo.GetMaxSTT(request.ProjectID),
@@ -263,9 +279,9 @@ namespace RERPAPI.Controllers.Project
                                         Status = 0,
                                         ItemLate = 0,
                                         NeedApprove = true,
-                                        Priority = 1, 
+                                        Priority = 1,
                                         Deadline = planEnd,
-                                        Code = _projectItemRepo.GenerateProjectItemCode(request.ProjectID),
+                                        Code = _projectItemRepo.GenerateProjectItemCodeByGateStepLink(request.ProjectID, gateCode),
                                         EstimatedTime = (int)(step.DayCount.Value * 8),
                                         UserID = step.Workers.First().EmployeeID,
                                         STT = _projectItemRepo.GetMaxSTT(request.ProjectID),
@@ -471,15 +487,19 @@ namespace RERPAPI.Controllers.Project
         {
             try
             {
-                // SP trả về 3 result sets: links, workers, checklists+files
-                var (links, workers, checklistFileRows) = await SqlDapper<ProjectGateStepLinkResultDto>
-                    .QueryMultipleAsync<ProjectGateStepLinkResultDto, ProjectGateStepWorkerResultDto, ProjectGateStepCheckListFileResultDto>(
+                // SP trả về 4 result sets: links, workers, checklists+files, forms
+                var (links, workers, checklistFileRows, formRows) = await SqlDapper<ProjectGateStepLinkResultDto>
+                    .QueryMultipleAsync<ProjectGateStepLinkResultDto, ProjectGateStepWorkerResultDto, ProjectGateStepCheckListFileResultDto, ProjectGateStepFormResultDto>(
                         "spGetProjectGateStepLinkByProject",
                         new { ProjectID = projectId }
                     );
 
                 var workerGroups = workers
                     .GroupBy(w => w.ProjectGateStepLinkID)
+                    .ToDictionary(g => g.Key, g => g.ToList());
+
+                var formGroups = formRows
+                    .GroupBy(f => f.ProjectGateStepLinkID)
                     .ToDictionary(g => g.Key, g => g.ToList());
 
                 // Gom checklist theo LinkID, sau đó gom file theo ProjectGateStepCheckListID
@@ -546,10 +566,38 @@ namespace RERPAPI.Controllers.Project
                         : new List<ProjectGateStepWorkerDto>(),
                     CheckLists = checklistByLink.TryGetValue(l.ID, out var clDtos)
                         ? clDtos
-                        : new List<ProjectGateStepCheckListLinkDto>()
+                        : new List<ProjectGateStepCheckListLinkDto>(),
+                    Forms = formGroups.TryGetValue(l.ID, out var fList)
+                        ? fList.Select(f => new ProjectGateStepFormDto
+                        {
+                            ID = f.ID,
+                            ProjectGateStepID = f.ProjectGateStepID,
+                            STT = f.STT,
+                            FormName = f.FormName,
+                            FileName = f.FileName,
+                            FilePath = f.FilePath,
+                            FileSize = f.FileSize,
+                            Description = f.Description
+                        }).ToList()
+                        : new List<ProjectGateStepFormDto>()
                 }).ToList();
 
                 return Ok(ApiResponseFactory.Success(result, "Lấy dữ liệu thành công"));
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
+            }
+        }
+
+        [HttpGet("get-workers-by-step-link/{stepLinkId}")]
+        public async Task<IActionResult> GetWorkersByStepLink(int stepLinkId)
+        {
+            try
+            {
+                var workers = _stepWorkerRepo.GetAll(w => w.ProjectGateStepLinkID == stepLinkId).ToList();
+                var employeeIds = workers.Select(w => w.EmployeeID).Distinct().ToList();
+                return Ok(ApiResponseFactory.Success(employeeIds, "Lấy danh sách ID nhân viên thực hiện thành công"));
             }
             catch (Exception ex)
             {

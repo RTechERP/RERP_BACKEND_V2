@@ -134,12 +134,20 @@ namespace RERPAPI.Model.Common
                 transaction,
                 commandType: CommandType.StoredProcedure);
 
-            return (
-                multi.Read<T1>().AsList(),
-                multi.Read<T2>().AsList(),
-                multi.Read<T3>().AsList(),
-                multi.Read<T4>().AsList()
-            );
+            var r1 = multi.Read<T1>().AsList();
+            var r2 = multi.Read<T2>().AsList();
+            var r3 = multi.Read<T3>().AsList();
+            List<T4> r4;
+            try
+            {
+                r4 = multi.Read<T4>().AsList();
+            }
+            catch
+            {
+                r4 = new List<T4>();
+            }
+
+            return (r1, r2, r3, r4);
         }
 
         public static async Task<int> ExecuteStoredProcedure(

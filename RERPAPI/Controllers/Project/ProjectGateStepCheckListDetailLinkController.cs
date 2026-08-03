@@ -21,17 +21,20 @@ namespace RERPAPI.Controllers.Project
         private readonly ProjectGateStepCheckListDetailLinkRepo _stepCheckListDetailLinkRepo;
         private readonly ProjectGateStepCheckListDetailRepo _stepCheckListDetailRepo;
         private readonly ProjectGateStepFileRepo _stepFileRepo;
+        private readonly ConfigSystemRepo _configSystemRepo;
         private readonly CurrentUser _currentUser;
 
         public ProjectGateStepCheckListDetailLinkController(
             ProjectGateStepCheckListDetailLinkRepo stepCheckListDetailLinkRepo,
             ProjectGateStepCheckListDetailRepo stepCheckListDetailRepo,
             ProjectGateStepFileRepo stepFileRepo,
+            ConfigSystemRepo configSystemRepo,
             CurrentUser currentUser)
         {
             _stepCheckListDetailLinkRepo = stepCheckListDetailLinkRepo;
             _stepCheckListDetailRepo = stepCheckListDetailRepo;
             _stepFileRepo = stepFileRepo;
+            _configSystemRepo = configSystemRepo;
             _currentUser = currentUser;
         }
 
@@ -317,6 +320,101 @@ namespace RERPAPI.Controllers.Project
             catch (Exception ex)
             {
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
+            }
+        }
+
+        /// <summary>
+        /// Upload nhiều file đính kèm cho bước quy trình Project Gate với định dạng tên file:
+        /// [Tên_file_gốc]_[Mã_dự_án]_[yyyyMMddHHmmss]_[Mã_ngẫu_nhiên].[Đuôi_mở_rộng]
+        /// </summary>
+        [HttpPost("upload-multiple")]
+        [DisableRequestSizeLimit]
+        public async Task<IActionResult> UploadMultipleFiles()
+        {
+            try
+            {
+                var form = await Request.ReadFormAsync();
+                var key = form["key"].ToString();
+                if (string.IsNullOrWhiteSpace(key)) key = "Projects";
+
+                var files = form.Files;
+                if (files == null || files.Count == 0)
+                {
+                    return BadRequest(ApiResponseFactory.Fail(null, "Danh sách file không được để trống!"));
+                }
+
+                var uploadPath = _configSystemRepo.GetUploadPathByKey(key);
+                if (string.IsNullOrWhiteSpace(uploadPath))
+                {
+                    return BadRequest(ApiResponseFactory.Fail(null, $"Không tìm thấy cấu hình đường dẫn cho key: {key}"));
+                }
+
+                var subPathRaw = form["subPath"].ToString()?.Trim() ?? "";
+                var projectCode = form["projectCode"].ToString()?.Trim() ?? "";
+                string targetFolder = uploadPath;
+
+                if (!string.IsNullOrWhiteSpace(subPathRaw))
+                {
+                    var separator = Path.DirectorySeparatorChar;
+                    var segments = subPathRaw
+                        .Replace('/', separator)
+                        .Replace('\\', separator)
+                        .Split(separator, StringSplitOptions.RemoveEmptyEntries)
+                        .Select(seg =>
+                        {
+                            var invalidChars = Path.GetInvalidFileNameChars();
+                            var cleaned = new string(seg.Where(c => !invalidChars.Contains(c)).ToArray());
+                            return cleaned.Replace("..", "").Trim();
+                        })
+                        .Where(s => !string.IsNullOrWhiteSpace(s))
+                        .ToArray();
+
+                    if (segments.Length > 0)
+                    {
+                        targetFolder = Path.Combine(uploadPath, Path.Combine(segments));
+                    }
+                }
+
+                if (!Directory.Exists(targetFolder))
+                {
+                    Directory.CreateDirectory(targetFolder);
+                }
+
+                var uploadResults = new List<object>();
+
+                foreach (var file in files)
+                {
+                    if (file.Length > 0)
+                    {
+                        var fileExtension = Path.GetExtension(file.FileName);
+                        var originalFileName = Path.GetFileNameWithoutExtension(file.FileName);
+
+                        var projCodePart = !string.IsNullOrWhiteSpace(projectCode) ? $"_{projectCode}" : "";
+                        var uniqueFileName = $"{originalFileName}{projCodePart}_{DateTime.Now:yyyyMMddHHmmss}_{Guid.NewGuid().ToString("N")[..8]}{fileExtension}";
+                        var fullPath = Path.Combine(targetFolder, uniqueFileName);
+
+                        using (var stream = new FileStream(fullPath, FileMode.Create))
+                        {
+                            await file.CopyToAsync(stream);
+                        }
+
+                        uploadResults.Add(new
+                        {
+                            OriginalFileName = file.FileName,
+                            SavedFileName = uniqueFileName,
+                            FilePath = fullPath,
+                            FileSize = file.Length,
+                            file.ContentType,
+                            UploadTime = DateTime.Now
+                        });
+                    }
+                }
+
+                return Ok(ApiResponseFactory.Success(uploadResults, $"Upload thành công {uploadResults.Count} file!"));
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ApiResponseFactory.Fail(ex, $"Lỗi upload file: {ex.Message}"));
             }
         }
     }

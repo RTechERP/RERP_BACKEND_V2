@@ -1,4 +1,4 @@
-﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.IdentityModel.Tokens;
 using RERPAPI.Model.Common;
@@ -1859,7 +1859,7 @@ namespace RERPAPI.Controllers.Project
                             ProjectTaskID = existingTask.ID,
                             TypeLog = "Thay đổi công việc cha"
                         };
-                        if (projectTask.ParentID != null && projectTask.ParentID >= 0)
+                        if (projectTask.ParentID != null && projectTask.ParentID > 0)
                         {
                             existingTask.Code = _projectItemRepo.GenerateChildProjectItemCode(projectTask.ParentID ?? 0).Trim();
 
@@ -2721,7 +2721,9 @@ namespace RERPAPI.Controllers.Project
                     var createProjectTask = new ProjectItem
                     {
                         Mission = item.Mission,
-                        Code = _projectItemRepo.GenerateProjectItemCodeNew(projectID ?? 0),
+                        Code = (parentID.HasValue && parentID.Value > 0)
+                            ? _projectItemRepo.GenerateChildProjectItemCode(parentID.Value).Trim()
+                            : _projectItemRepo.GenerateProjectItemCodeNew(projectID ?? 0),
                         ProjectID = projectID,
                         EmployeeIDRequest = employeeAsignerID,
                         TypeProjectItem = 1,
