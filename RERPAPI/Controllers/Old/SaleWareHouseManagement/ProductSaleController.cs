@@ -306,6 +306,23 @@ namespace RERPAPI.Controllers.Old.SaleWareHouseManagement
                     //end update
                     if (dto.ProductSale.ID <= 0)
                     {
+                        ProductSale prd = dto.ProductSale;
+                        var checkExistProduct = _productsaleRepo.GetAll(x =>
+                            x.ProductCode == prd.ProductCode &&
+                            x.ProductName == prd.ProductName &&
+                            x.Maker == prd.Maker &&
+                            x.Unit == prd.Unit &&
+                            x.IsApproved == true &&
+                            x.IsDeleted != true &&
+                            x.ProductGroupID != prd.ProductGroupID
+                         ).FirstOrDefault();
+
+                        if (checkExistProduct != null)
+                        {
+                            dto.ProductSale.IsApproved = true;
+                            dto.ProductSale.ApprovedID = checkExistProduct.ApprovedID;
+                        }
+
                         // Tạo mới
                         if (string.IsNullOrWhiteSpace(dto.ProductSale.ProductNewCode))
                         {
