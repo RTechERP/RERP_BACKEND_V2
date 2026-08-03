@@ -115,6 +115,7 @@ namespace RERPAPI.Repo.GenericEntity
             if (oldData.SpecialCode != newData.SpecialCode) changes.Add($"- Mã đặc biệt: {oldData.SpecialCode} → {newData.SpecialCode}");
             if (oldData.ReasonProblem != newData.ReasonProblem) changes.Add($"- Lý do: {oldData.ReasonProblem} → {newData.ReasonProblem}");
             if (oldData.Note != newData.Note) changes.Add($"- Ghi chú: {oldData.Note} → {newData.Note}");
+            if (oldData.IsProblem != newData.IsProblem) changes.Add($"- Phát sinh: {oldData.IsProblem} → {newData.IsProblem}");
             return changes.Count > 0 ? string.Join("\n", changes) : null;
         }
     }

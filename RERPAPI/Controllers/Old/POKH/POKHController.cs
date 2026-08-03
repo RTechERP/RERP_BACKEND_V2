@@ -1359,6 +1359,8 @@ namespace RERPAPI.Controllers.Old.POKH
                         .Replace('/', '_')
                         .TrimEnd('=');
 
+                List<int> idProductSaleCheck = new List<int>();
+
                 foreach (var productSaleID in dto.productSaleIDs)
                 {
                     var productSale = _productSaleRepo.GetByID(productSaleID);
@@ -1378,7 +1380,22 @@ namespace RERPAPI.Controllers.Old.POKH
 
                     productSale.EmployeeRequestApprovedID = currentUser.EmployeeID;
                     await _productSaleRepo.UpdateAsync(productSale);
+
+                    var checkExist = _productSaleRepo
+                        .GetAll(x => x.ProductCode.Trim() == productSale.ProductCode.Trim() && x.IsDeleted != true);
+
+                    if(checkExist.Count() > 1)
+                    {
+                        idProductSaleCheck.Add(productSale.ID);
+                    }
+
                 }
+
+                string idExists = string.Join(",", idProductSaleCheck);
+                string idExistToken = Convert.ToBase64String(Encoding.UTF8.GetBytes(idExists))
+                       .Replace('+', '-')
+                       .Replace('/', '_')
+                       .TrimEnd('=');
 
                 if (string.IsNullOrEmpty(tableRows))
                 {
@@ -1417,13 +1434,13 @@ namespace RERPAPI.Controllers.Old.POKH
                     <p>
                         Vui lòng đăng nhập hệ thống <strong>R-ERP</strong> và truy cập
                         theo đường dẫn sau:  
-                        <a href='https://erp.rtc.edu.vn/rerpweb/product-sale-new-approved?ids={token}'
+                        <a href='https://erp.rtc.edu.vn/rerpweb/product-sale-new-approved?ids={token}&idExist={idExistToken}'
                            target='_blank'>
                             Duyệt sản phẩm!
                         </a>.
                     </p>
                 </div>";
-
+                
                 // Gửi mail
                 await _emailHelper.SendAsync(emailTo, subject, body, true, emailCc);
 

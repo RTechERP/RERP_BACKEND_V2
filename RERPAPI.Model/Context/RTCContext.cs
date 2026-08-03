@@ -394,6 +394,8 @@ public partial class RTCContext : DbContext
 
     public virtual DbSet<EmployeeSettingMoney> EmployeeSettingMoneys { get; set; }
 
+    public virtual DbSet<EmployeeSignatureFile> EmployeeSignatureFiles { get; set; }
+
     public virtual DbSet<EmployeeStatus> EmployeeStatuses { get; set; }
 
     public virtual DbSet<EmployeeTeam> EmployeeTeams { get; set; }
@@ -4355,12 +4357,14 @@ public partial class RTCContext : DbContext
 
             entity.Property(e => e.ApprovedID).HasComment("Trưởng phòng duyệt");
             entity.Property(e => e.ApprovedSeniorID).HasDefaultValue(0);
+            entity.Property(e => e.CompanyName).HasMaxLength(255);
             entity.Property(e => e.CostBussiness).HasColumnType("decimal(18, 4)");
             entity.Property(e => e.CostOvernight).HasColumnType("decimal(18, 2)");
             entity.Property(e => e.CostVehicle).HasColumnType("decimal(18, 4)");
             entity.Property(e => e.CostWorkEarly).HasColumnType("decimal(18, 2)");
             entity.Property(e => e.CreatedBy).HasMaxLength(50);
             entity.Property(e => e.CreatedDate).HasColumnType("datetime");
+            entity.Property(e => e.CustomerName).HasMaxLength(255);
             entity.Property(e => e.DateApprovedBGD).HasColumnType("datetime");
             entity.Property(e => e.DateApprovedSenior).HasColumnType("datetime");
             entity.Property(e => e.DayBussiness).HasColumnType("datetime");
@@ -5274,6 +5278,19 @@ public partial class RTCContext : DbContext
             entity.Property(e => e.MoneyCTX).HasColumnType("decimal(18, 0)");
             entity.Property(e => e.MoneyOT).HasColumnType("decimal(18, 0)");
             entity.Property(e => e.MoneyQuaDem).HasColumnType("decimal(18, 0)");
+        });
+
+        modelBuilder.Entity<EmployeeSignatureFile>(entity =>
+        {
+            entity.HasKey(e => e.ID).HasName("PK__Employee__3214EC279BEE9F90");
+
+            entity.ToTable("EmployeeSignatureFile");
+
+            entity.Property(e => e.CreatedBy).HasMaxLength(150);
+            entity.Property(e => e.CreatedDate).HasColumnType("datetime");
+            entity.Property(e => e.FileName).HasMaxLength(550);
+            entity.Property(e => e.UpdatedBy).HasMaxLength(150);
+            entity.Property(e => e.UpdatedDate).HasColumnType("datetime");
         });
 
         modelBuilder.Entity<EmployeeStatus>(entity =>

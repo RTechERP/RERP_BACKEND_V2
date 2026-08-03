@@ -57,6 +57,8 @@ namespace RERPAPI.Controllers.Old.SaleWareHouseManagement
 
         private readonly BillExportDetailFilesRepo _billExportDetailFilesRepo;
         private readonly ConfigSystemRepo _configSystemRepo;
+
+        private readonly EmployeeSignatureFileRepo _employeeSignatureFileRepo;
         public BillExportController(
              IOptions<List<PathStaticFile>> pathStaticFiles,
             ProductGroupRepo productgroupRepo,
@@ -81,7 +83,8 @@ namespace RERPAPI.Controllers.Old.SaleWareHouseManagement
             POKHRepo pokhRepo, POKHFilesRepo pokhFilesRepo,
             BillExportSaleLogRepo billExportSaleLogRepo,
             BillExportDetailFilesRepo billExportDetailFilesRepo,
-            ConfigSystemRepo configSystemRepo
+            ConfigSystemRepo configSystemRepo,
+            EmployeeSignatureFileRepo employeeSignatureFileRepo
             )
         {
             _productgroupRepo = productgroupRepo;
@@ -113,6 +116,7 @@ namespace RERPAPI.Controllers.Old.SaleWareHouseManagement
             _pathStaticFiles = pathStaticFiles.Value;
             _billExportDetailFilesRepo = billExportDetailFilesRepo;
             _configSystemRepo = configSystemRepo;
+            _employeeSignatureFileRepo = employeeSignatureFileRepo;
         }
 
         [HttpGet("get-all-project")]
@@ -1582,18 +1586,18 @@ namespace RERPAPI.Controllers.Old.SaleWareHouseManagement
                 string message = "";
                 BillExport billExp = _billexportRepo.GetByID(id);
 
-                PathStaticFile pathStaticFile = _pathStaticFiles.Where(x => x.PathName == "WebData").FirstOrDefault() ?? new PathStaticFile();
-                if (!Path.Exists(pathStaticFile.PathFull))
-                {
-                    message = $"Thư mục ảnh chữ ký không tồn tại!\n{pathStaticFile.PathName}: {pathStaticFile.PathFull}";
-                }
+                var pathStaticFile = _configSystemRepo.GetUploadPathByKey("SIGNATURE_PATH");
+                if (string.IsNullOrWhiteSpace(pathStaticFile))
+                    return BadRequest(ApiResponseFactory.Fail(null, $"Không tìm thấy cấu hình đường dẫn cho key: EmployeeSignature"));
 
-                Employee emDeliver = _employeeRepo.GetByID((int)billExp.UserID); // Người giao
-                Employee emReciver = _employeeRepo.GetByID((int)billExp.SenderID); // Người nhận
+                Employee emReciver = _employeeRepo.GetAll(x=> x.UserID == billExp.UserID).FirstOrDefault(); // Người giao
+                Employee emDeliver = _employeeRepo.GetAll(x => x.UserID == billExp.SenderID).FirstOrDefault(); // Người nhận
 
-                string pathImage = Path.Combine(pathStaticFile.PathFull, "03. Signature");
-                string picDeliver = Path.Combine(pathImage, $@"{emDeliver.Code.Trim()}.png");
-                string picReciver = Path.Combine(pathImage, $@"{emReciver.Code.Trim()}.png");
+                var checkPicDeliver = _employeeSignatureFileRepo.GetAll(x => x.EmployeeID == emDeliver.ID && x.IsDeleted != true).FirstOrDefault();
+                var checkPicReciver = _employeeSignatureFileRepo.GetAll(x => x.EmployeeID == emReciver.ID && x.IsDeleted != true).FirstOrDefault();
+
+                string picDeliver = checkPicDeliver != null ? Path.Combine(pathStaticFile, $@"{emDeliver.Code.Trim()}.png") ?? "" : "";
+                string picReciver = checkPicReciver != null ? Path.Combine(pathStaticFile, $@"{emReciver.Code.Trim()}.png") ?? "" : "";
                 //string picDeliver = Path.Combine(pathImage, $@"test.png");
                 //string picReciver = Path.Combine(pathImage, $@"test.png");
 
@@ -1722,6 +1726,76 @@ namespace RERPAPI.Controllers.Old.SaleWareHouseManagement
                     status = 0,
                     message = $"Lỗi tải file lên server: {ex.Message}"
                 });
+            }
+        }
+
+        [HttpPost("status-preparing")]
+        [RequiresPermission("N32")]
+        public async Task<IActionResult> updateStatusPreparing([FromBody] List<BillExport> billexports)
+        {
+            try
+            {
+                var claims = User.Claims.ToDictionary(x => x.Type, x => x.Value);
+                var currentUser = ObjectMapper.GetCurrentUser(claims);
+
+                var ids = billexports.Select(x => x.ID).ToList();
+                var dict = billexports.ToDictionary(x => x.ID);
+
+                var billexps = _billexportRepo
+                    .GetAll(x => ids.Contains(x.ID));
+
+                foreach (var item in billexps)
+                {
+                    item.IsOrderPrepared = dict[item.ID].IsOrderPrepared;
+                    item.OrderPreparedID = currentUser.ID;
+                }
+
+                await _billexportRepo.UpdateRangeAsync_Binh(billexps);
+
+                return Ok(new
+                {
+                    status = 1,
+                    data = ""
+                });
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
+            }
+        }
+
+        [HttpPost("status-receive")]
+        [RequiresPermission("N32")]
+        public async Task<IActionResult> updateStatusReceive([FromBody] List<BillExport> billexports)
+        {
+            try
+            {
+                var claims = User.Claims.ToDictionary(x => x.Type, x => x.Value);
+                var currentUser = ObjectMapper.GetCurrentUser(claims);
+
+                var ids = billexports.Select(x => x.ID).ToList();
+                var dict = billexports.ToDictionary(x => x.ID);
+
+                var billexps = _billexportRepo
+                    .GetAll(x => ids.Contains(x.ID));
+
+                foreach (var item in billexps)
+                {
+                    item.IsOrderReceived = dict[item.ID].IsOrderReceived;
+                    item.OrderReceivedID = currentUser.ID;
+                }
+
+                await _billexportRepo.UpdateRangeAsync_Binh(billexps);
+
+                return Ok(new
+                {
+                    status = 1,
+                    data = ""
+                });
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
         #endregion

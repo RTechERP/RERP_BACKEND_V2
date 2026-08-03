@@ -105,4 +105,12 @@ public partial class EmployeeBussiness
     /// Trạng thái từ chối duyệt của Senior
     /// </summary>
     public int? DecilineApproveSenior { get; set; }
+
+    public string? CustomerName { get; set; }
+
+    public string? CompanyName { get; set; }
+
+    public int? VehicleBookingID { get; set; }
+
+    public bool? IsSelfTransport { get; set; }
 }

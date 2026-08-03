@@ -37,6 +37,7 @@ namespace RERPAPI.Controllers.Old.SaleWareHouseManagement
         private readonly IConfiguration _configuration;
         private readonly DocumentImportPONCCRepo _documentImportPONCCRepo;
         private readonly EmployeeRepo _employeeRepo;
+        private readonly ConfigSystemRepo _configSystemRepo;
 
         //private readonly PONCCDetailRepo _pONCCDetailRepo;
         private readonly PONCCRepo _pONCCRepo;
@@ -50,6 +51,7 @@ namespace RERPAPI.Controllers.Old.SaleWareHouseManagement
         private List<InvoiceDTO> listInvoice = new List<InvoiceDTO>();
 
         private readonly List<PathStaticFile> _pathStaticFiles;
+        private readonly EmployeeSignatureFileRepo _employeeSignatureFileRepo;
 
         public BillImportController(
             IOptions<List<PathStaticFile>> pathStaticFiles,
@@ -67,7 +69,9 @@ namespace RERPAPI.Controllers.Old.SaleWareHouseManagement
             , PONCCRepo pONCCRepo
             , ProductSaleGroupWarehouseLinkRepo productSaleGroupWarehouseLinkRepo,
             ProductGroupWareHouseRepo productGroupWareHouseRepo, ProductSaleRepo productSaleRepo,
-            BillImportSaleLogRepo billImportSaleLogRepo)
+            BillImportSaleLogRepo billImportSaleLogRepo,
+            ConfigSystemRepo configSystemRepo,
+            EmployeeSignatureFileRepo employeeSignatureFileRepo)
         {
             _pathStaticFiles = pathStaticFiles.Value;
             _billImportRepo = billImportRepo;
@@ -87,6 +91,8 @@ namespace RERPAPI.Controllers.Old.SaleWareHouseManagement
             _productSaleGroupWarehouseLinkRepo = productSaleGroupWarehouseLinkRepo;
             _productSaleRepo = productSaleRepo;
             _billImportSaleLogRepo = billImportSaleLogRepo;
+            _configSystemRepo = configSystemRepo;
+            _employeeSignatureFileRepo = employeeSignatureFileRepo;
         }
 
         /// <summary>
@@ -1819,18 +1825,18 @@ namespace RERPAPI.Controllers.Old.SaleWareHouseManagement
                 string message = "";
                 BillImport billImp = _billImportRepo.GetByID(id);
 
-                PathStaticFile pathStaticFile = _pathStaticFiles.Where(x => x.PathName == "WebData").FirstOrDefault() ?? new PathStaticFile();
-                if (!Path.Exists(pathStaticFile.PathFull))
-                {
-                    message = $"Thư mục ảnh chữ ký không tồn tại!\n{pathStaticFile.PathName}: {pathStaticFile.PathFull}";
-                }
+                var pathStaticFile = _configSystemRepo.GetUploadPathByKey("SIGNATURE_PATH");
+                if (string.IsNullOrWhiteSpace(pathStaticFile))
+                    return BadRequest(ApiResponseFactory.Fail(null, $"Không tìm thấy cấu hình đường dẫn cho key: EmployeeSignature"));
 
-                Employee emDeliver = _employeeRepo.GetByID((int)billImp.DeliverID); // Người giao
-                Employee emReciver = _employeeRepo.GetByID((int)billImp.ReciverID); // Người nhận
+                Employee emReciver = _employeeRepo.GetAll(x => x.UserID == billImp.ReciverID).FirstOrDefault(); // Người giao
+                Employee emDeliver = _employeeRepo.GetAll(x => x.UserID == billImp.DeliverID).FirstOrDefault(); // Người nhận
 
-                string pathImage = Path.Combine(pathStaticFile.PathFull, "03. Signature");
-                string picDeliver = Path.Combine(pathImage, $@"{emDeliver.Code.Trim()}.png");
-                string picReciver = Path.Combine(pathImage, $@"{emReciver.Code.Trim()}.png");
+                var checkPicDeliver = _employeeSignatureFileRepo.GetAll(x => x.EmployeeID == emDeliver.ID && x.IsDeleted != true).FirstOrDefault();
+                var checkPicReciver = _employeeSignatureFileRepo.GetAll(x => x.EmployeeID == emReciver.ID && x.IsDeleted != true).FirstOrDefault();
+
+                string picDeliver = checkPicDeliver != null ? Path.Combine(pathStaticFile, $@"{emDeliver.Code.Trim()}.png") ?? "" : "";
+                string picReciver = checkPicReciver != null ? Path.Combine(pathStaticFile, $@"{emReciver.Code.Trim()}.png") ?? "" : "";
                 //string picDeliver = Path.Combine(pathImage, $@"test.png");
                 //string picReciver = Path.Combine(pathImage, $@"test.png");
 
