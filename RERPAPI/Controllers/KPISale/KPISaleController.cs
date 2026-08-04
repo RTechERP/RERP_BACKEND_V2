@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using RERPAPI.Model.Common;
 using RERPAPI.Model.DTO;
+using RERPAPI.Model.DTO.HRM;
 using RERPAPI.Model.DTO.KPISale;
 using RERPAPI.Model.Entities;
 using RERPAPI.Repo.GenericEntity;
@@ -25,6 +26,7 @@ namespace RERPAPI.Controllers.KPISale
         private readonly KPISaleTeamMemberRepo _teamMemberRepo;
         private readonly KPISalePeroidRepo _kpiSalePeriodRepo;
         private readonly UserRepo _userRepo;
+        private readonly EmailHelper _emailHelper;
 
         private static readonly Regex SqlIdentifierRegex = new("^[A-Za-z_][A-Za-z0-9_]*$", RegexOptions.Compiled);
 
@@ -110,7 +112,8 @@ namespace RERPAPI.Controllers.KPISale
             KPISaleApprovalLogRepo approvalLogRepo,
             KPISaleTeamMemberRepo teamMemberRepo,
             KPISalePeroidRepo kpiSalePeroidRepo,
-            UserRepo userRepo)
+            UserRepo userRepo,
+            EmailHelper emailHelper)
         {
             _kpiSaleRepo = kpiSaleRepo;
             _employeeRepo = employeeRepo;
@@ -119,7 +122,49 @@ namespace RERPAPI.Controllers.KPISale
             _teamMemberRepo = teamMemberRepo;
             _kpiSalePeriodRepo = kpiSalePeroidRepo;
             _userRepo = userRepo;
+            _emailHelper = emailHelper;
         }
+        #region api lấy employee
+        [HttpGet("employees")]
+        public IActionResult GetEmployee(int? status, int? departmentid, string? keyword)
+        {
+            try
+            {
+                departmentid = departmentid ?? 0;
+                keyword = string.IsNullOrWhiteSpace(keyword) ? "" : keyword;
+                status = status ?? 0;
+                var claims = User.Claims.ToDictionary(x => x.Type, x => x.Value);
+                object data;
+                CurrentUser currentUser = ObjectMapper.GetCurrentUser(claims);
+                //var vUserHR = _vUserGroupLinksRepo.GetAll().FirstOrDefault(x => (x.Code == "N1" || x.Code == "N2") && x.UserID == currentUser.ID);
+                //var vUserHRN60 = _vUserGroupLinksRepo.GetAll().FirstOrDefault(x => (x.Code == "N60") && x.UserID == currentUser.ID);
+                //if (vUserHR == null && vUserHRN60 == null)
+                //{
+                    data = SQLHelper<EmployeeCommonDTO>.ProcedureToListModel("spGetEmployee",
+                                                new string[] { "@Status", "@DepartmentID", "@Keyword" },
+                                                new object[] { status, departmentid, keyword ?? "" });
+                //}
+                //else if (vUserHRN60 != null)
+                //{
+                //    data = SQLHelper<EmployeeDTON60>.ProcedureToListModel("spGetEmployee",
+                //                                new string[] { "@Status", "@DepartmentID", "@Keyword" },
+                //                                new object[] { status, departmentid, keyword ?? "" });
+                //}
+                //else
+                //{
+                //    var employee = SQLHelper<object>.ProcedureToList("spGetEmployee",
+                //                               new string[] { "@Status", "@DepartmentID", "@Keyword" },
+                //                               new object[] { status, departmentid, keyword });
+                //    data = SQLHelper<object>.GetListData(employee, 0);
+                //}
+                return Ok(ApiResponseFactory.Success(data, ""));
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
+            }
+        }
+        #endregion
 
         #region Period
 
@@ -8370,5 +8415,125 @@ FROM (
         }
 
         #endregion Approval (Workflow khớp frontend kpi-summary)
+
+        #region SendMail (Sales Manager gửi mail yêu cầu BGĐ duyệt)
+
+        public class SendApprovalRequestEmailRequest
+        {
+            public int PeriodID { get; set; }
+            public int? TeamID { get; set; }
+            public int? TemplateID { get; set; }
+            public string? Note { get; set; }
+        }
+
+        public class SendApprovalRequestEmailResponse
+        {
+            public string SentTo { get; set; } = "";
+            public string SentCc { get; set; } = "";
+            public string Subject { get; set; } = "";
+            public int TotalRecipients { get; set; }
+            public List<string> RecipientEmails { get; set; } = new();
+        }
+
+        /// <summary>
+        /// Sales Manager gửi mail yêu cầu Ban Giám Đốc duyệt mục tiêu KPI Sale.
+        /// Hiện tại gửi cứng tới các EmployeeID = 1, 2, 3 (sau này có thể cấu hình danh sách BGĐ theo team).
+        /// </summary>
+        [HttpPost("send-approval-request-email")]
+        public async Task<IActionResult> SendApprovalRequestEmail([FromBody] SendApprovalRequestEmailRequest request)
+        {
+            try
+            {
+                if (request == null)
+                    return BadRequest(ApiResponseFactory.Fail(null, "Request không được null."));
+
+                if (request.PeriodID <= 0)
+                    return BadRequest(ApiResponseFactory.Fail(null, "PeriodID không hợp lệ."));
+
+                // Danh sách ID BGĐ fix cứng
+                var boardDirectorIds = new HashSet<int> { 1, 2, 3 };
+                //var boardDirectorIds = new HashSet<int> { 575 };
+
+                // Lấy email công ty của các BGĐ
+                var employees = _employeeRepo
+                    .GetAll(e => boardDirectorIds.Contains(e.ID))
+                    .ToList();
+
+                var emails = employees
+                    .Select(e => e.EmailCongTy)
+                    .Where(e => !string.IsNullOrWhiteSpace(e))
+                    .Distinct()
+                    .ToList();
+
+                if (!emails.Any())
+                {
+                    return Ok(ApiResponseFactory.Success(
+                        new SendApprovalRequestEmailResponse(),
+                        "Không tìm thấy email công ty của các BGĐ trong hệ thống."));
+                }
+
+                // Lấy thêm thông tin kỳ & team (nếu có) để hiển thị trong email
+                var period = await _kpiSaleRepo.KPISalePeriods.AsNoTracking()
+                    .FirstOrDefaultAsync(p => p.ID == request.PeriodID);
+                string periodCode = period?.PeriodCode ?? $"#{request.PeriodID}";
+
+                string teamName = "";
+                if (request.TeamID.HasValue && request.TeamID.Value > 0)
+                {
+                    var team = _kpiSaleRepo.KPISaleTeams.AsNoTracking()
+                        .FirstOrDefault(t => t.ID == request.TeamID.Value);
+                    teamName = team?.TeamName ?? team?.TeamCode ?? $"#{request.TeamID}";
+                }
+
+                var currentUser = GetCurrentUser();
+                string senderName = currentUser?.FullName ?? currentUser?.LoginName ?? "Sales Manager";
+
+                // Email đầu tiên gán cho To, phần còn lại vào CC
+                string emailTo = emails.First();
+                string emailCc = emails.Count > 1 ? string.Join(",", emails.Skip(1)) : "";
+
+                string subject = $"[KPI SALE] YÊU CẦU BAN GIÁM ĐỐC DUYỆT MỤC TIÊU {periodCode}".ToUpper();
+                string frontendBaseUrl = "https://erp.rtc.edu.vn/rerpweb";
+                //string frontendBaseUrl = "http://localhost:4200/rerpweb";
+                string deepLinkUrl = $"{frontendBaseUrl}/kpi-target-tab?periodId={request.PeriodID}{(request.TeamID.HasValue ? $"&teamId={request.TeamID.Value}" : "")}";
+                string body = $@"
+<div style='font-family: Arial, sans-serif; line-height: 1.6;'>
+    <h2 style='color: #722ed1;'>YÊU CẦU DUYỆT MỤC TIÊU KPI SALE</h2>
+    <p><strong>Kỳ KPI:</strong> {periodCode}</p>
+    {(string.IsNullOrEmpty(teamName) ? "" : $"<p><strong>Team:</strong> {teamName}</p>")}
+    <p><strong>Người gửi:</strong> {senderName}</p>
+    <p><strong>Thời gian gửi:</strong> {DateTime.Now:dd/MM/yyyy HH:mm}</p>
+    <hr/>
+    <p>Sales Manager đã hoàn tất duyệt mục tiêu KPI Sale cho kỳ <strong>{periodCode}</strong>{(string.IsNullOrEmpty(teamName) ? "" : $" của team <strong>{teamName}</strong>")}.</p>
+    <p>Kính mong Ban Giám Đốc xem xét và duyệt mục tiêu trên hệ thống R-ERP.</p>
+    <hr/>
+    <p style='margin-top: 20px;'>
+        <a href='{deepLinkUrl}' style='background-color: #722ed1; color: white; padding: 12px 24px; text-decoration: none; border-radius: 4px; font-weight: bold; display: inline-block;'>XEM VÀ DUYỆT TRÊN HỆ THỐNG</a>
+    </p>
+    <p style='margin-top: 10px;'><small>Hoặc truy cập đường dẫn: <a href='{deepLinkUrl}'>{deepLinkUrl}</a></small></p>
+    <hr/>
+    <p><small>Đây là email thông báo tự động từ hệ thống R-ERP, vui lòng không phản hồi lại email này.</small></p>
+</div>";
+
+                await _emailHelper.SendAsync(emailTo, subject, body, true, emailCc);
+
+                var response = new SendApprovalRequestEmailResponse
+                {
+                    SentTo = emailTo,
+                    SentCc = emailCc,
+                    Subject = subject,
+                    TotalRecipients = emails.Count,
+                    RecipientEmails = emails
+                };
+
+                return Ok(ApiResponseFactory.Success(response, $"Gửi email yêu cầu duyệt tới Ban Giám Đốc thành công ({emails.Count} người nhận)."));
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ApiResponseFactory.Fail(ex, $"Lỗi hệ thống khi gửi email: {ex.Message}"));
+            }
+        }
+
+        #endregion
     }
 }
