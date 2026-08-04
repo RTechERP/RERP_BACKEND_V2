@@ -111,7 +111,7 @@ namespace RERPAPI.Controllers.HRM
 
                 foreach (var item in list)
                 {
-                    //item.ConfirmStatus = confirmStatus;
+                    item.ConfirmStatus = confirmStatus;
                     item.ConfirmDate = DateTime.Now;
                     item.ConfirmBy = _currentUser.FullName;
                 }
