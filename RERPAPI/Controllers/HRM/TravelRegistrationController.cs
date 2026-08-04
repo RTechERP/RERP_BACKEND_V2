@@ -57,8 +57,23 @@ namespace RERPAPI.Controllers.HRM
         {
             try
             {
-                if (obj.ID <= 0) await _travelRegistrationRepo.CreateAsync(obj);
-                else _travelRegistrationRepo.Update(obj);
+                if (obj.ID <= 0)
+                {
+                    await _travelRegistrationRepo.CreateAsync(obj);
+                }
+                else
+                {
+                    var exist = _travelRegistrationRepo.GetByID(obj.ID);
+                    if (exist != null)
+                    {
+                        obj.IsDeleted = exist.IsDeleted;
+                    }
+                    else
+                    {
+                        obj.CreatedDate = DateTime.Now;
+                    }
+                 await   _travelRegistrationRepo.UpdateAsync(obj);
+                }
 
                 return Ok(ApiResponseFactory.Success(1, "Lưu thành công"));
             }
@@ -96,7 +111,7 @@ namespace RERPAPI.Controllers.HRM
 
                 foreach (var item in list)
                 {
-                    item.ConfirmStatus = confirmStatus;
+                    //item.ConfirmStatus = confirmStatus;
                     item.ConfirmDate = DateTime.Now;
                     item.ConfirmBy = _currentUser.FullName;
                 }

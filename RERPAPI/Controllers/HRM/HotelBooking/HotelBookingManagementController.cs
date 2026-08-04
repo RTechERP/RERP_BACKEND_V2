@@ -193,6 +193,7 @@ namespace RERPAPI.Controllers.HRM.HotelBooking
                             var newProp = new HotelBookingProposal
                             {
                                 HotelBookingManagementID = master.ID,
+                                HotelName = prop.HotelName,
                                 TypeRoom = prop.TypeRoom,
                                 Quantity = prop.Quantity,
                                 UnitPrice = prop.UnitPrice,
@@ -301,7 +302,8 @@ namespace RERPAPI.Controllers.HRM.HotelBooking
                             select new
                             {
                                 Location = m.Location,
-                                TypeRoom = p != null ? p.TypeRoom : null
+                                TypeRoom = p != null ? p.TypeRoom : null,
+                                HotelName = p != null ? p.HotelName : null
                             };
 
                 var data = query.Distinct().ToList();
@@ -514,16 +516,38 @@ namespace RERPAPI.Controllers.HRM.HotelBooking
                                 var item = items[i];
 
                                 int paCol = startPACol + i;
-                                string typeRoom = item["TypeRoom"] != null ? item["TypeRoom"].ToString() : "";
-                                decimal unitPrice = item["UnitPrice"] != null && item["UnitPrice"] != DBNull.Value ? Convert.ToDecimal(item["UnitPrice"]) : 0;
-                                int quantity = item["Quantity"] != null && item["Quantity"] != DBNull.Value ? Convert.ToInt32(item["Quantity"]) : 0;
-                                decimal totalAmount = item["TotalAmount"] != null && item["TotalAmount"] != DBNull.Value ? Convert.ToDecimal(item["TotalAmount"]) : (unitPrice * quantity);
+
+                                string GetDictVal(IDictionary<string, object> dict, string key)
+                                {
+                                    var k = dict.Keys.FirstOrDefault(x => string.Equals(x, key, StringComparison.OrdinalIgnoreCase));
+                                    if (k != null && dict[k] != null && dict[k] != DBNull.Value)
+                                    {
+                                        return dict[k].ToString() ?? "";
+                                    }
+                                    return "";
+                                }
+
+                                string typeRoom = GetDictVal(item, "TypeRoom");
+                                string hotelName = GetDictVal(item, "HotelName");
+                                decimal unitPrice = 0;
+                                var upVal = GetDictVal(item, "UnitPrice");
+                                if (!string.IsNullOrEmpty(upVal)) decimal.TryParse(upVal, out unitPrice);
+
+                                int quantity = 0;
+                                var qVal = GetDictVal(item, "Quantity");
+                                if (!string.IsNullOrEmpty(qVal)) int.TryParse(qVal, out quantity);
+
+                                decimal totalAmount = 0;
+                                var taVal = GetDictVal(item, "TotalAmount");
+                                if (!string.IsNullOrEmpty(taVal)) decimal.TryParse(taVal, out totalAmount);
+                                else totalAmount = unitPrice * quantity;
 
                                 string priceStr = unitPrice > 0 ? unitPrice.ToString("#,##0") : "";
                                 string totalStr = totalAmount > 0 ? totalAmount.ToString("#,##0") : "";
 
                                 var lines = new List<string>();
-                                if (!string.IsNullOrEmpty(typeRoom)) lines.Add($"Loại phòng:{typeRoom}");
+                                if (!string.IsNullOrEmpty(hotelName)) lines.Add($"Tên khách sạn: {hotelName}");
+                                if (!string.IsNullOrEmpty(typeRoom)) lines.Add($"Loại phòng: {typeRoom}");
                                 if (quantity > 0) lines.Add($"SL: {quantity}");
                                 if (!string.IsNullOrEmpty(priceStr)) lines.Add($"Đơn giá: {priceStr}");
                                 if (!string.IsNullOrEmpty(totalStr)) lines.Add($"Thành tiền: {totalStr}");
