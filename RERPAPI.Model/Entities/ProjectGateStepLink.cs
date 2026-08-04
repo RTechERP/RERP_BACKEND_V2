@@ -18,5 +18,8 @@ namespace RERPAPI.Model.Entities
         public bool? IsApproved { get; set; }
         public string? ApprovedBy { get; set; }
         public DateTime? ApprovedDate { get; set; }
+        public int? ParentID { get; set; }
+        public string? Content { get; set; }
+        public string? ActualContent { get; set; }
     }
 }

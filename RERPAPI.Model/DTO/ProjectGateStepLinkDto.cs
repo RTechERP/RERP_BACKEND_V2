@@ -19,6 +19,7 @@ namespace RERPAPI.Model.DTO
         public decimal? DayCount { get; set; }
         public int? PeopleCount { get; set; }
         public string? Content { get; set; }
+        public string? ActualContent { get; set; }
         public List<ProjectGateStepWorkerDto> Workers { get; set; }
         public List<ProjectGateStepCheckListLinkDto> CheckLists { get; set; }
         public List<ProjectGateStepFormDto> Forms { get; set; } = new();
@@ -29,6 +30,7 @@ namespace RERPAPI.Model.DTO
         public int? ProjectGateStepTemplateID { get; set; }
         public int? DepartmentID { get; set; }
         public int? ProjectTaskID { get; set; }
+        public int? ParentID { get; set; }
     }
 
     public class ProjectGateStepCheckListLinkDto
@@ -100,6 +102,9 @@ namespace RERPAPI.Model.DTO
         public string? ApprovalComment { get; set; }
         public int? ProjectGateStepTemplateID { get; set; }
         public int? DepartmentID { get; set; }
+        public int? ParentID { get; set; }
+        public string? Content { get; set; }
+        public string? ActualContent { get; set; }
     }
 
     /// <summary>

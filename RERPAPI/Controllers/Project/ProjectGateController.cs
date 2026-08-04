@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using RERPAPI.Attributes;
 using RERPAPI.Model.Common;
 using RERPAPI.Model.DTO;
 using RERPAPI.Model.Entities;
@@ -46,6 +47,8 @@ namespace RERPAPI.Controllers.Project
         /// <summary>
         /// Thêm mới hoặc cập nhật danh sách các Gate
         /// </summary>
+        /// 
+        [RequiresPermission("N1,N109")]
         [HttpPost("save-data")]
         public async Task<IActionResult> SaveData([FromBody] List<ProjectGate> dto)
         {
@@ -93,6 +96,8 @@ namespace RERPAPI.Controllers.Project
         /// <summary>
         /// Xóa danh sách các Gate theo ID (phương thức cứng vì bảng không có IsDeleted)
         /// </summary>
+        /// 
+        [RequiresPermission("N1,N109")]
         [HttpPost("delete")]
         public async Task<IActionResult> Delete([FromBody] List<int> ids)
         {

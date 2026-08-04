@@ -1,3 +1,4 @@
+
 using Dapper;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -34,6 +35,7 @@ namespace RERPAPI.Controllers.Project
         private readonly ProjectGateStepCheckListLinkRepo _stepCheckListLinkRepo;
         private readonly ProjectGateStepRepo _stepRepo;
         private readonly ProjectGateRepo _gateRepo;
+        private readonly ProjectTypeLinkRepo _projectTypeLinkRepo;
 
         public ProjectGateStepLinkController(
             ProjectGateStepLinkRepo stepLinkRepo,
@@ -48,7 +50,9 @@ namespace RERPAPI.Controllers.Project
             ProjectGateStepCheckListDetailRepo stepCheckListDetailRepo,
             ProjectGateStepCheckListLinkRepo stepCheckListLinkRepo,
             ProjectGateStepRepo stepRepo,
-            ProjectGateRepo gateRepo)
+            ProjectGateRepo gateRepo,
+          
+            ProjectTypeLinkRepo projectTypeLinkRepo)
         {
             _stepLinkRepo = stepLinkRepo;
             _stepWorkerRepo = stepWorkerRepo;
@@ -63,8 +67,9 @@ namespace RERPAPI.Controllers.Project
             _stepCheckListLinkRepo = stepCheckListLinkRepo;
             _stepRepo = stepRepo;
             _gateRepo = gateRepo;
+            _projectTypeLinkRepo = projectTypeLinkRepo;
         }
-
+        [RequiresPermission("N109")]
         [HttpPost("Save")]
         public async Task<IActionResult> Save([FromBody] SaveProjectGateStepRequestDto request)
         {
@@ -93,11 +98,59 @@ namespace RERPAPI.Controllers.Project
                 // Lấy toàn bộ các link hiện có của dự án này trong DB
                 var existingLinks = _stepLinkRepo.GetAll(l => l.ProjectID == request.ProjectID).ToList();
                 var processedLinkIDs = new List<int>();
+                var idMapping = new Dictionary<int, int>();
 
                 if (request.Steps != null && request.Steps.Any())
                 {
-                    foreach (var step in request.Steps)
+                    // Sắp xếp các bước: Các bước cha (ParentID == null hoặc 0) xử lý trước, bước con xử lý sau
+                    var sortedSteps = request.Steps
+                        .OrderBy(s => (s.ParentID.HasValue && s.ParentID.Value != 0) ? 1 : 0)
+                        .ToList();
+
+                    // Đảm bảo các kiểu dự án (ProjectTypeLink) trong danh sách bước được liên kết và lưu với dự án
+                    var uniqueTypeIds = sortedSteps
+                        .Where(s => s.ProjectTypeID > 0)
+                        .Select(s => s.ProjectTypeID)
+                        .Distinct()
+                        .ToList();
+
+                    foreach (var typeId in uniqueTypeIds)
                     {
+                        var existingTypeLink = _projectTypeLinkRepo.GetAll(ptl => ptl.ProjectID == request.ProjectID && ptl.ProjectTypeID == typeId).FirstOrDefault();
+                        if (existingTypeLink == null)
+                        {
+                            var newTypeLink = new ProjectTypeLink
+                            {
+                                ProjectID = request.ProjectID,
+                                ProjectTypeID = typeId,
+                                Selected = true,
+                                CreatedDate = DateTime.Now,
+                                CreatedBy = _currentUser?.LoginName
+                            };
+                            await _projectTypeLinkRepo.CreateAsync(newTypeLink);
+                        }
+                        else if (existingTypeLink.Selected != true)
+                        {
+                            existingTypeLink.Selected = true;
+                            existingTypeLink.UpdatedDate = DateTime.Now;
+                            existingTypeLink.UpdatedBy = _currentUser?.LoginName;
+                            await _projectTypeLinkRepo.UpdateAsync(existingTypeLink);
+                        }
+                    }
+
+                    foreach (var step in sortedSteps)
+                    {
+                        // Xác định realParentID: Nếu ParentID trỏ tới ID bản nháp tạm thời (số âm), tra cứu ID thật từ idMapping
+                        int? realParentID = step.ParentID;
+                        if (step.ParentID.HasValue && idMapping.ContainsKey(step.ParentID.Value))
+                        {
+                            realParentID = idMapping[step.ParentID.Value];
+                        }
+                        else if (step.ParentID.HasValue && step.ParentID.Value <= 0)
+                        {
+                            realParentID = null;
+                        }
+
                         string gateCode = "";
                         var gateStep = _stepRepo.GetByID(step.ProjectGateStepID);
                         if (gateStep != null && gateStep.ProjectGateID.HasValue)
@@ -110,11 +163,32 @@ namespace RERPAPI.Controllers.Project
                         }
 
                         // Tìm link tương ứng hiện có trong DB
-                        var matchingLink = existingLinks.FirstOrDefault(l =>
-                            l.ProjectTypeID == step.ProjectTypeID &&
-                            l.ProjectGateStepID == step.ProjectGateStepID &&
-                            l.IsRepeat == step.IsRepeat &&
-                            l.DepartmentID == step.DepartmentID);
+                        ProjectGateStepLink matchingLink = null;
+                        if (step.ID > 0)
+                        {
+                            matchingLink = existingLinks.FirstOrDefault(l => l.ID == step.ID);
+                        }
+                        else
+                        {
+                            matchingLink = existingLinks.FirstOrDefault(l =>
+                                !processedLinkIDs.Contains(l.ID) &&
+                                l.ProjectTypeID == step.ProjectTypeID &&
+                                l.ProjectGateStepID == step.ProjectGateStepID &&
+                                l.IsRepeat == step.IsRepeat &&
+                                l.DepartmentID == step.DepartmentID &&
+                                ((l.ParentID == null && realParentID == null) || (l.ParentID == realParentID)));
+                        }
+
+                        // Xác định parentProjectTaskId: Lấy ProjectTaskID của công đoạn cha (ProjectGateStepLink cha)
+                        int? parentProjectTaskId = null;
+                        if (realParentID.HasValue && realParentID.Value > 0)
+                        {
+                            var parentGateLink = existingLinks.FirstOrDefault(l => l.ID == realParentID.Value);
+                            if (parentGateLink != null && parentGateLink.ProjectTaskID.HasValue && parentGateLink.ProjectTaskID.Value > 0)
+                            {
+                                parentProjectTaskId = parentGateLink.ProjectTaskID.Value;
+                            }
+                        }
 
                         if (matchingLink != null)
                         {
@@ -123,8 +197,16 @@ namespace RERPAPI.Controllers.Project
                             matchingLink.IsDeleted = false; // Đảm bảo chưa bị xóa
                             matchingLink.ProjectGateStepTemplateID = step.ProjectGateStepTemplateID;
                             matchingLink.DepartmentID = step.DepartmentID;
+                            matchingLink.ParentID = realParentID;
+                            matchingLink.Content = step.Content;
+                            matchingLink.ActualContent = step.ActualContent;
+                            if (step.ProjectTypeID > 0)
+                            {
+                                matchingLink.ProjectTypeID = step.ProjectTypeID;
+                            }
                             await _stepLinkRepo.UpdateAsync(matchingLink);
                             processedLinkIDs.Add(matchingLink.ID);
+                            idMapping[step.ID] = matchingLink.ID;
 
                             // Đồng bộ nhân viên (Workers) của Link này
                             var existingWorkers = _stepWorkerRepo.GetAll(w => w.ProjectGateStepLinkID == matchingLink.ID).ToList();
@@ -171,8 +253,9 @@ namespace RERPAPI.Controllers.Project
                                 && step.Workers != null && step.Workers.Any())
                             {
                                 string mission = !string.IsNullOrEmpty(step.Content) ? step.Content : $"Gate Step #{step.ProjectGateStepID}";
+                                string taskDescription = !string.IsNullOrEmpty(step.ActualContent) ? step.ActualContent : step.Content;
                                 var planStart = step.StartDate.Value;
-                                var planEnd = planStart.AddDays((double)step.DayCount.Value);
+                                var planEnd = step.DayCount.Value > 0 ? planStart.AddDays((double)step.DayCount.Value - 1) : planStart;
 
                                 if (matchingLink.ProjectTaskID.HasValue)
                                 {
@@ -180,6 +263,7 @@ namespace RERPAPI.Controllers.Project
                                     if (projectItem != null)
                                     {
                                         projectItem.Mission = mission;
+                                        projectItem.Description = taskDescription;
                                         projectItem.PlanStartDate = planStart;
                                         projectItem.PlanEndDate = planEnd;
                                         projectItem.Deadline = planEnd;
@@ -187,6 +271,8 @@ namespace RERPAPI.Controllers.Project
                                         projectItem.UserID = step.Workers.First().EmployeeID;
                                         projectItem.IsDeleted = false;
                                         projectItem.EmployeeIDRequest = _currentUser.EmployeeID;
+                                        projectItem.TypeProjectItem = step.ProjectTypeID;
+                                        projectItem.ParentID = parentProjectTaskId;
                                         _projectItemRepo.CalculateDays(projectItem);
                                         await _projectItemRepo.UpdateAsync(projectItem);
 
@@ -198,7 +284,9 @@ namespace RERPAPI.Controllers.Project
                                     var newItem = new ProjectItem
                                     {
                                         ProjectID = request.ProjectID,
+                                        TypeProjectItem = step.ProjectTypeID,
                                         Mission = mission,
+                                        Description = taskDescription,
                                         PlanStartDate = planStart,
                                         PlanEndDate = planEnd,
                                         Deadline = planEnd,
@@ -209,7 +297,8 @@ namespace RERPAPI.Controllers.Project
                                         UserID = step.Workers.First().EmployeeID,
                                         STT = _projectItemRepo.GetMaxSTT(request.ProjectID),
                                         IsDeleted = false,
-                                        EmployeeIDRequest = _currentUser.EmployeeID
+                                        EmployeeIDRequest = _currentUser.EmployeeID,
+                                        ParentID = parentProjectTaskId
                                     };
                                     _projectItemRepo.CalculateDays(newItem);
                                     if (await _projectItemRepo.CreateAsync(newItem) > 0)
@@ -237,7 +326,10 @@ namespace RERPAPI.Controllers.Project
                                 IsRepeat = step.IsRepeat,
                                 IsDeleted = false,
                                 ProjectGateStepTemplateID = step.ProjectGateStepTemplateID,
-                                DepartmentID = step.DepartmentID
+                                DepartmentID = step.DepartmentID,
+                                ParentID = realParentID,
+                                Content = step.Content,
+                                ActualContent = step.ActualContent
                             };
 
                             await _stepLinkRepo.CreateAsync(newLink);
@@ -245,6 +337,11 @@ namespace RERPAPI.Controllers.Project
                             if (newLink.ID > 0)
                             {
                                 processedLinkIDs.Add(newLink.ID);
+                                idMapping[step.ID] = newLink.ID;
+                                if (!existingLinks.Any(l => l.ID == newLink.ID))
+                                {
+                                    existingLinks.Add(newLink);
+                                }
 
                                 // Thêm người thực hiện
                                 if (step.Workers != null && step.Workers.Any())
@@ -267,13 +364,16 @@ namespace RERPAPI.Controllers.Project
                                     && step.Workers != null && step.Workers.Any())
                                 {
                                     string mission = !string.IsNullOrEmpty(step.Content) ? step.Content : $"Gate Step #{step.ProjectGateStepID}";
+                                    string taskDescription = !string.IsNullOrEmpty(step.ActualContent) ? step.ActualContent : step.Content;
                                     var planStart = step.StartDate.Value;
-                                    var planEnd = planStart.AddDays((double)step.DayCount.Value);
+                                    var planEnd = step.DayCount.Value > 0 ? planStart.AddDays((double)step.DayCount.Value - 1) : planStart;
 
                                     var newItem = new ProjectItem
                                     {
                                         ProjectID = request.ProjectID,
+                                        TypeProjectItem = step.ProjectTypeID,
                                         Mission = mission,
+                                        Description = taskDescription,
                                         PlanStartDate = planStart,
                                         PlanEndDate = planEnd,
                                         Status = 0,
@@ -286,7 +386,8 @@ namespace RERPAPI.Controllers.Project
                                         UserID = step.Workers.First().EmployeeID,
                                         STT = _projectItemRepo.GetMaxSTT(request.ProjectID),
                                         IsDeleted = false,
-                                        EmployeeIDRequest = _currentUser.EmployeeID
+                                        EmployeeIDRequest = _currentUser.EmployeeID,
+                                        ParentID = parentProjectTaskId
                                     };
                                     _projectItemRepo.CalculateDays(newItem);
                                     if (await _projectItemRepo.CreateAsync(newItem) > 0)
@@ -481,7 +582,7 @@ namespace RERPAPI.Controllers.Project
                 }
             }
         }
-
+        [RequiresPermission("N109")]
         [HttpGet("GetByProject/{projectId}")]
         public async Task<IActionResult> GetByProject(int projectId)
         {
@@ -555,6 +656,9 @@ namespace RERPAPI.Controllers.Project
                     ProjectGateStepTemplateID = l.ProjectGateStepTemplateID,
                     DepartmentID = l.DepartmentID,
                     ProjectTaskID = l.ProjectTaskID,
+                    ParentID = l.ParentID,
+                    Content = l.Content,
+                    ActualContent = l.ActualContent,
                     Workers = workerGroups.TryGetValue(l.ID, out var wList)
                         ? wList.Select(w => new ProjectGateStepWorkerDto
                         {
@@ -605,6 +709,7 @@ namespace RERPAPI.Controllers.Project
             }
         }
 
+        [RequiresPermission("N109")]
         [HttpGet("GetDeletedByProject/{projectId}")]
         public async Task<IActionResult> GetDeletedByProject(int projectId)
         {
