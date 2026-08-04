@@ -83,4 +83,6 @@ public partial class HotelBookingProposal
     public int? ApproveID { get; set; }
 
     public string? ReasonDecline { get; set; }
+
+    public string? HotelName { get; set; }
 }

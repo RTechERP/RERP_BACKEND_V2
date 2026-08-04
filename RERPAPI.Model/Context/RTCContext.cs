@@ -7727,6 +7727,7 @@ public partial class RTCContext : DbContext
                 .HasComment("Ngày tạo bản ghi")
                 .HasColumnType("datetime");
             entity.Property(e => e.HotelBookingManagementID).HasComment("ID bản ghi master trong bảng HotelBookingManagement");
+            entity.Property(e => e.HotelName).HasMaxLength(250);
             entity.Property(e => e.IsApprove).HasDefaultValue(0);
             entity.Property(e => e.IsDeleted).HasComment("Trạng thái xóa mềm: 0 - Chưa xóa, 1 - Đã xóa");
             entity.Property(e => e.IsHCNSProposal).HasComment("Đánh dấu HCNS đề xuất: 0 - Không, 1 - Có");
@@ -15241,7 +15242,7 @@ public partial class RTCContext : DbContext
             entity.Property(e => e.EmployeeCode).HasMaxLength(50);
             entity.Property(e => e.EmployeeName).HasMaxLength(200);
             entity.Property(e => e.Gender).HasMaxLength(10);
-            entity.Property(e => e.Height).HasColumnType("decimal(5, 2)");
+            entity.Property(e => e.Height).HasMaxLength(200);
             entity.Property(e => e.IsPublish).HasDefaultValue(false);
             entity.Property(e => e.PhoneNumber).HasMaxLength(20);
             entity.Property(e => e.PositionName).HasMaxLength(200);

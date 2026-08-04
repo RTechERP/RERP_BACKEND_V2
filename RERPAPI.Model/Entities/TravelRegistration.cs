@@ -21,7 +21,7 @@ public partial class TravelRegistration
 
     public int? Age { get; set; }
 
-    public decimal? Height { get; set; }
+    public string? Height { get; set; }
 
     public string? Gender { get; set; }
 
