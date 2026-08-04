@@ -64,8 +64,6 @@ namespace RERPAPI.Controllers.Project
                 return Ok(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
-        //Hàm lấy mã hạng mục công việc
-        // [Authorize]
         [HttpGet("get-project-item-code")]
         public IActionResult GetProjectItemCode([FromQuery] int projectId)
         {
@@ -73,19 +71,6 @@ namespace RERPAPI.Controllers.Project
             {
                 string newCode = _projectItemRepo.GenerateProjectItemCode(projectId);
                 var data = newCode;
-                return Ok(ApiResponseFactory.Success(newCode, ""));
-            }
-            catch (Exception ex)
-            {
-                return Ok(ApiResponseFactory.Fail(ex, ex.Message));
-            }
-        }
-        [HttpGet("get-child-project-item-code")]
-        public IActionResult GetChildProjectItemCode([FromQuery] int parentId)
-        {
-            try
-            {
-                string newCode = _projectItemRepo.GenerateChildProjectItemCode(parentId);
                 return Ok(ApiResponseFactory.Success(newCode, ""));
             }
             catch (Exception ex)
@@ -302,7 +287,7 @@ namespace RERPAPI.Controllers.Project
                         if (item.ID <= 0)
                         {
                             item.STT = _projectItemRepo.GetMaxSTT(item.ProjectID);
-                            if (item.UserID == null || item.UserID <= 0) item.UserID = currentUser.ID;
+                            item.UserID = currentUser.ID;
                             item.ItemLate = 0;
                             _projectItemRepo.CalculateDays(item);
                             if (item.ActualEndDate.HasValue) item.IsApproved = 2;
