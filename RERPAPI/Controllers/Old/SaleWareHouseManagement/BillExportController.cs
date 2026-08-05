@@ -1730,7 +1730,6 @@ namespace RERPAPI.Controllers.Old.SaleWareHouseManagement
         }
 
         [HttpPost("status-preparing")]
-        [RequiresPermission("N32")]
         public async Task<IActionResult> updateStatusPreparing([FromBody] List<BillExport> billexports)
         {
             try
@@ -1765,7 +1764,6 @@ namespace RERPAPI.Controllers.Old.SaleWareHouseManagement
         }
 
         [HttpPost("status-receive")]
-        [RequiresPermission("N32")]
         public async Task<IActionResult> updateStatusReceive([FromBody] List<BillExport> billexports)
         {
             try
@@ -1798,6 +1796,24 @@ namespace RERPAPI.Controllers.Old.SaleWareHouseManagement
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
+
+        [HttpGet("inventory-project")]
+        public IActionResult getInventoryProject(int projectId, int productSaleId)
+        {
+            try
+            {
+                var inventoryPrj = _inventoryProjectRepo.
+                    GetAll(x => x.ProjectID == projectId && x.ProductSaleID == productSaleId).FirstOrDefault();
+                var quantity = inventoryPrj != null ? inventoryPrj.Quantity : 0;
+
+                return Ok(ApiResponseFactory.Success(quantity, ""));
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
+            }
+        }
+
         #endregion
     }
 }
