@@ -1,5 +1,3 @@
-using FirebaseAdmin;
-using Google.Apis.Auth.OAuth2;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.FileProviders;
 using Microsoft.Extensions.Options;
@@ -27,9 +25,11 @@ using RERPAPI.Repo.GenericEntity.GeneralCatetogy.PaymentOrders;
 using RERPAPI.Repo.GenericEntity.HRM;
 using RERPAPI.Repo.GenericEntity.HRM.DepartmentRequire;
 using RERPAPI.Repo.GenericEntity.HRM.FlightBooking;
+using RERPAPI.Repo.GenericEntity.HRM.HotelBooking;
 using RERPAPI.Repo.GenericEntity.HRM.HRRecruitmentInterviewAssessment;
 using RERPAPI.Repo.GenericEntity.HRM.ProductProtectiveGear;
 using RERPAPI.Repo.GenericEntity.HRM.Vehicle;
+using RERPAPI.Repo.GenericEntity.HRM.Visa;
 using RERPAPI.Repo.GenericEntity.HRRecruitmentExamRepo;
 using RERPAPI.Repo.GenericEntity.KPISale;
 using RERPAPI.Repo.GenericEntity.MakerTrainingFirm;
@@ -51,8 +51,6 @@ using tusdotnet.Models;
 using tusdotnet.Models.Configuration;
 using tusdotnet.Models.Expiration;
 using tusdotnet.Stores;
-using RERPAPI.Repo.GenericEntity.HRM.Visa;
-using RERPAPI.Repo.GenericEntity.HRM.HotelBooking;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -644,7 +642,7 @@ builder.Services.AddScoped<ProjectTaskTypeRepo>();
 builder.Services.AddScoped<KPIEvaluationRuleDetailRepo>();
 builder.Services.AddScoped<KPIExamRepo>();
 builder.Services.AddScoped<KPISumaryEvaluationRepo>();
-builder.Services.AddScoped<KPIEvaluationLogRepo>(); 
+builder.Services.AddScoped<KPIEvaluationLogRepo>();
 #endregion
 
 #region Yêu cầu tuyển dụng
@@ -819,11 +817,11 @@ builder.Services.AddCors(options =>
         ;
     });
 });
- //Chỉ khởi tạo 1 lần duy nhất khi chạy server
-FirebaseApp.Create(new AppOptions()
-{
-    Credential = GoogleCredential.FromFile("firebase-adminsdk.json") // Thay bằng đường dẫn thực tế
-});
+//Chỉ khởi tạo 1 lần duy nhất khi chạy server
+//FirebaseApp.Create(new AppOptions()
+//{
+//    Credential = GoogleCredential.FromFile("firebase-adminsdk.json") // Thay bằng đường dẫn thực tế
+//});
 
 builder.Services.AddSingleton<SseService>();
 
@@ -1000,8 +998,8 @@ List<PathStaticFile> staticFiles = builder.Configuration.GetSection("PathStaticF
 foreach (var item in staticFiles)
 {
     var pathName = item.PathName.Trim().ToLower();
-    var requestPath = pathName == "upload" 
-        ? "/api/upload" 
+    var requestPath = pathName == "upload"
+        ? "/api/upload"
         : $"/api/share/{pathName}";
 
     app.UseStaticFiles(new StaticFileOptions()
