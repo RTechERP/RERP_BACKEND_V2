@@ -104,5 +104,44 @@ namespace RERPAPI.Repo.GenericEntity
                     .Select(x => x.Code)
                     .FirstOrDefault();
         }
+
+        /// <summary>
+        /// Tìm sản phẩm theo Mã SP trong nhóm đích; nếu chưa có thì tạo mới
+        /// (dùng cho chuyển kho nội bộ giữa 2 loại kho/nhóm SP).
+        /// Tên/Hãng/ĐVT trùng khớp đã được đảm bảo ở bước validate trước khi lưu.
+        /// Mã nội bộ (ProductNewCode) của sản phẩm mới được sinh qua <paramref name="generateProductNewCode"/>
+        /// (dùng chung logic với ProjectPartlistPurchaseRequestRepo.GenerateProductNewCode).
+        /// </summary>
+        public async Task<ProductSale> GetOrCreateForGroupAsync(ProductSale source, int destGroupId, string createdBy, Func<int, string> generateProductNewCode)
+        {
+            var match = GetAll(x => x.ProductGroupID == destGroupId && x.IsDeleted != true
+                    && (x.ProductCode ?? "").Trim().ToLower() == (source.ProductCode ?? "").Trim().ToLower())
+                .FirstOrDefault();
+            if (match != null) return match;
+
+            var created = new ProductSale
+            {
+                ProductCode = source.ProductCode,
+                ProductName = source.ProductName,
+                Maker = source.Maker,
+                Unit = source.Unit,
+                FirmID = source.FirmID,
+                UnitCountID = source.UnitCountID,
+                ProductGroupID = destGroupId,
+                ProductNewCode = generateProductNewCode(destGroupId),
+                Import = 0,
+                Export = 0,
+                NumberInStoreDauky = 0,
+                NumberInStoreCuoiKy = 0,
+                IsFix = source.IsFix,
+                IsStandardized = source.IsStandardized,
+                IsApproved = source.IsApproved,
+                IsDeleted = false,
+                CreatedDate = DateTime.Now,
+                CreatedBy = createdBy,
+            };
+            await CreateAsync(created);
+            return created;
+        }
     }
 }

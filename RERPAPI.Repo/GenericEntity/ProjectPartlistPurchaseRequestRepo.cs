@@ -210,6 +210,35 @@ namespace RERPAPI.Repo.GenericEntity
             return true;
         }
 
+        public bool ValidateRequestApprovedItem(ProjectPartlistPurchaseRequest request, out string message)
+        {
+            message = "";
+            if (request.ProductRTCID <= 0)
+            {
+                if (request.SupplierSaleID <= 0)
+                {
+                    message = $"Vui lòng nhập Nhà cung cấp cho sản phẩm [{request.ProductCode}]!";
+                    return false;
+                }
+                if (request.UnitPrice == null || request.UnitPrice <= 0)
+                {
+                    message = $"Vui lòng nhập Đơn giá cho sản phẩm [{request.ProductCode}]!";
+                    return false;
+                }
+                if (request.ProductSaleID <= 0)
+                {
+                    message = $"Vui lòng tạo Mã nội bộ cho sản phẩm [{request.ProductCode}]!";
+                    return false;
+                }
+                if (request.CurrencyID <= 0)
+                {
+                    message = $"Vui lòng chọn Loại tiền cho sản phẩm [{request.ProductCode}]!";
+                    return false;
+                }
+            }
+            return true;
+        }
+
         public bool ValidateAddPoncc(List<ProjectPartlistPurchaseRequestDTO> requests, out string message)
         {
             message = "";

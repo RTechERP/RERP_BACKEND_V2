@@ -1264,6 +1264,32 @@ namespace RERPAPI.Controllers.Old.SaleWareHouseManagement
             }
         }
 
+        [HttpGet("get-inventory-project-import-export-batch")]
+        public IActionResult GetInventoryProjectImportExportBatch(
+            int warehouseId,
+            int productId,
+            int projectId = 0,
+            int pokhDetailId = 0,
+            string billExportDetailIds = "")
+        {
+            try
+            {
+                string productParamsJson = System.Text.Json.JsonSerializer.Serialize(new[]
+                {
+                    new { ProductID = productId, ProjectID = projectId, POKHDetailID = pokhDetailId }
+                });
+
+                var rows = _billexportRepo.GetInventoryProjectImportExportBatch(warehouseId, productParamsJson, billExportDetailIds ?? "");
+                var row = rows.FirstOrDefault();
+
+                return Ok(ApiResponseFactory.Success(row, "Lấy dữ liệu thành công!"));
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
+            }
+        }
+
 
         [HttpGet("download-pokh-files/{pokhID}")]
         public IActionResult DownloadPOKHFiles(int pokhID)

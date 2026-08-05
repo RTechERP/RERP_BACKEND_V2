@@ -143,7 +143,7 @@ namespace RERPAPI.Repo.GenericEntity
                 return false;
             }
 
-            if (pONCCDTO.RulePayID <= 0)
+            if (!pONCCDTO.RulePayID.HasValue || pONCCDTO.RulePayID <= 0)
             {
                 message = "Vui lòng chọn điều khoản thanh toán!";
                 return false;

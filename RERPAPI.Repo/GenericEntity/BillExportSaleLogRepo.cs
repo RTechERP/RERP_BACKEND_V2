@@ -21,7 +21,7 @@ namespace RERPAPI.Repo.GenericEntity
             // Internal tracking fields
             "SupplierID", "StockID", "GroupID", "KhoTypeID",
             "AddressStockID", "IsMerge", "UnApprove", "IsPrepared", "IsReceived",
-            "PreparedDate", "BillDocumentExportType", "BillImportID", "IsTranfer", "IsTransfer", "Deadline",
+            "PreparedDate", "BillDocumentExportType", "BillImportID", "IsTranfer", "IsTransfer", "IsTransferInternal", "KhoTypeTransferID", "Deadline",
             "BillID", "ExportID", "TotalQty", "POKHID", "POKHDetailID",
             "TradePriceDetailID", "BillImportDetailID", "ProjectPartListID",
             "ReturnedStatus", "TemQty", "IsTemVerify", "IsHeavy",
