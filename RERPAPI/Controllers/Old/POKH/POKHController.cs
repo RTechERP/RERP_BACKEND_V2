@@ -1376,6 +1376,8 @@ namespace RERPAPI.Controllers.Old.POKH
                             <td style='border:1px solid #ddd;padding:8px;'>{productSale.ProductNewCode}</td>
                             <td style='border:1px solid #ddd;padding:8px;'>{productSale.ProductCode}</td>
                             <td style='border:1px solid #ddd;padding:8px;'>{productSale.ProductName}</td>
+                            <td style='border:1px solid #ddd;padding:8px;'>{productSale.Unit}</td>
+                            <td style='border:1px solid #ddd;padding:8px;'>{productSale.Maker}</td>
                         </tr>";
 
                     productSale.EmployeeRequestApprovedID = currentUser.EmployeeID;
@@ -1422,6 +1424,8 @@ namespace RERPAPI.Controllers.Old.POKH
                                 <th style='border:1px solid #ddd;padding:8px;'>Mã nội bộ</th>
                                 <th style='border:1px solid #ddd;padding:8px;'>Mã sản phẩm</th>
                                 <th style='border:1px solid #ddd;padding:8px;'>Tên sản phẩm</th>
+                                <th style='border:1px solid #ddd;padding:8px;'>Đơn vị</th>
+                                <th style='border:1px solid #ddd;padding:8px;'>Hãng</th>
                             </tr>
                         </thead>
                         <tbody>
