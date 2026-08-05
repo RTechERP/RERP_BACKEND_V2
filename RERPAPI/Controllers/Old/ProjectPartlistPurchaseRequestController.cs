@@ -385,9 +385,9 @@ namespace RERPAPI.Controllers.Old
             try
             {
                 string textStatus = status ? "Y/C duyệt" : "hủy Y/C duyệt";
-                if (!_repo.ValidateRequestApproved(data, out string message))
+                if (data == null || data.Count == 0)
                 {
-                    return BadRequest(ApiResponseFactory.Fail(null, message));
+                    return BadRequest(ApiResponseFactory.Fail(null, "Dữ liệu không hợp lệ"));
                 }
                 var claims = User.Claims.ToDictionary(x => x.Type, x => x.Value);
                 var currentUser = ObjectMapper.GetCurrentUser(claims);
@@ -400,10 +400,27 @@ namespace RERPAPI.Controllers.Old
                 {
                     if (item.ID <= 0) continue;
                     var existingRequest = _repo.GetByID(item.ID);
-                    if (existingRequest == null) continue;
+                    if (existingRequest == null)
+                    {
+                        failedItems.Add($"[{item.ProductCode}] không tìm thấy dữ liệu (ID={item.ID})");
+                        continue;
+                    }
 
                     if (existingRequest.EmployeeIDRequestApproved != currentUser.EmployeeID
-                        && !currentUser.IsAdmin) continue;
+                        && !currentUser.IsAdmin)
+                    {
+                        string skipReason = (existingRequest.EmployeeIDRequestApproved == null || existingRequest.EmployeeIDRequestApproved <= 0)
+                            ? "chưa được bạn 'Check' (NV mua) nên không thể xin duyệt"
+                            : $"đã được NV mua khác (EmployeeID={existingRequest.EmployeeIDRequestApproved}) Check, không thể xin duyệt";
+                        failedItems.Add($"[{item.ProductCode}] {skipReason}");
+                        continue;
+                    }
+
+                    if (status && !_repo.ValidateRequestApprovedItem(item, out string itemValidationMessage))
+                    {
+                        failedItems.Add($"[{item.ProductCode}] {itemValidationMessage}");
+                        continue;
+                    }
 
                     try
                     {
@@ -411,6 +428,17 @@ namespace RERPAPI.Controllers.Old
                     item.IsRequestApproved = status;
                     item.EmployeeIDRequestApproved = currentUser.EmployeeID;
 
+                        await _repo.UpdateAsync(item);
+
+                        // Verify DB thực sự đã lưu — tránh trường hợp UpdateAsync !hasChanges return 1 mà không save
+                        var saved = _repo.GetSingleNoTracking(x => x.ID == item.ID);
+                        if (saved.IsRequestApproved != status)
+                        {
+                            failedItems.Add($"[{item.ProductCode}] lưu không thành công");
+                            continue;
+                        }
+
+                        // Chỉ ghi log SAU KHI đã xác nhận lưu thành công, tránh log "đã duyệt" giả khi lưu thất bại
                     if (existingRequest != null) //logycmh
                     {
                         string log = _projectPartListPurchaseRequestLogRepo.GenerateLog(existingRequest, item);
@@ -427,16 +455,6 @@ namespace RERPAPI.Controllers.Old
                         }
                     }
 
-                    await _repo.UpdateAsync(item);
-
-                        // Verify DB thực sự đã lưu — tránh trường hợp UpdateAsync !hasChanges return 1 mà không save
-                        var saved = _repo.GetSingleNoTracking(x => x.ID == item.ID);
-                        if (saved.IsRequestApproved != status)
-                        {
-                            failedItems.Add($"[{item.ProductCode}] lưu không thành công");
-                            continue;
-                        }
-
                     await _projectPartListPurchaseRequestApproveLogRepo.CreateLogAsync(item.ID, logStatus, currentUser.EmployeeID, currentUser.LoginName);
                         updatedCount++;
                 }
@@ -446,7 +464,12 @@ namespace RERPAPI.Controllers.Old
                     }
                 }
                 if (updatedCount == 0)
-                    return BadRequest(ApiResponseFactory.Fail(null, $"Không có sản phẩm nào được {textStatus}. Vui lòng kiểm tra lại!"));
+                {
+                    string failMessage = $"Không có sản phẩm nào được {textStatus}. Vui lòng kiểm tra lại!";
+                    if (failedItems.Count > 0)
+                        failMessage += "\n" + string.Join("\n", failedItems);
+                    return BadRequest(ApiResponseFactory.Fail(null, failMessage));
+                }
 
                 string resultMessage = $"Đã {textStatus} thành công {updatedCount} sản phẩm.";
                 if (failedItems.Count > 0)
