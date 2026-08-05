@@ -3787,7 +3787,7 @@ namespace RERPAPI.Controllers.KPISale
                         result.AchievedPercent,
                         result.WeightPercent,
                         result.FinalScore,
-                        result.ReportScoreAdjustmentType,
+                        index.ReportScoreAdjustmentType,
                         result.ReportScoreValue,
                         result.CalculatedDate
                     };
@@ -3829,32 +3829,52 @@ namespace RERPAPI.Controllers.KPISale
                     .ThenByDescending(x => x.ID)
                     .FirstOrDefaultAsync();
 
+                var items = data.Select(x =>
+                    {
+                        // REPORT index: FinalScore phải được tính từ ReportScoreAdjustmentType × ReportScoreValue
+                        // (cộng hoặc trừ), không lấy trực tiếp từ DB vì DB có thể đã lưu sai.
+                        var indexTypeNorm = (x.IndexType ?? string.Empty).Trim().ToUpperInvariant();
+                        var reportAdjType = x.ReportScoreAdjustmentType ?? 0;
+                        var reportScoreValue = x.ReportScoreValue ?? 0;
+                        var finalScore = indexTypeNorm == "REPORT"
+                            ? (reportAdjType == 2
+                                ? reportScoreValue
+                                : reportAdjType == 1
+                                    ? -reportScoreValue
+                                    : 0)
+                            : x.FinalScore;
+
+                        return new KPISaleCalculateResult
+                        {
+                            KpiIndexID = x.KpiIndexID,
+                            IndexCode = x.IndexCode,
+                            IndexName = x.IndexName,
+                            IndexType = x.IndexType,
+                            GoalValue = x.GoalValue,
+                            ResultValue = x.ResultValue,
+                            AchievedPercent = x.AchievedPercent,
+                            WeightPercent = x.WeightPercent,
+                            FinalScore = finalScore,
+                            UnitType = x.UnitType,
+                            ReportScoreAdjustmentType = x.ReportScoreAdjustmentType,
+                            ReportScoreValue = x.ReportScoreValue,
+                            SortOrder = x.SortOrder,
+                            IsMainIndex = x.IsMainIndex,
+                            IsBold = x.IsBold,
+                            ParentID = x.ParentID,
+                            EmployeeID = x.EmployeeID,
+                            TeamID = x.TeamID,
+                            PeriodID = x.PeriodID,
+                            PeriodCode = x.PeriodCode,
+                            CalculatedDate = x.CalculatedDate
+                        };
+                    }).ToList();
+
+                var recalculatedTotal = items.Sum(x => x.FinalScore);
+
                 var response = new KPISaleCalculateResponse
                 {
-                    Items = data.Select(x => new KPISaleCalculateResult
-                    {
-                        KpiIndexID = x.KpiIndexID,
-                        IndexCode = x.IndexCode,
-                        IndexName = x.IndexName,
-                        IndexType = x.IndexType,
-                        GoalValue = x.GoalValue,
-                        ResultValue = x.ResultValue,
-                        AchievedPercent = x.AchievedPercent,
-                        WeightPercent = x.WeightPercent,
-                        FinalScore = x.FinalScore,
-                        UnitType = x.UnitType,
-                        ReportScoreAdjustmentType = x.ReportScoreAdjustmentType,
-                        ReportScoreValue = x.ReportScoreValue,
-                        SortOrder = x.SortOrder,
-                        IsMainIndex = x.IsMainIndex,
-                        IsBold = x.IsBold,
-                        ParentID = x.ParentID,
-                        EmployeeID = x.EmployeeID,
-                        TeamID = x.TeamID,
-                        PeriodID = x.PeriodID,
-                        PeriodCode = x.PeriodCode,
-                        CalculatedDate = x.CalculatedDate
-                    }).ToList(),
+                    Items = items,
                     TotalPerformance = totalPerformance == null
                         ? null
                         : new KPISaleTotalPerformanceDto
@@ -3863,7 +3883,7 @@ namespace RERPAPI.Controllers.KPISale
                             EmployeeID = totalPerformance.EmployeeID,
                             PeriodID = totalPerformance.PeriodID,
                             TemplateID = totalPerformance.TemplateID,
-                            FinalScore = totalPerformance.FinalScore,
+                            FinalScore = recalculatedTotal,
                             CalculatedDate = totalPerformance.CalculatedDate
                         }
                 };
