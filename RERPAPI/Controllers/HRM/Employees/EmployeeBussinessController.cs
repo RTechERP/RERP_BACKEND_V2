@@ -1,4 +1,4 @@
-﻿using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc;
 using RERPAPI.Attributes;
 using RERPAPI.Model.Common;
 using RERPAPI.Model.DTO;
@@ -27,7 +27,7 @@ namespace RERPAPI.Controllers.HRM.Employees
             _employeeBussinessVehicleRepo = employeeBussinessVehicleRepo;
         }
 
-        [RequiresPermission("N1,N2")]
+        [RequiresPermission("N1,N2,N113")]
         [HttpPost]
         public IActionResult getEmployeeBussiness(EmployeeBussinessParam param)
         {
@@ -145,7 +145,7 @@ namespace RERPAPI.Controllers.HRM.Employees
             }
         }
 
-        [RequiresPermission("N1,N2")]
+        [RequiresPermission("N1,N2,N113")]
         [HttpPost("get-work-management")]
         public IActionResult GetWorkManagement([FromBody] EmployeeNightShiftSummaryRequestParam request)
         {
@@ -166,7 +166,7 @@ namespace RERPAPI.Controllers.HRM.Employees
             }
         }
 
-        [RequiresPermission("N1,N2")]
+        [RequiresPermission("N1,N2,N113")]
         [HttpGet("detail")]
         public IActionResult GetEmployeeBussinessDetail(int employeeId, DateTime dayBussiness)
         {
@@ -207,7 +207,7 @@ namespace RERPAPI.Controllers.HRM.Employees
             }
         }
 
-        [RequiresPermission("N1,N2")]
+        [RequiresPermission("N1,N2,N113")]
         [HttpPost("save-data")]
         public async Task<IActionResult> saveEmployeeBussiness([FromBody] List<EmployeeBussiness> employeeBussiness)
         {
@@ -236,7 +236,7 @@ namespace RERPAPI.Controllers.HRM.Employees
             }
         }
 
-        [RequiresPermission("N1")]
+        [RequiresPermission("N1,N113")]
         [HttpPost("save-approve-tbp")]
         public async Task<IActionResult> SaveApproveTBP([FromBody] List<EmployeeBussiness> employeeBussiness)
         {
@@ -265,7 +265,7 @@ namespace RERPAPI.Controllers.HRM.Employees
             }
         }
 
-        [RequiresPermission("N1,N2")]
+        [RequiresPermission("N1,N2,N113")]
         [HttpPost("save-approve-hr")]
         public async Task<IActionResult> SaveApproveHR([FromBody] List<EmployeeBussiness> employeeBussiness)
         {
