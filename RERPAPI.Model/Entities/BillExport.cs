@@ -144,4 +144,14 @@ public partial class BillExport
     public int? OrderPreparedID { get; set; }
 
     public int? OrderReceivedID { get; set; }
+
+    /// <summary>
+    /// Chuyển kho nội bộ (giữa 2 loại kho/nhóm SP cùng warehouse)
+    /// </summary>
+    public bool? IsTransferInternal { get; set; }
+
+    /// <summary>
+    /// ID loại kho đích khi chuyển kho nội bộ
+    /// </summary>
+    public int? KhoTypeTransferID { get; set; }
 }

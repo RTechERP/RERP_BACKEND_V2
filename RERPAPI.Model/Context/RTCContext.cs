@@ -2125,7 +2125,9 @@ public partial class RTCContext : DbContext
             entity.Property(e => e.IsApproved).HasComment("Duyệt");
             entity.Property(e => e.IsDeleted).HasDefaultValue(false);
             entity.Property(e => e.IsTransfer).HasComment("Chuyển kho");
+            entity.Property(e => e.IsTransferInternal).HasComment("Chuyển kho nội bộ (giữa 2 loại kho/nhóm SP cùng warehouse)");
             entity.Property(e => e.KhoTypeID).HasComment("Loại kho nội bộ");
+            entity.Property(e => e.KhoTypeTransferID).HasComment("ID loại kho đích khi chuyển kho nội bộ");
             entity.Property(e => e.PreparedDate).HasColumnType("datetime");
             entity.Property(e => e.RequestDate)
                 .HasComment("Ngày yêu cầu xuất")
