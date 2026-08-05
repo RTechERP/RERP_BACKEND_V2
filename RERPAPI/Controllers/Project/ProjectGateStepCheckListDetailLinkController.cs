@@ -97,6 +97,7 @@ namespace RERPAPI.Controllers.Project
                     FilePath = dto.FilePath,
                     FileSize = dto.FileSize,
                     ContentType = dto.ContentType,
+                    Status = 1,
                     IsDeleted = false,
                     CreatedBy = User.Identity?.Name ?? "System",
                     CreatedDate = DateTime.Now,
@@ -417,5 +418,28 @@ namespace RERPAPI.Controllers.Project
                 return BadRequest(ApiResponseFactory.Fail(ex, $"Lỗi upload file: {ex.Message}"));
             }
         }
+
+        [HttpPost("UpdateFileStatus/{fileId}")]
+        public async Task<IActionResult> UpdateFileStatus(int fileId, [FromQuery] int status)
+        {
+            try
+            {
+                var file = _stepFileRepo.GetByID(fileId);
+                if (file == null)
+                    return NotFound(ApiResponseFactory.Fail(null, "Không tìm thấy file"));
+
+                file.Status = status;
+                file.UpdatedBy = User.Identity?.Name ?? "System";
+                file.UpdatedDate = DateTime.Now;
+                await _stepFileRepo.UpdateAsync(file);
+
+                return Ok(ApiResponseFactory.Success(true, "Cập nhật trạng thái file thành công"));
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
+            }
+        }
     }
 }
+

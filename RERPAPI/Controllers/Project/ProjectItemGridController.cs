@@ -9,9 +9,23 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using RERPAPI.Repo.GenericEntity;
 
 namespace RERPAPI.Controllers.Project
 {
+    public class ProjectItemGridDTO : ProjectItem
+    {
+        public List<int>? UserIDs { get; set; }
+        public List<int>? RelatedUserIDs { get; set; }
+    }
+
+    public class ProjectItemGridFullDTO
+    {
+        public ProjectItemProblem? projectItemProblem { get; set; }
+        public List<ProjectItemGridDTO>? projectItems { get; set; }
+        public ProjectItemFile? ProjectItemFile { get; set; }
+    }
+
     [Route("api/[controller]")]
     [ApiController]
     [Authorize]
@@ -19,27 +33,33 @@ namespace RERPAPI.Controllers.Project
     {
         private readonly ProjectItemRepo _projectItemRepo;
         private readonly ProjectItemProblemRepo _projectItemProblemRepo;
+        private readonly ProjectTaskEmployeeRepo _projectTaskEmployeeRepo;
 
         public ProjectItemGridController(
             ProjectItemRepo projectItemRepo,
-            ProjectItemProblemRepo projectItemProblemRepo
+            ProjectItemProblemRepo projectItemProblemRepo,
+            ProjectTaskEmployeeRepo projectTaskEmployeeRepo
         )
         {
             _projectItemRepo = projectItemRepo;
             _projectItemProblemRepo = projectItemProblemRepo;
+            _projectTaskEmployeeRepo = projectTaskEmployeeRepo;
         }
 
         /// <summary>
         /// Lấy danh sách hạng mục công việc của dự án cho bảng cây editable
         /// </summary>
         [HttpGet("get-project-item")]
-        public IActionResult GetProjectItem([FromQuery] int projectID)
+        public IActionResult GetProjectItem([FromQuery] int projectID, [FromQuery] DateTime? dateStart = null, [FromQuery] DateTime? dateEnd = null)
         {
             try
             {
-                var projectItem = SQLHelper<dynamic>.ProcedureToList("spGetProjectItem",
-                    new string[] { "@ProjectID" },
-                    new object[] { projectID });
+                object dateStartParam = dateStart.HasValue ? (object)dateStart.Value : DBNull.Value;
+                object dateEndParam = dateEnd.HasValue ? (object)dateEnd.Value : DBNull.Value;
+
+                var projectItem = SQLHelper<dynamic>.ProcedureToList("spGetProjectItemGrid",
+                    new string[] { "@ProjectID", "@DateStart", "@DateEnd" },
+                    new object[] { projectID, dateStartParam, dateEndParam });
                 var projectItemData = SQLHelper<dynamic>.GetListData(projectItem, 0);
 
                 if (projectItemData is IEnumerable<dynamic> items)
@@ -67,7 +87,35 @@ namespace RERPAPI.Controllers.Project
                         return hasAssigner && hasAssignee;
                     }).ToList();
 
-                    return Ok(ApiResponseFactory.Success(filteredList, "Lấy dữ liệu thành công"));
+                    // Lấy danh sách Người thực hiện (Type = 1) và Người liên quan (Type = 2) cho tất cả các task
+                    var taskIds = filteredList.Select(x => Convert.ToInt32(((IDictionary<string, object>)x)["ID"])).Distinct().ToList();
+                    var allTaskEmployees = taskIds.Any()
+                        ? _projectTaskEmployeeRepo.GetAll(x => taskIds.Contains(x.ProjectTaskID) && (x.IsDeleted != true)).ToList()
+                        : new List<ProjectTaskEmployee>();
+
+                    var assigneeMap = allTaskEmployees.Where(x => x.Type == 1)
+                        .GroupBy(x => x.ProjectTaskID)
+                        .ToDictionary(g => g.Key, g => g.Select(x => x.EmployeeID).ToList());
+
+                    var relatedMap = allTaskEmployees.Where(x => x.Type == 2)
+                        .GroupBy(x => x.ProjectTaskID)
+                        .ToDictionary(g => g.Key, g => g.Select(x => x.EmployeeID).ToList());
+
+                    var resultList = new List<IDictionary<string, object>>();
+                    foreach (var item in filteredList)
+                    {
+                        var dict = new Dictionary<string, object>((IDictionary<string, object>)item);
+                        int taskId = Convert.ToInt32(dict["ID"]);
+
+                        dict["UserIDs"] = assigneeMap.ContainsKey(taskId) && assigneeMap[taskId].Any()
+                            ? assigneeMap[taskId]
+                            : (dict.ContainsKey("UserID") && dict["UserID"] != null && Convert.ToInt32(dict["UserID"]) > 0 ? new List<int> { Convert.ToInt32(dict["UserID"]) } : new List<int>());
+
+                        dict["RelatedUserIDs"] = relatedMap.ContainsKey(taskId) ? relatedMap[taskId] : new List<int>();
+                        resultList.Add(dict);
+                    }
+
+                    return Ok(ApiResponseFactory.Success(resultList, "Lấy dữ liệu thành công"));
                 }
 
                 return Ok(ApiResponseFactory.Success(projectItemData, "Lấy dữ liệu thành công"));
@@ -116,7 +164,7 @@ namespace RERPAPI.Controllers.Project
         /// Lưu hàng loạt hạng mục công việc (ProjectItem) riêng cho view Editable Tree-Grid
         /// </summary>
         [HttpPost("save-data")]
-        public async Task<IActionResult> SaveData([FromBody] ProjectItemFullDTO projectItem)
+        public async Task<IActionResult> SaveData([FromBody] ProjectItemGridFullDTO projectItem)
         {
             try
             {
@@ -151,10 +199,16 @@ namespace RERPAPI.Controllers.Project
                             }
                         }
 
+                        if (item.UserIDs != null && item.UserIDs.Any())
+                        {
+                            item.UserID = item.UserIDs.First();
+                        }
+
                         if (item.ID <= 0)
                         {
                             item.STT = _projectItemRepo.GetMaxSTT(item.ProjectID);
-                            if (item.UserID == null || item.UserID <= 0) item.UserID = currentUser.ID;
+                            // Dùng EmployeeID làm fallback nhất quán với bảng ProjectTaskEmployee
+                            if (item.UserID == null || item.UserID <= 0) item.UserID = currentUser.EmployeeID > 0 ? currentUser.EmployeeID : currentUser.ID;
                             item.ItemLate = 0;
                             _projectItemRepo.CalculateDays(item);
                             if (item.ActualEndDate.HasValue) item.IsApproved = 2;
@@ -178,6 +232,78 @@ namespace RERPAPI.Controllers.Project
                             if (!string.IsNullOrEmpty(item.Code))
                             {
                                 codeToIdMap[item.Code] = item.ID;
+                            }
+                        }
+
+                        // Đồng bộ Người thực hiện (ProjectTaskEmployee, Type = 1) nếu có UserIDs
+                        if (item.UserIDs != null && item.ID > 0)
+                        {
+                            var existingAssignees = _projectTaskEmployeeRepo.GetAll(x => x.ProjectTaskID == item.ID && x.Type == 1 && (x.IsDeleted != true)).ToList();
+                            var newAssigneeIds = item.UserIDs.Distinct().ToList();
+
+                            foreach (var ass in existingAssignees)
+                            {
+                                if (!newAssigneeIds.Contains(ass.EmployeeID))
+                                {
+                                    ass.IsDeleted = true;
+                                    ass.UpdatedDate = DateTime.Now;
+                                    ass.UpdatedBy = currentUser.LoginName;
+                                    await _projectTaskEmployeeRepo.UpdateAsync(ass);
+                                }
+                            }
+
+                            foreach (var empId in newAssigneeIds)
+                            {
+                                if (empId > 0 && !existingAssignees.Any(x => x.EmployeeID == empId))
+                                {
+                                    var newAssignee = new ProjectTaskEmployee
+                                    {
+                                        ProjectTaskID = item.ID,
+                                        EmployeeID = empId,
+                                        Type = 1, // 1: Người thực hiện
+                                        IsDeleted = false,
+                                        CreatedDate = DateTime.Now,
+                                        CreatedBy = currentUser.LoginName
+                                    };
+                                    await _projectTaskEmployeeRepo.CreateAsync(newAssignee);
+                                }
+                            }
+                        }
+
+                        // Đồng bộ Người liên quan (ProjectTaskEmployee, Type = 2) nếu có dữ liệu RelatedUserIDs
+                        if (item.RelatedUserIDs != null && item.ID > 0)
+                        {
+                            var existingRelated = _projectTaskEmployeeRepo.GetAll(x => x.ProjectTaskID == item.ID && x.Type == 2 && (x.IsDeleted != true)).ToList();
+                            var newRelatedIds = item.RelatedUserIDs.Distinct().ToList();
+
+                            // Xóa bớt những người bỏ chọn
+                            foreach (var rel in existingRelated)
+                            {
+                                if (!newRelatedIds.Contains(rel.EmployeeID))
+                                {
+                                    rel.IsDeleted = true;
+                                    rel.UpdatedDate = DateTime.Now;
+                                    rel.UpdatedBy = currentUser.LoginName;
+                                    await _projectTaskEmployeeRepo.UpdateAsync(rel);
+                                }
+                            }
+
+                            // Thêm mới những người được chọn thêm
+                            foreach (var empId in newRelatedIds)
+                            {
+                                if (empId > 0 && !existingRelated.Any(x => x.EmployeeID == empId))
+                                {
+                                    var newRel = new ProjectTaskEmployee
+                                    {
+                                        ProjectTaskID = item.ID,
+                                        EmployeeID = empId,
+                                        Type = 2, // 2: Người liên quan
+                                        IsDeleted = false,
+                                        CreatedDate = DateTime.Now,
+                                        CreatedBy = currentUser.LoginName
+                                    };
+                                    await _projectTaskEmployeeRepo.CreateAsync(newRel);
+                                }
                             }
                         }
                     }

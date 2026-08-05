@@ -637,6 +637,7 @@ namespace RERPAPI.Controllers.Project
                                          ContentType = r.ContentType,
                                          CreatedBy = r.CreatedBy,
                                          CreatedDate = r.CreatedDate,
+                                         Status = r.Status ?? 1
                                      }).ToList()
                              };
                          }).ToList()
@@ -788,7 +789,8 @@ namespace RERPAPI.Controllers.Project
                                         FileSize = f.FileSize,
                                         ContentType = f.ContentType,
                                         CreatedBy = f.CreatedBy,
-                                        CreatedDate = f.CreatedDate
+                                        CreatedDate = f.CreatedDate,
+                                        Status = f.Status ?? 1
                                     }).ToList()
                                     : new List<ProjectGateStepFileDto>()
                             };

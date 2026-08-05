@@ -66,5 +66,11 @@ namespace RERPAPI.Model.Entities
         /// ID nhân viên upload file
         /// </summary>
         public int? EmployeeID { get; set; }
+
+        /// <summary>
+        /// Trạng thái file: 1 = Hoạt động, 0 = File không tồn tại trên server
+        /// </summary>
+        public int? Status { get; set; } = 1;
     }
 }
+

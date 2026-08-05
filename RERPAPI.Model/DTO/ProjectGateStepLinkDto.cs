@@ -72,6 +72,7 @@ namespace RERPAPI.Model.DTO
         public int? ProjectGateStepCheckListDetailLinkID { get; set; }
         public string? CreatorFullName { get; set; }
         public int? EmployeeID { get; set; }
+        public int? Status { get; set; } = 1;
     }
 
     public class ProjectGateStepWorkerDto
@@ -157,6 +158,7 @@ namespace RERPAPI.Model.DTO
         public DateTime? CreatedDate { get; set; }
         public string? UpdatedBy { get; set; }
         public DateTime? UpdatedDate { get; set; }
+        public int? Status { get; set; }
     }
 
     public class CompleteRuleDto
