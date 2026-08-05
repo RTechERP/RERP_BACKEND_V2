@@ -10,6 +10,7 @@ namespace RERPAPI.Model.Entities
         public int ProjectGateStepID { get; set; }
         public int ProjectTypeID { get; set; }
         public DateTime? StartDate { get; set; }
+        public DateTime? DateEnd { get; set; }
         public bool IsRepeat { get; set; }
         public int? ProjectTaskID { get; set; }
         public bool? IsDeleted { get; set; }

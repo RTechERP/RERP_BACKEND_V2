@@ -15,6 +15,7 @@ namespace RERPAPI.Model.DTO
         public int ProjectGateStepID { get; set; }
         public int ProjectTypeID { get; set; }
         public DateTime? StartDate { get; set; }
+        public DateTime? DateEnd { get; set; }
         public bool IsRepeat { get; set; }
         public decimal? DayCount { get; set; }
         public int? PeopleCount { get; set; }
@@ -95,6 +96,7 @@ namespace RERPAPI.Model.DTO
         public int ProjectGateStepID { get; set; }
         public int ProjectTypeID { get; set; }
         public DateTime? StartDate { get; set; }
+        public DateTime? DateEnd { get; set; }
         public bool IsRepeat { get; set; }
         public int? ProjectTaskID { get; set; }
         public bool? IsApproved { get; set; }

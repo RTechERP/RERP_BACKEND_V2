@@ -1848,6 +1848,29 @@ namespace RERPAPI.Controllers.Project
             }
         }
 
+        [HttpGet("get-demo-project")]
+        public async Task<IActionResult> GetDemoProject([FromQuery] int sourceProjectId)
+        {
+            try
+            {
+                var sourceProject = projectRepo.GetByID(sourceProjectId);
+                if (sourceProject == null)
+                {
+                    return BadRequest(ApiResponseFactory.Fail(null, "Không tìm thấy dự án gốc"));
+                }
+
+                string targetProjectCode = sourceProject.ProjectCode + "_DEMO";
+                var demoProject = projectRepo.GetAll()
+                    .FirstOrDefault(x => x.ProjectCode == targetProjectCode && x.IsDeleted != true);
+
+                return Ok(ApiResponseFactory.Success(demoProject, ""));
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
+            }
+        }
+
         [HttpPost("create-demo-project")]
         public async Task<IActionResult> CreateDemoProject([FromQuery] int sourceProjectId)
         {

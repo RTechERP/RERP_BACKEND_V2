@@ -45,6 +45,27 @@ namespace RERPAPI.Controllers.Project
         }
 
         /// <summary>
+        /// Lấy chi tiết Gate theo ID
+        /// </summary>
+        [HttpGet("get-by-id")]
+        public IActionResult GetByID([FromQuery] int id)
+        {
+            try
+            {
+                var item = _projectGateRepo.GetByID(id);
+                if (item == null)
+                {
+                    return BadRequest(ApiResponseFactory.Fail(null, "Không tìm thấy dữ liệu Gate"));
+                }
+                return Ok(ApiResponseFactory.Success(item, "Lấy dữ liệu thành công"));
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
+            }
+        }
+
+        /// <summary>
         /// Thêm mới hoặc cập nhật danh sách các Gate
         /// </summary>
         /// 

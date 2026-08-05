@@ -194,6 +194,7 @@ namespace RERPAPI.Controllers.Project
                         {
                             // ── CẬP NHẬT LINK HIỆN CÓ ──
                             matchingLink.StartDate = step.StartDate;
+                            matchingLink.DateEnd = step.DateEnd;
                             matchingLink.IsDeleted = false; // Đảm bảo chưa bị xóa
                             matchingLink.ProjectGateStepTemplateID = step.ProjectGateStepTemplateID;
                             matchingLink.DepartmentID = step.DepartmentID;
@@ -255,7 +256,9 @@ namespace RERPAPI.Controllers.Project
                                 string mission = !string.IsNullOrEmpty(step.Content) ? step.Content : $"Gate Step #{step.ProjectGateStepID}";
                                 string taskDescription = !string.IsNullOrEmpty(step.ActualContent) ? step.ActualContent : step.Content;
                                 var planStart = step.StartDate.Value;
-                                var planEnd = step.DayCount.Value > 0 ? planStart.AddDays((double)step.DayCount.Value - 1) : planStart;
+                                var planEnd = step.DateEnd.HasValue
+                                    ? step.DateEnd.Value
+                                    : (step.DayCount.Value > 0 ? planStart.AddDays((double)step.DayCount.Value - 1) : planStart);
 
                                 if (matchingLink.ProjectTaskID.HasValue)
                                 {
@@ -323,6 +326,7 @@ namespace RERPAPI.Controllers.Project
                                 ProjectGateStepID = step.ProjectGateStepID,
                                 ProjectTypeID = step.ProjectTypeID,
                                 StartDate = step.StartDate,
+                                DateEnd = step.DateEnd,
                                 IsRepeat = step.IsRepeat,
                                 IsDeleted = false,
                                 ProjectGateStepTemplateID = step.ProjectGateStepTemplateID,
@@ -366,7 +370,9 @@ namespace RERPAPI.Controllers.Project
                                     string mission = !string.IsNullOrEmpty(step.Content) ? step.Content : $"Gate Step #{step.ProjectGateStepID}";
                                     string taskDescription = !string.IsNullOrEmpty(step.ActualContent) ? step.ActualContent : step.Content;
                                     var planStart = step.StartDate.Value;
-                                    var planEnd = step.DayCount.Value > 0 ? planStart.AddDays((double)step.DayCount.Value - 1) : planStart;
+                                    var planEnd = step.DateEnd.HasValue
+                                        ? step.DateEnd.Value
+                                        : (step.DayCount.Value > 0 ? planStart.AddDays((double)step.DayCount.Value - 1) : planStart);
 
                                     var newItem = new ProjectItem
                                     {
@@ -649,6 +655,7 @@ namespace RERPAPI.Controllers.Project
                     ProjectGateStepID = l.ProjectGateStepID,
                     ProjectTypeID = l.ProjectTypeID,
                     StartDate = l.StartDate,
+                    DateEnd = l.DateEnd,
                     IsRepeat = l.IsRepeat,
                     IsApproved = l.IsApproved,
                     ApprovedBy = l.ApprovedBy,
