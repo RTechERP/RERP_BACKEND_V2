@@ -7,8 +7,9 @@ public class FlightBookingRequestParam
 {
     public DateTime? StartDate { get; set; }
     public DateTime? EndDate { get; set; }
-    public string? Keyword { get; set; }
+    public string? Keyword { get; set; }    
     public int? EmployeeID { get; set; }
+          public int? EmployeeBookerID { get; set; }
     public int? ProjectID { get; set; }
     public System.Collections.Generic.List<int>? SelectedIDs { get; set; }
 }

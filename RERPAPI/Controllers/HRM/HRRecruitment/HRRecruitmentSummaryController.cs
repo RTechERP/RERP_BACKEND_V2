@@ -3,7 +3,9 @@ using Microsoft.AspNetCore.Mvc;
 using OfficeOpenXml;
 using RERPAPI.Attributes;
 using RERPAPI.Model.Common;
+using RERPAPI.Model.DTO;
 using RERPAPI.Model.DTO.HRM;
+using RERPAPI.Repo.GenericEntity;
 
 namespace RERPAPI.Controllers.HRM.HRRecruitment
 {
@@ -12,7 +14,14 @@ namespace RERPAPI.Controllers.HRM.HRRecruitment
     [Authorize]
     public class HRRecruitmentSummaryController : ControllerBase
     {
-        [RequiresPermission("N1,N2")]
+        private readonly vUserGroupLinksRepo _vUserGroupLinksRepo;
+
+        public HRRecruitmentSummaryController(vUserGroupLinksRepo vUserGroupLinksRepo)
+        {
+            _vUserGroupLinksRepo = vUserGroupLinksRepo;
+        }
+
+        [RequiresPermission("N1,N2,N32")]
         [HttpPost("get-summary")]
         public IActionResult GetSummary([FromBody] HRRecruitmentSummaryFilterDTO request)
         {
@@ -22,7 +31,20 @@ namespace RERPAPI.Controllers.HRM.HRRecruitment
                 {
                     return BadRequest(ApiResponseFactory.Fail(null, "Request body is empty"));
                 }
-
+                var claims = User.Claims.ToDictionary(x => x.Type, x => x.Value);
+                CurrentUser currentUser = ObjectMapper.GetCurrentUser(claims);
+                var vUserHR = _vUserGroupLinksRepo.GetAll().FirstOrDefault(x =>
+                 (x.Code == "N2" || x.Code == "N1" || x.Code == "N94" || currentUser.IsAdmin == true) &&
+                 x.UserID == currentUser.ID);
+                int requestID;
+                if (vUserHR != null)
+                {
+                    requestID = 0;
+                }
+                else
+                {
+                    requestID = currentUser.EmployeeID;
+                }
                 DateTime? dateStart = null;
                 DateTime? dateEnd = null;
 
@@ -41,8 +63,8 @@ namespace RERPAPI.Controllers.HRM.HRRecruitment
 
                 var dt = SQLHelper<object>.ProcedureToList(
                     "spGetHRRecruitmentSummaryCandidate",
-                    new string[] { "@DateStart", "@DateEnd", "DepartmentID", "@IsComplete" },
-                    new object[] { ds_formatted, de_formatted, request.DepartmentID, request.IsComplete }
+                    new string[] { "@DateStart", "@DateEnd", "DepartmentID", "@IsComplete", "@EmployeeRequestID" },
+                    new object[] { ds_formatted, de_formatted, request.DepartmentID, request.IsComplete,requestID }
                 );
 
                 var hiringRequests = SQLHelper<object>.GetListData(dt, 0);
@@ -62,7 +84,7 @@ namespace RERPAPI.Controllers.HRM.HRRecruitment
             }
         }
 
-        [RequiresPermission("N1,N2")]
+        [RequiresPermission("N1,N2,N32")]
         [HttpPost("get-source-summary")]
         public IActionResult GetSourceSummary([FromBody] HRRecruitmentSummaryFilterDTO request)
         {
@@ -80,7 +102,20 @@ namespace RERPAPI.Controllers.HRM.HRRecruitment
                 {
                     dateStart = ds;
                 }
-
+                var claims = User.Claims.ToDictionary(x => x.Type, x => x.Value);
+                CurrentUser currentUser = ObjectMapper.GetCurrentUser(claims);
+                var vUserHR = _vUserGroupLinksRepo.GetAll().FirstOrDefault(x =>
+                 (x.Code == "N2" || x.Code == "N1" || x.Code == "N94" || currentUser.IsAdmin == true) &&
+                 x.UserID == currentUser.ID);
+                int requestID;
+                if (vUserHR != null)
+                {
+                    requestID = 0;
+                }
+                else
+                {
+                    requestID = currentUser.EmployeeID;
+                }
                 if (!string.IsNullOrEmpty(request.DateEnd) && DateTime.TryParse(request.DateEnd, out DateTime de))
                 {
                     dateEnd = de;
@@ -91,8 +126,8 @@ namespace RERPAPI.Controllers.HRM.HRRecruitment
 
                 var dt = SQLHelper<object>.ProcedureToList(
                     "spGetHRRecruitmentSourceSummary",
-                    new string[] { "@DateStart", "@DateEnd", "DepartmentID" },
-                    new object[] { ds_formatted, de_formatted, request.DepartmentID }
+                    new string[] { "@DateStart", "@DateEnd", "DepartmentID", "@EmployeeRequestID" },
+                    new object[] { ds_formatted, de_formatted, request.DepartmentID ,requestID}
                 );
 
                 var sourceData = SQLHelper<object>.GetListData(dt, 0);
@@ -108,7 +143,7 @@ namespace RERPAPI.Controllers.HRM.HRRecruitment
             }
         }
 
-        [RequiresPermission("N1,N2")]
+        [RequiresPermission("N1,N2,N32")]
         [HttpPost("get-education-summary")]
         public IActionResult GetEducationSummary([FromBody] HRRecruitmentSummaryFilterDTO request)
         {
@@ -126,7 +161,20 @@ namespace RERPAPI.Controllers.HRM.HRRecruitment
                 {
                     dateStart = ds;
                 }
-
+                var claims = User.Claims.ToDictionary(x => x.Type, x => x.Value);
+                CurrentUser currentUser = ObjectMapper.GetCurrentUser(claims);
+                var vUserHR = _vUserGroupLinksRepo.GetAll().FirstOrDefault(x =>
+                 (x.Code == "N2" || x.Code == "N1" || x.Code == "N94" || currentUser.IsAdmin == true) &&
+                 x.UserID == currentUser.ID);
+                int requestID;
+                if (vUserHR != null)
+                {
+                    requestID = 0;
+                }
+                else
+                {
+                    requestID = currentUser.EmployeeID;
+                }
                 if (!string.IsNullOrEmpty(request.DateEnd) && DateTime.TryParse(request.DateEnd, out DateTime de))
                 {
                     dateEnd = de;
@@ -137,8 +185,8 @@ namespace RERPAPI.Controllers.HRM.HRRecruitment
 
                 var dt = SQLHelper<object>.ProcedureToList(
                     "spGetHRRecruitmentEducationSummary",
-                    new string[] { "@DateStart", "@DateEnd", "DepartmentID" },
-                    new object[] { ds_formatted, de_formatted, request.DepartmentID }
+                    new string[] { "@DateStart", "@DateEnd", "DepartmentID", "@EmployeeRequestID" },
+                    new object[] { ds_formatted, de_formatted, request.DepartmentID,requestID }
                 );
 
                 var educationData = SQLHelper<object>.GetListData(dt, 0);
@@ -154,7 +202,7 @@ namespace RERPAPI.Controllers.HRM.HRRecruitment
             }
         }
 
-        [RequiresPermission("N1,N2")]
+        [RequiresPermission("N1,N2,N32")]
         [HttpPost("ExportExcel")]
         public IActionResult ExportExcel([FromBody] HRRecruitmentSummaryFilterDTO request)
         {

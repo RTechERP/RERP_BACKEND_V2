@@ -11,25 +11,39 @@ namespace RERPAPI.Repo.GenericEntity
         private CurrencyRepo _currencyRepo;
         private CurrentUser _currentUser;
         private readonly EmailHelper _emailHelper;
+        private readonly ProjectPartListPriceRequestLogRepo _projectPartListPriceRequestLogRepo;
 
-        public ProjectPartlistPriceRequestRepo(CurrentUser currentUser, EmployeeSendEmailRepo employeeSendEmailRepo, EmployeeRepo employeeRepo, CurrencyRepo currencyRepo, EmailHelper emailHelper) : base(currentUser)
+        public ProjectPartlistPriceRequestRepo(
+            CurrentUser currentUser, 
+            EmployeeSendEmailRepo employeeSendEmailRepo, 
+            EmployeeRepo employeeRepo, 
+            CurrencyRepo currencyRepo, 
+            EmailHelper emailHelper,
+            ProjectPartListPriceRequestLogRepo projectPartListPriceRequestLogRepo
+        ) : base(currentUser)
         {
             _employeeSendEmailRepo = employeeSendEmailRepo;
             _employeeRepo = employeeRepo;
             _currencyRepo = currencyRepo;
             _currentUser = currentUser;
             _emailHelper = emailHelper;
+            _projectPartListPriceRequestLogRepo = projectPartListPriceRequestLogRepo;
         }
 
         public async Task SaveData(ProjectPartlistPriceRequest item)
         {
             if (item.ID > 0)
             {
+                var oldModel = GetByID(item.ID);
+                await _projectPartListPriceRequestLogRepo.updateLog(oldModel, item);
+
                 await UpdateAsync(item);
             }
             else
             {
                 await CreateAsync(item);
+                await _projectPartListPriceRequestLogRepo.
+                   AddLog(item.ID, $"{_currentUser.FullName} đã thêm mới yêu cầu báo giá!", "Thêm mới");
             }
         }
 

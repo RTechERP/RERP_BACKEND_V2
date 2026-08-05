@@ -109,7 +109,8 @@ namespace RERPAPI.Controllers.Project
                         IsApprove = isApprove,
                         ViewNumber = viewNumber
                     };
-                    var projectTasksnew = await SqlDapper<spGetProjectTaskByEmployeeID>.ProcedureToListTAsync("spGetProjectTaskByEmployeeID", param1);
+                    //var projectTasksnew = await SqlDapper<spGetProjectTaskByEmployeeID>.ProcedureToListTAsync("spGetProjectTaskByEmployeeID", param1);
+                    var projectTasksnew = await SqlDapper<spGetProjectTaskByEmployeeID>.ProcedureToListTAsync("spGetProjectTaskByEmployeeID_Nhat", param1);
                     return Ok(ApiResponseFactory.Success(new
                     {
                         ProjectTask = projectTasksnew.OrderByDescending(x => x.UpdatedDate),
@@ -126,7 +127,8 @@ namespace RERPAPI.Controllers.Project
                     IsApprove = isApprove,
                     ViewNumber = viewNumber
                 };
-                var projectTasks = await SqlDapper<spGetProjectTaskByEmployeeID>.ProcedureToListTAsync("spGetProjectTaskByEmployeeID", param);
+                //var projectTasks = await SqlDapper<spGetProjectTaskByEmployeeID>.ProcedureToListTAsync("spGetProjectTaskByEmployeeID", param);
+                var projectTasks = await SqlDapper<spGetProjectTaskByEmployeeID>.ProcedureToListTAsync("spGetProjectTaskByEmployeeID_Nhat", param);
                 return Ok(ApiResponseFactory.Success(new
                 {
                     ProjectTask = projectTasks.OrderByDescending(x => x.UpdatedDate),
@@ -296,6 +298,7 @@ namespace RERPAPI.Controllers.Project
             [FromQuery] int userID = 0,
             [FromQuery] int projectID = 0,
             [FromQuery] string status = "0,1",
+            [FromQuery] int approve = -1,
             [FromQuery] int typeSearch = 1
             )
         {
@@ -314,6 +317,7 @@ namespace RERPAPI.Controllers.Project
                     UserID = userID,
                     ProjectID = projectID,
                     Status = status,
+                    Approve = approve,
                     TypeSearch = typeSearch
                 };
                 var projectTasks = await SqlDapper<object>.ProcedureToListAsync("spGetProjectTaskTimeLineByTeam", param);
@@ -2063,7 +2067,7 @@ namespace RERPAPI.Controllers.Project
                         }
                     }
 
-                    if (projectTask.ParentID != null && projectTask.ParentID >= 0)
+                    if (projectTask.ParentID != null && projectTask.ParentID > 0)
                     {
                         newProjectTask.Code = _projectItemRepo.GenerateChildProjectItemCode(projectTask.ParentID ?? 0).Trim();
                     }

@@ -28,4 +28,32 @@ public partial class KPISaleAllowedColumn
     public bool IsValueColumn { get; set; }
 
     public bool IsActive { get; set; }
+
+    public string? ManualValueMapJson { get; set; }
+
+    public string? LookupTable { get; set; }
+
+    public string? LookupValueColumn { get; set; }
+
+    public string? LookupDisplayColumn { get; set; }
+
+    public string? PreFilterColumn { get; set; }
+
+    public string? PreFilterOperator { get; set; }
+
+    public string? PreFilterValueType { get; set; }
+
+    public string? PreFilterValue { get; set; }
+
+    public string? PreFilterValue2 { get; set; }
+
+    public string? LookupPreFilterColumn { get; set; }
+
+    public string? LookupPreFilterOperator { get; set; }
+
+    public string? LookupPreFilterValueType { get; set; }
+
+    public string? LookupPreFilterValue { get; set; }
+
+    public string? LookupPreFilterValue2 { get; set; }
 }

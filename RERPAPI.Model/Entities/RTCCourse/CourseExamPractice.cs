@@ -1,4 +1,7 @@
-﻿namespace RERPAPI.Model.Entities.RTCCourse;
+﻿using System;
+using System.Collections.Generic;
+
+namespace RERPAPI.Model.Entities.RTCCourse;
 
 public partial class CourseExamPractice
 {

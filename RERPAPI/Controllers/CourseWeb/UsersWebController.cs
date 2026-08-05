@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Mvc;
 using RERPAPI.Model.Common;
 using RERPAPI.Model.Entities.RTCCourse;
 using RERPAPI.Repo.GenericCourseEntity;
+using static QRCoder.PayloadGenerator;
 
 namespace RERPAPI.Controllers.CourseWeb
 {
@@ -50,15 +51,25 @@ namespace RERPAPI.Controllers.CourseWeb
                     {
                         return Ok(ApiResponseFactory.Fail(null, "Email đã tồn tại!"));
                     }
+                    if (_userRepo.GetAll(c => c.PhoneNumber == model.PhoneNumber).Count() > 0)
+                    {
+                        return Ok(ApiResponseFactory.Fail(null, "Số điện thoại đã tồn tại!"));
+                    }
                     string hashedPassword = RERPAPI.Model.Common.MaHoaMD5.EncryptPassword(model.PasswordHash);
                     var result = _userRepo.Create(new User
-                    {
+                    {   
                         LoginName = model.Email,
                         FullName = model.FullName,
                         BirthOfDate = model.BirthOfDate,
                         PasswordHash = hashedPassword,
                         Email = model.Email,
-                        Status = model.Status
+                        Address = model.Address,
+                        PhoneNumber = model.PhoneNumber,
+                        Position = model.Position,
+                        Organization = model.Organization,
+                        Status = model.Status,
+                        CanLearnAhead = model.CanLearnAhead
+
                     });
                     if (result > 0)
                     {
@@ -93,7 +104,12 @@ namespace RERPAPI.Controllers.CourseWeb
                     user.FullName = model.FullName;
                     user.BirthOfDate = model.BirthOfDate;
                     user.Email = model.Email;
+                    user.Address = model.Address;
+                    user.PhoneNumber = model.PhoneNumber;
+                    user.Position = model.Position;
+                    user.Organization = model.Organization;
                     user.Status = model.Status;
+                    user.CanLearnAhead = model.CanLearnAhead;
                     if (_userRepo.Update(user) <= 0)
                     {
                         return Ok(ApiResponseFactory.Fail(null, "Có lỗi xảy ra khi cập nhật người dùng"));

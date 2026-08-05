@@ -4,6 +4,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.FileProviders;
 using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
+using RERPAPI.Controllers.ESL;
 using RERPAPI.IRepo;
 using RERPAPI.Middleware;
 using RERPAPI.Model.Common;
@@ -18,6 +19,7 @@ using RERPAPI.Repo.GenericEntity.Asset;
 using RERPAPI.Repo.GenericEntity.BBNV;
 using RERPAPI.Repo.GenericEntity.DocumentManager;
 using RERPAPI.Repo.GenericEntity.Duan.MeetingMinutes;
+using RERPAPI.Repo.GenericEntity.ESL;
 using RERPAPI.Repo.GenericEntity.Film;
 using RERPAPI.Repo.GenericEntity.GeneralCatetogy;
 using RERPAPI.Repo.GenericEntity.GeneralCatetogy.JobRequirements;
@@ -49,6 +51,8 @@ using tusdotnet.Models;
 using tusdotnet.Models.Configuration;
 using tusdotnet.Models.Expiration;
 using tusdotnet.Stores;
+using RERPAPI.Repo.GenericEntity.HRM.Visa;
+using RERPAPI.Repo.GenericEntity.HRM.HotelBooking;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -108,6 +112,7 @@ builder.Services.AddScoped<CustomerRepo>();
 builder.Services.AddScoped<CourseCatalogRepo>();
 builder.Services.AddScoped<CustomerSpecializationRepo>();
 builder.Services.AddScoped<DailyReportTechnicalRepo>();
+builder.Services.AddScoped<TeamEmployeeProjectRepo>();
 builder.Services.AddScoped<DailyReportSaleRepo>();
 builder.Services.AddScoped<DailyReportSaleAdminRepo>();
 builder.Services.AddScoped<DocumentTypeRepo>();
@@ -505,6 +510,7 @@ builder.Services.AddScoped<CourseAnswerRepo>();
 builder.Services.AddScoped<CourseExamPracticeRepo>();
 builder.Services.AddScoped<ExamResultRepo>();
 builder.Services.AddScoped<ExamResultDetailRepo>();
+builder.Services.AddScoped<ExamResultAnswerDetailRepo>();
 
 builder.Services.AddScoped<InventoryProjectProductSaleLinkRepo>();
 builder.Services.AddScoped<HandoverPersonalAssetRepo>();
@@ -549,6 +555,7 @@ builder.Services.AddScoped<DrawingRepo>();
 builder.Services.AddScoped<DrawingLogRepo>();
 builder.Services.AddScoped<JobRequirementRecommendRepo>();
 builder.Services.AddScoped<JobRequirementRecommendDetailRepo>();
+builder.Services.AddScoped<AppMobileVersionRepo>();
 
 #region khóa học
 
@@ -617,7 +624,7 @@ builder.Services.AddScoped<NotificationTypeRepo>();
 builder.Services.AddScoped<JobRequirementLogRepo>();
 //builder.Services.AddScoped<AssetLogRepo>();
 
-#region KPI
+#region KPI Tech
 
 builder.Services.AddScoped<KPISaleRepo>();
 builder.Services.AddScoped<KPIEvaluationPointRepo>();
@@ -637,8 +644,8 @@ builder.Services.AddScoped<ProjectTaskTypeRepo>();
 builder.Services.AddScoped<KPIEvaluationRuleDetailRepo>();
 builder.Services.AddScoped<KPIExamRepo>();
 builder.Services.AddScoped<KPISumaryEvaluationRepo>();
-
-#endregion KPI
+builder.Services.AddScoped<KPIEvaluationLogRepo>(); 
+#endregion
 
 #region Yêu cầu tuyển dụng
 
@@ -705,7 +712,37 @@ builder.Services.AddScoped<ProjectTaskStatusRepo>();
 builder.Services.AddScoped<PaymentOrderOrderTypeRepo>();
 builder.Services.AddScoped<ConfigNotificationKeyRepo>();
 builder.Services.AddScoped<ConfigNotificationKeyLinkRepo>();
+builder.Services.AddScoped<ProductGroupRTCLinkRepo>();
+builder.Services.AddScoped<MakerTrainingDepartmentLinkRepo>();
+builder.Services.AddScoped<MakerTrainingVideoLinkRepo>();
 
+builder.Services.AddScoped<ESLTestTableRepo>();
+builder.Services.AddScoped<ESLTestTableRegistrationRepo>();
+builder.Services.AddScoped<ESLTestTableRegistrationLogRepo>();
+builder.Services.AddScoped<ESLTestTableRegistrationDetailRepo>();
+builder.Services.AddScoped<ESLConfigRepo>();
+
+builder.Services.AddScoped<VehicleRentalRequestRepo>();
+builder.Services.AddScoped<BusinessVisaRequestRepo>();
+
+
+builder.Services.AddHttpClient<IESLBindService, ESLBindService>();
+builder.Services.AddScoped<KPISaleApprovalRepo>();
+builder.Services.AddScoped<KPISaleApprovalLogRepo>();
+builder.Services.AddScoped<KPISaleTeamMemberRepo>();
+builder.Services.AddScoped<KPISalePeroidRepo>();
+builder.Services.AddScoped<FlightBookingPassengerRepo>();
+builder.Services.AddScoped<HotelBookingManagementRepo>();
+builder.Services.AddScoped<HotelBookingProposalRepo>();
+builder.Services.AddScoped<HotelBookingEmployeeRepo>();
+builder.Services.AddScoped<SalaryIncreaseRepo>();
+builder.Services.AddScoped<SalaryIncreaseDetailRepo>();
+builder.Services.AddScoped<HotelBookingEmployeeRepo>();
+builder.Services.AddScoped<TravelRegistrationRepo>();
+builder.Services.AddScoped<BillExportDetailFilesRepo>();
+builder.Services.AddScoped<ExpectedPayableRepo>();
+builder.Services.AddScoped<EmployeeSignatureFileRepo>();
+builder.Services.AddScoped<BusinessConfigRepo>();
 #region DI LOG
 
 builder.Services.AddScoped<POKHLogRepo>();
@@ -717,6 +754,14 @@ builder.Services.AddScoped<AssetLogRepo>();
 builder.Services.AddScoped<BillExportTechnicalAuditLogRepo>();
 builder.Services.AddScoped<AssetAllocationLogRepo>();
 builder.Services.AddScoped<ProjectPartlistPurchaseRequestLogRepo>();
+builder.Services.AddScoped<ProjectPartListPriceRequestLogRepo>();
+builder.Services.AddScoped<ProjectPartListLogRepo>();
+builder.Services.AddScoped<JobPerfomanceEvaluationNewLogRepo>();
+builder.Services.AddScoped<ProjectPartListHistoryLogRepo>();
+builder.Services.AddScoped<InventoryStockLogRepo>();
+builder.Services.AddScoped<ProductSaleImportExportLogRepo>();
+builder.Services.AddScoped<ProductRTCFileRepo>();
+builder.Services.AddScoped<ExpectedPayableLogRepo>();
 
 #endregion DI LOG
 
@@ -744,6 +789,7 @@ builder.Services.AddScoped<RERPAPI.Repo.GenericCourseEntity.UserRepo>();
 builder.Services.AddScoped<RERPAPI.Repo.GenericCourseEntity.EmployeeRepo>();
 builder.Services.AddScoped<RERPAPI.Repo.GenericCourseEntity.CourseExamPracticeRepo>();
 builder.Services.AddScoped<RERPAPI.Repo.GenericCourseEntity.CourseCatalogTypeRepo>();
+builder.Services.AddScoped<HistoryProductPriceRequestRepo>();
 
 #endregion DI Khoá học web
 
@@ -773,7 +819,7 @@ builder.Services.AddCors(options =>
         ;
     });
 });
-// Chỉ khởi tạo 1 lần duy nhất khi chạy server
+ //Chỉ khởi tạo 1 lần duy nhất khi chạy server
 FirebaseApp.Create(new AppOptions()
 {
     Credential = GoogleCredential.FromFile("firebase-adminsdk.json") // Thay bằng đường dẫn thực tế
@@ -839,6 +885,7 @@ builder.Services.AddAuthentication();
 var smtpSettings = builder.Services.Configure<SmtpSettings>(builder.Configuration.GetSection("SmtpSettings"));
 builder.Services.Configure<SmtpSettingsHr>(builder.Configuration.GetSection("SmtpSettingsHr"));
 builder.Services.Configure<SmtpSettingsHrm>(builder.Configuration.GetSection("SmtpSettingsHrm"));
+builder.Services.Configure<SalaryIncreaseMailSettings>(builder.Configuration.GetSection("SalaryIncreaseMailSettings"));
 
 //Get list static file
 builder.Services.Configure<List<PathStaticFile>>(builder.Configuration.GetSection("PathStaticFiles"));
@@ -952,17 +999,22 @@ List<PathStaticFile> staticFiles = builder.Configuration.GetSection("PathStaticF
 
 foreach (var item in staticFiles)
 {
+    var pathName = item.PathName.Trim().ToLower();
+    var requestPath = pathName == "upload" 
+        ? "/api/upload" 
+        : $"/api/share/{pathName}";
+
     app.UseStaticFiles(new StaticFileOptions()
     {
         FileProvider = new PhysicalFileProvider(item.PathFull),
-        RequestPath = new PathString($"/api/share/{item.PathName.Trim().ToLower()}")
+        RequestPath = new PathString(requestPath)
     });
 
-    app.UseDirectoryBrowser(new DirectoryBrowserOptions
-    {
-        FileProvider = new PhysicalFileProvider(item.PathFull),
-        RequestPath = new PathString($"/api/share/{item.PathName.Trim().ToLower()}")
-    });
+    //app.UseDirectoryBrowser(new DirectoryBrowserOptions
+    //{
+    //    FileProvider = new PhysicalFileProvider(item.PathFull),
+    //    RequestPath = new PathString(requestPath)
+    //});
 }
 var tusStore = new TusDiskStore(Directory.GetCurrentDirectory());
 // config Tus dotnet

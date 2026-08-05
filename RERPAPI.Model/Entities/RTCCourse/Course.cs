@@ -1,4 +1,7 @@
-﻿namespace RERPAPI.Model.Entities.RTCCourse;
+﻿using System;
+using System.Collections.Generic;
+
+namespace RERPAPI.Model.Entities.RTCCourse;
 
 public partial class Course
 {
@@ -39,4 +42,6 @@ public partial class Course
     public int? CourseTypeID { get; set; }
 
     public int? EmployeeID { get; set; }
+
+    public string? Thumbnail { get; set; }
 }

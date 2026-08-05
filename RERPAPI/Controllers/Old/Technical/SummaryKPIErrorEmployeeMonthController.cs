@@ -38,7 +38,7 @@ namespace RERPAPI.Controllers.Old.Technical
         {
             try
             {
-                var data = _departmentRepo.GetAll(x => x.IsDeleted != true).OrderBy(x => x.STT);
+                var data = _kpiErrorTypeRepo.GetAll(x => x.IsDelete != true).OrderBy(x => x.STT);
                 return Ok(ApiResponseFactory.Success(data, ""));
             }
             catch (Exception ex)

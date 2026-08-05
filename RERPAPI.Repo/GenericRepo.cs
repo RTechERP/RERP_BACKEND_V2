@@ -302,11 +302,13 @@ namespace RERPAPI.Repo
 
                 // Bỏ qua các field audit UpdatedDate, UpdatedBy, CreatedDate, CreatedBy
                 var hasChanges = entry.Properties.Any(p =>
-                    p.IsModified &&
-                    p.Metadata.Name != "UpdatedDate" &&
-                    p.Metadata.Name != "UpdatedBy" &&
-                    p.Metadata.Name != "CreatedDate" &&
-                    p.Metadata.Name != "CreatedBy");
+                    p.IsModified 
+                    //&&
+                    //p.Metadata.Name != "UpdatedDate" &&
+                    //p.Metadata.Name != "UpdatedBy" &&
+                    //p.Metadata.Name != "CreatedDate" &&
+                    //p.Metadata.Name != "CreatedBy"
+                    );
                 // Nếu không có thay đổi dữ liệu thật sự thì không save
                 if (!hasChanges)
                     return 1; // Return 1 để biểu thị "cập nhật thành công nhưng không có thay đổi nào được lưu"

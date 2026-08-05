@@ -1,4 +1,6 @@
-﻿using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
+using NPOI.HPSF;
 using RERPAPI.Model.Common;
 using RERPAPI.Model.Entities.RTCCourse;
 using RERPAPI.Model.Param.CourseWeb;
@@ -91,6 +93,74 @@ namespace RERPAPI.Controllers.CourseWeb
                                                 new string[] { "@Status", "@EmployeeID" },
                                                 new object[] {  -1, employeeID,
                 });
+
+                return Ok(ApiResponseFactory.Success(SQLCourseHelper<object>.GetListData(data, 0), ""));
+            }
+            catch (Exception ex)
+            {
+                return Ok(ApiResponseFactory.Fail(ex, ex.Message));
+            }
+        }
+
+        [HttpGet("get-course-evaluate-summary")]
+        public IActionResult GetCourseEvaluateSummary()
+        {
+            try
+            {
+                var data = SQLCourseHelper<object>.ProcedureToList("spGetCourseEvaluateSummary",
+                                                new string[] { },
+                                                new object[] { });
+
+                return Ok(ApiResponseFactory.Success(SQLCourseHelper<object>.GetListData(data, 0), ""));
+            }
+            catch (Exception ex)
+            {
+                return Ok(ApiResponseFactory.Fail(ex, ex.Message));
+            }
+        }
+
+        [HttpGet("leaderboard")]
+        public IActionResult GetLeaderboard(int limit = 10)
+        {
+            try
+            {
+                var data = SQLCourseHelper<object>.ProcedureToList("spGetCourseLeaderboard",
+                                                new string[] { "@Limit" },
+                                                new object[] { limit });
+
+                return Ok(ApiResponseFactory.Success(SQLCourseHelper<object>.GetListData(data, 0), ""));
+            }
+            catch (Exception ex)
+            {
+                return Ok(ApiResponseFactory.Fail(ex, ex.Message));
+            }
+        }
+
+        [HttpGet("get-course-comment-summary")]
+        public IActionResult GetCourseCommentSummary(int limit = 5)
+        {
+            try
+            {
+                var data = SQLCourseHelper<object>.ProcedureToList("spGetCourseCommentSummary",
+                                                new string[] { "@Limit" },
+                                                new object[] { limit });
+
+                return Ok(ApiResponseFactory.Success(SQLCourseHelper<object>.GetListData(data, 0), ""));
+            }
+            catch (Exception ex)
+            {
+                return Ok(ApiResponseFactory.Fail(ex, ex.Message));
+            }
+        }
+
+        [HttpGet("top-participation")]
+        public IActionResult GetTopParticipation(string timeRange = "MONTH", int limit = 5)
+        {
+            try
+            {
+                var data = SQLCourseHelper<object>.ProcedureToList("spGetTopCourseByParticipation",
+                                                new string[] { "@TimeRange", "@Limit" },
+                                                new object[] { timeRange, limit });
 
                 return Ok(ApiResponseFactory.Success(SQLCourseHelper<object>.GetListData(data, 0), ""));
             }
@@ -354,6 +424,7 @@ namespace RERPAPI.Controllers.CourseWeb
                         Instructor = currentUser.FullName,
                         FileCourseID = 0,
                         IsPractice = false,
+                        Thumbnail = model.Thumbnail,
                     };
 
                     await _courseRepo.CreateAsync(courseNew);
@@ -377,6 +448,7 @@ namespace RERPAPI.Controllers.CourseWeb
                     courseUpdate.CourseCopyID = model.CourseCopyID;
                     courseUpdate.CourseTypeID = model.CourseTypeID;
                     courseUpdate.EmployeeID = model.EmployeeID;
+                    courseUpdate.Thumbnail = model.Thumbnail;
                     await _courseRepo.UpdateAsync(courseUpdate);
                 }
                 return Ok(ApiResponseFactory.Success(model, "Lưu khóa học thành công"));
@@ -431,7 +503,182 @@ namespace RERPAPI.Controllers.CourseWeb
                 return Ok(ApiResponseFactory.Fail(ex, $"Lỗi GET lesson file by lesonId: {ex.Message}"));
             }
         }
+        /// <summary>
+        /// Upload file chung cho hệ thống
+        /// </summary>
+        [HttpPost("upload")]
+        [Authorize]
+        [DisableRequestSizeLimit]
+        public async Task<IActionResult> UploadFile()
+        {
+            try
+            {
+                var form = await Request.ReadFormAsync();
+                var key = form["key"].ToString();
+                var file = form.Files.FirstOrDefault();
 
+                // Kiểm tra input
+                if (string.IsNullOrWhiteSpace(key))
+                {
+                    return BadRequest(ApiResponseFactory.Fail(null, "Key không được để trống!"));
+                }
+
+                if (file == null || file.Length == 0)
+                {
+                    return BadRequest(ApiResponseFactory.Fail(null, "File không được để trống!"));
+                }
+
+                // Lấy đường dẫn từ ConfigSystem
+                var uploadPath = _configSystemRepo.GetUploadPathByKey(key);
+                if (string.IsNullOrWhiteSpace(uploadPath))
+                {
+                    return BadRequest(ApiResponseFactory.Fail(null, $"Không tìm thấy cấu hình đường dẫn cho key: {key}"));
+                }
+
+                // Tạo thư mục nếu chưa tồn tại
+                if (!Directory.Exists(uploadPath))
+                {
+                    Directory.CreateDirectory(uploadPath);
+                }
+
+                // Tạo tên file unique để tránh trùng lặp
+                var fileExtension = Path.GetExtension(file.FileName);
+                var originalFileName = Path.GetFileNameWithoutExtension(file.FileName);
+                var uniqueFileName = $"{originalFileName}_{DateTime.Now:yyyyMMddHHmmss}_{Guid.NewGuid().ToString("N")[..8]}{fileExtension}";
+                var fullPath = Path.Combine(uploadPath, uniqueFileName);
+
+                // Lưu file
+                using (var stream = new FileStream(fullPath, FileMode.Create))
+                {
+                    await file.CopyToAsync(stream);
+                }
+
+                // Trả về thông tin file đã upload
+                var result = new
+                {
+                    OriginalFileName = file.FileName,
+                    SavedFileName = uniqueFileName,
+                    FilePath = fullPath,
+                    FileSize = file.Length,
+                    file.ContentType,
+                    UploadTime = DateTime.Now
+                };
+
+                return Ok(ApiResponseFactory.Success(result, "Upload file thành công!"));
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ApiResponseFactory.Fail(ex, $"Lỗi upload file: {ex.Message}"));
+            }
+        }
+        /// <summary>
+        /// Upload nhiều file cùng lúc
+        /// </summary>
+        [HttpPost("upload-multiple")]
+        //[Authorize]
+        [DisableRequestSizeLimit]
+        public async Task<IActionResult> UploadMultipleFiles()
+        {
+            try
+            {
+                var form = await Request.ReadFormAsync();
+                var key = form["key"].ToString();
+                var files = form.Files;
+
+                // Kiểm tra input
+                if (string.IsNullOrWhiteSpace(key))
+                {
+                    return BadRequest(ApiResponseFactory.Fail(null, "Key không được để trống!"));
+                }
+
+                if (files == null || files.Count == 0)
+                {
+                    return BadRequest(ApiResponseFactory.Fail(null, "Danh sách file không được để trống!"));
+                }
+
+                // Lấy đường dẫn từ ConfigSystem
+                var uploadPath = _configSystemRepo.GetUploadPathByKey(key);
+                if (string.IsNullOrWhiteSpace(uploadPath))
+                {
+                    return BadRequest(ApiResponseFactory.Fail(null, $"Không tìm thấy cấu hình đường dẫn cho key: {key}"));
+                }
+
+                // Đọc subPath từ form (nếu có) và ghép vào uploadPath
+                var subPathRaw = form["subPath"].ToString()?.Trim() ?? "";
+                string targetFolder = uploadPath;
+                if (!string.IsNullOrWhiteSpace(subPathRaw))
+                {
+                    // Chuẩn hóa dấu phân cách và loại bỏ ký tự không hợp lệ trong từng segment
+                    var separator = Path.DirectorySeparatorChar;
+                    var segments = subPathRaw
+                        .Replace('/', separator)
+                        .Replace('\\', separator)
+                        .Split(separator, StringSplitOptions.RemoveEmptyEntries)
+                        .Select(seg =>
+                        {
+                            var invalidChars = Path.GetInvalidFileNameChars();
+                            var cleaned = new string(seg.Where(c => !invalidChars.Contains(c)).ToArray());
+                            // Ngăn chặn đường dẫn leo lên thư mục cha
+                            cleaned = cleaned.Replace("..", "").Trim();
+                            return cleaned;
+                        })
+                        .Where(s => !string.IsNullOrWhiteSpace(s))
+                        .ToArray();
+
+                    if (segments.Length > 0)
+                    {
+                        targetFolder = Path.Combine(uploadPath, Path.Combine(segments));
+                    }
+                }
+
+                // Tạo thư mục nếu chưa tồn tại
+                if (!Directory.Exists(targetFolder))
+                {
+                    Directory.CreateDirectory(targetFolder);
+                }
+
+                var uploadResults = new List<object>();
+
+                foreach (var file in files)
+                {
+                    if (file.Length > 0)
+                    {
+                        // Tạo tên file unique
+                        var fileExtension = Path.GetExtension(file.FileName);
+                        var originalFileName = Path.GetFileNameWithoutExtension(file.FileName);
+                        // var uniqueFileName = $"{originalFileName}{fileExtension}";
+
+                        // Tạo tên file unique để tránh trùng lặp
+                        var uniqueFileName = $"{originalFileName}_{DateTime.Now:yyyyMMddHHmmss}_{Guid.NewGuid().ToString("N")[..8]}{fileExtension}";
+
+                        //var uniqueFileName = originalFileName;
+                        var fullPath = Path.Combine(targetFolder, uniqueFileName);
+
+                        // Lưu file
+                        using (var stream = new FileStream(fullPath, FileMode.Create))
+                        {
+                            await file.CopyToAsync(stream);
+                        }
+
+                        uploadResults.Add(new
+                        {
+                            OriginalFileName = file.FileName,
+                            SavedFileName = uniqueFileName,
+                            FilePath = fullPath,
+                            FileSize = file.Length,
+                            file.ContentType,
+                            UploadTime = DateTime.Now
+                        });
+                    }
+                }
+
+                return Ok(ApiResponseFactory.Success(uploadResults, $"Upload thành công {uploadResults.Count} file!"));
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ApiResponseFactory.Fail(ex, $"Lỗi upload file: {ex.Message}"));
+            }
+        }
         [HttpGet("get-path-server")]
         public async Task<IActionResult> getPathServer(string subPath)
         {

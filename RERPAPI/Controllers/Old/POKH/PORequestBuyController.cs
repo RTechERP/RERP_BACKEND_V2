@@ -15,11 +15,13 @@ namespace RERPAPI.Controllers.Old.POKH
     {
         private readonly ProjectPartlistPurchaseRequestRepo _PPPRRepo;
         private readonly UnitCountRepo _unitCountRepo;
+        private readonly ProjectPartlistPurchaseRequestLogRepo _PPPRLogRepo;
 
-        public PORequestBuyController(ProjectPartlistPurchaseRequestRepo pPPRRepo, UnitCountRepo unitCountRepo)
+        public PORequestBuyController(ProjectPartlistPurchaseRequestRepo pPPRRepo, UnitCountRepo unitCountRepo, ProjectPartlistPurchaseRequestLogRepo pPPRLogRepo)
         {
             _PPPRRepo = pPPRRepo;
             _unitCountRepo = unitCountRepo;
+            _PPPRLogRepo = pPPRLogRepo;
         }
 
         [HttpPost("save-data")]
@@ -28,6 +30,9 @@ namespace RERPAPI.Controllers.Old.POKH
             try
             {
                 var results = new List<object>();
+
+                var claims = User.Claims.ToDictionary(x => x.Type, x => x.Value);
+                var currentUser = ObjectMapper.GetCurrentUser(claims);
 
                 foreach (var item in request)
                 {
@@ -84,6 +89,7 @@ namespace RERPAPI.Controllers.Old.POKH
 
                     // Lưu vào database
                     var insertResult = await _PPPRRepo.CreateAsync(model);
+                    await _PPPRLogRepo.AddLog(model.ID, $"{currentUser.FullName} đã thêm mới yêu cầu mua hàng!", "Thêm mới"); // Update ycmh
                     results.Add(new { item.ProductCode, Success = insertResult > 0 });
                 }
 

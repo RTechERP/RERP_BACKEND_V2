@@ -38,7 +38,7 @@ namespace RERPAPI.Controllers.Old
         private ProjectPartlistPurchaseRequestNoteRepo _projectPartlistPurchaseRequestNoteRepo;
         private ProjectPartlistPriceRequestRepo _projectPartlistPriceRequestRepo;
         private ProjectPartlistPurchaseRequestLogRepo _projectPartListPurchaseRequestLogRepo;
-        private HistoryProductPriceRequestRepo _historyPriceRepo;
+        private HistoryProductPriceRequestRepo _historyProductPriceRequestRepo;
 
         public ProjectPartlistPurchaseRequestController(
             ProjectPartlistPurchaseRequestRepo projectPartlistPurchaseRequestRepo,
@@ -60,7 +60,7 @@ namespace RERPAPI.Controllers.Old
             ProjectPartlistPurchaseRequestNoteRepo projectPartlistPurchaseRequestNoteRepo,
             ProjectPartlistPriceRequestRepo projectPartlistPriceRequestRepo,
             ProjectPartlistPurchaseRequestLogRepo projectPartListPurchaseRequestLogRepo,
-            HistoryProductPriceRequestRepo historyPriceRepo
+            HistoryProductPriceRequestRepo historyProductPriceRequestRepo
             )
         {
             _repo = projectPartlistPurchaseRequestRepo;
@@ -82,7 +82,7 @@ namespace RERPAPI.Controllers.Old
             _projectPartlistPurchaseRequestNoteRepo = projectPartlistPurchaseRequestNoteRepo;
             _projectPartlistPriceRequestRepo = projectPartlistPriceRequestRepo;
             _projectPartListPurchaseRequestLogRepo = projectPartListPurchaseRequestLogRepo;
-            _historyPriceRepo = historyPriceRepo;
+            _historyProductPriceRequestRepo = historyProductPriceRequestRepo;
         }
 
         #endregion Khai báo repository
@@ -385,48 +385,96 @@ namespace RERPAPI.Controllers.Old
             try
             {
                 string textStatus = status ? "Y/C duyệt" : "hủy Y/C duyệt";
-                if (!_repo.ValidateRequestApproved(data, out string message))
+                if (data == null || data.Count == 0)
                 {
-                    return BadRequest(ApiResponseFactory.Fail(null, message));
+                    return BadRequest(ApiResponseFactory.Fail(null, "Dữ liệu không hợp lệ"));
                 }
                 var claims = User.Claims.ToDictionary(x => x.Type, x => x.Value);
                 var currentUser = ObjectMapper.GetCurrentUser(claims);
                 PurchaseRequestApproveStatus logStatus = status
                                                            ? PurchaseRequestApproveStatus.RequestApprove
                                                            : PurchaseRequestApproveStatus.CancelRequestApprove;
+                int updatedCount = 0;
+                var failedItems = new List<string>();
                 foreach (ProjectPartlistPurchaseRequestDTO item in data)
                 {
                     if (item.ID <= 0) continue;
                     var existingRequest = _repo.GetByID(item.ID);
-                    if (existingRequest == null) continue;
-
-                    if (existingRequest.EmployeeIDRequestApproved != currentUser.EmployeeID
-                        && !currentUser.IsAdmin) continue;
-
-                    _repo.UpdateData(item);
-                    item.IsRequestApproved = status;
-                    item.EmployeeIDRequestApproved = currentUser.EmployeeID;
-
-                    if (existingRequest != null) //logycmh
+                    if (existingRequest == null)
                     {
-                        string log = _projectPartListPurchaseRequestLogRepo.GenerateLog(existingRequest, item);
-                        if (!String.IsNullOrWhiteSpace(log))
-                        {
-                            log += $"\n+ Đã {textStatus} mua sản phẩm.\n";
-                            await _projectPartListPurchaseRequestLogRepo.
-                                AddLog(item.ID, $"{currentUser.FullName} đã cập nhật:\n{log}", "Cập nhật");
-                        }
-                        else
-                        {
-                            await _projectPartListPurchaseRequestLogRepo.
-                                AddLog(item.ID, $"{currentUser.FullName} đã {textStatus} mua sản phẩm", "Cập nhật");
-                        }
+                        failedItems.Add($"[{item.ProductCode}] không tìm thấy dữ liệu (ID={item.ID})");
+                        continue;
                     }
 
-                    await _repo.UpdateAsync(item);
-                    await _projectPartListPurchaseRequestApproveLogRepo.CreateLogAsync(item.ID, logStatus, currentUser.EmployeeID, currentUser.LoginName);
+                    if (existingRequest.EmployeeIDRequestApproved != currentUser.EmployeeID
+                        && !currentUser.IsAdmin)
+                    {
+                        string skipReason = (existingRequest.EmployeeIDRequestApproved == null || existingRequest.EmployeeIDRequestApproved <= 0)
+                            ? "chưa được bạn 'Check' (NV mua) nên không thể xin duyệt"
+                            : $"đã được NV mua khác (EmployeeID={existingRequest.EmployeeIDRequestApproved}) Check, không thể xin duyệt";
+                        failedItems.Add($"[{item.ProductCode}] {skipReason}");
+                        continue;
+                    }
+
+                    if (status && !_repo.ValidateRequestApprovedItem(item, out string itemValidationMessage))
+                    {
+                        failedItems.Add($"[{item.ProductCode}] {itemValidationMessage}");
+                        continue;
+                    }
+
+                    try
+                    {
+                        _repo.UpdateData(item);
+                        item.IsRequestApproved = status;
+                        item.EmployeeIDRequestApproved = currentUser.EmployeeID;
+
+                        await _repo.UpdateAsync(item);
+
+                        // Verify DB thực sự đã lưu — tránh trường hợp UpdateAsync !hasChanges return 1 mà không save
+                        var saved = _repo.GetSingleNoTracking(x => x.ID == item.ID);
+                        if (saved.IsRequestApproved != status)
+                        {
+                            failedItems.Add($"[{item.ProductCode}] lưu không thành công");
+                            continue;
+                        }
+
+                        // Chỉ ghi log SAU KHI đã xác nhận lưu thành công, tránh log "đã duyệt" giả khi lưu thất bại
+                        if (existingRequest != null) //logycmh
+                        {
+                            string log = _projectPartListPurchaseRequestLogRepo.GenerateLog(existingRequest, item);
+                            if (!String.IsNullOrWhiteSpace(log))
+                            {
+                                log += $"\n+ Đã {textStatus} mua sản phẩm.\n";
+                                await _projectPartListPurchaseRequestLogRepo.
+                                    AddLog(item.ID, $"{currentUser.FullName} đã cập nhật:\n{log}", "Cập nhật");
+                            }
+                            else
+                            {
+                                await _projectPartListPurchaseRequestLogRepo.
+                                    AddLog(item.ID, $"{currentUser.FullName} đã {textStatus} mua sản phẩm", "Cập nhật");
+                            }
+                        }
+
+                        await _projectPartListPurchaseRequestApproveLogRepo.CreateLogAsync(item.ID, logStatus, currentUser.EmployeeID, currentUser.LoginName);
+                        updatedCount++;
+                    }
+                    catch (Exception itemEx)
+                    {
+                        failedItems.Add($"[{item.ProductCode}] {itemEx.Message}");
+                    }
                 }
-                return Ok(ApiResponseFactory.Success(data, $"Đã cập nhật trạng thái {textStatus} thành công."));
+                if (updatedCount == 0)
+                {
+                    string failMessage = $"Không có sản phẩm nào được {textStatus}. Vui lòng kiểm tra lại!";
+                    if (failedItems.Count > 0)
+                        failMessage += "\n" + string.Join("\n", failedItems);
+                    return BadRequest(ApiResponseFactory.Fail(null, failMessage));
+                }
+
+                string resultMessage = $"Đã {textStatus} thành công {updatedCount} sản phẩm.";
+                if (failedItems.Count > 0)
+                    resultMessage += $"\nLỗi {failedItems.Count} sản phẩm:\n" + string.Join("\n", failedItems);
+                return Ok(ApiResponseFactory.Success(data, resultMessage));
             }
             catch (Exception ex)
             {
@@ -963,10 +1011,10 @@ namespace RERPAPI.Controllers.Old
 
                 var firms = _firmRepo.GetAll(x => x.FirmType == 1 && x.IsDelete != true);
 
+
                 string productCode = string.Join(",", data.Select(x => x.ProductCode));
                 List<HistoryProductPriceRequest> lstHistoryProductPriceRequests = await SqlDapper<HistoryProductPriceRequest>.ProcedureToListTAsync("spGetAllHistoryProductPriceRequestByListProductCode",
                     new { ListProductCode = productCode });
-
                 foreach (var item in data)
                 {
                     ProjectPartlistPurchaseRequest prjPartList = _repo.GetByID(item.ID);
@@ -996,19 +1044,43 @@ namespace RERPAPI.Controllers.Old
                     history.HistoryPrice = item.HistoryPrice;
                     history.IsDeleted = false;
 
-                    if (item.HistoryPrice > 0) _historyPriceRepo.Update(history);
-                    else _historyPriceRepo.Create(history);
+                    if (item.HistoryPrice > 0) _historyProductPriceRequestRepo.Update(history);
+                    else _historyProductPriceRequestRepo.Create(history);
                     #endregion
 
 
                     if ((item.ProductGroupID <= 0 && item.ProductGroupRTCID <= 0))
                     {
+                        #region Update lịch sử giá 
+                        HistoryProductPriceRequest historys = lstHistoryProductPriceRequests.FirstOrDefault(x => x.ProductCode == item.ProductCode) ?? new HistoryProductPriceRequest();
+                        historys.HistoryType = $"ProjectPartlistPurchaseRequestID - {item.ID}";
+                        historys.SupplierSaleID = item.SupplierSaleID;
+                        historys.CurrencyID = item.CurrencyID;
+                        historys.ProductCode = item.ProductCode;
+                        historys.ProductName = item.ProductName;
+                        historys.UnitPrice = item.UnitPrice;
+                        historys.Quantity = item.Quantity;
+                        historys.VAT = item.VAT;
+                        historys.TotalPrice = item.TotalPrice;
+                        historys.TotaMoneyVAT = item.TotaMoneyVAT;
+                        historys.TotalPriceExchange = item.TotalPriceExchange;
+                        historys.TotalDayLeadTime = item.TotalDayLeadTime;
+                        historys.Note = item.Note;
+                        historys.HistoryPrice = item.HistoryPrice;
+                        historys.IsDeleted = false;
+
+
+                        if (history.ID > 0) _historyProductPriceRequestRepo.Update(historys);
+                        else _historyProductPriceRequestRepo.Create(historys);
+                        #endregion
+
                         _repo.UpdateData(item);
                         if (item.ID <= 0)
                         {
                             await _repo.CreateAsync(item);
+
                             await _projectPartListPurchaseRequestLogRepo.
-                                AddLog(item.ID, $"{currentUser.FullName} đã thêm mới yêu cầu mua hàng!", "Thêm mới"); //logycmh
+                                AddLog(item.ID, $"{currentUser.FullName} đã thêm mới yêu cầu mua hàng!", "Thêm mới");
                         }
                         else
                         {
@@ -1025,37 +1097,68 @@ namespace RERPAPI.Controllers.Old
                         List<int> productGroupIDs = _productGroupRepo.GetAll(
                         x => x.ID == item.ProductGroupID || x.ParentID == item.ProductGroupID)
                         .Select(x => x.ID).ToList();
-                        var purchaseReq = _repo.GetSingleNoTracking(x => x.ID == item.ID);
-                        if (purchaseReq.ProductSaleID <= 0)
+
+                        #region Update bỏ check purchaseReq của Mr.Nhật
+                        //var purchaseReq = _repo.GetSingleNoTracking(x => x.ID == item.ID);
+                        //if (purchaseReq.ProductSaleID <= 0)
+                        //{
+                        //    var productSales = _productSaleRepo.GetAll(x =>
+                        //        x.ProductCode.ToLower() == item.ProductCode.ToLower() &&
+                        //        x.IsDeleted != true
+                        //    ).ToList();
+
+                        //    ProductSale productSale = productSales
+                        //        .FirstOrDefault(x => productGroupIDs.Contains((int)x.ProductGroupID))
+                        //        ?? new ProductSale();
+
+                        //    if (productSale.ID <= 0)
+                        //    {
+                        //        productSale.ProductCode = item.ProductCode;
+                        //        productSale.ProductName = item.ProductName;
+                        //        productSale.Unit = item.UnitName;
+                        //        productSale.ProductGroupID = item.ProductGroupID;
+                        //        productSale.ProductNewCode = _repo.GenerateProductNewCode(Convert.ToInt32(item.ProductGroupID));
+                        //        string maker = item.Manufacturer;
+
+                        //        Firm firm = _firmRepo.GetAll(x =>
+                        //                    x.FirmName.Trim().ToLower() == maker.Trim().ToLower())
+                        //                    .FirstOrDefault() ?? new Firm();
+
+                        //        productSale.Maker = maker;
+                        //        productSale.FirmID = firm.ID;
+                        //        await _productSaleRepo.CreateAsync(productSale);
+                        //    }
+                        //    item.ProductSaleID = productSale.ID;
+                        //}
+                        #endregion
+
+                        var productSales = _productSaleRepo.GetAll(x =>
+                                x.ProductCode.ToLower() == item.ProductCode.ToLower() &&
+                                x.IsDeleted != true
+                            ).ToList();
+
+                        ProductSale productSale = productSales
+                            .FirstOrDefault(x => productGroupIDs.Contains((int)x.ProductGroupID))
+                            ?? new ProductSale();
+
+                        if (productSale.ID <= 0)
                         {
-                            var productSales = _productSaleRepo.GetAll(x =>
-                            x.ProductCode.ToLower() == item.ProductCode.ToLower() &&
-                            x.IsDeleted != true
-                        ).ToList();
+                            productSale.ProductCode = item.ProductCode;
+                            productSale.ProductName = item.ProductName;
+                            productSale.Unit = item.UnitName;
+                            productSale.ProductGroupID = item.ProductGroupID;
+                            productSale.ProductNewCode = _repo.GenerateProductNewCode(Convert.ToInt32(item.ProductGroupID));
+                            string maker = item.Manufacturer;
 
-                            ProductSale productSale = productSales
-                                .FirstOrDefault(x => productGroupIDs.Contains((int)x.ProductGroupID))
-                                ?? new ProductSale();
+                            Firm firm = _firmRepo.GetAll(x =>
+                                        x.FirmName.Trim().ToLower() == maker.Trim().ToLower())
+                                        .FirstOrDefault() ?? new Firm();
 
-                            if (productSale.ID <= 0)
-                            {
-                                productSale.ProductCode = item.ProductCode;
-                                productSale.ProductName = item.ProductName;
-                                productSale.Unit = item.UnitName;
-                                productSale.ProductGroupID = item.ProductGroupID;
-                                productSale.ProductNewCode = _repo.GenerateProductNewCode(Convert.ToInt32(item.ProductGroupID));
-                                string maker = item.Manufacturer;
-
-                                Firm firm = _firmRepo.GetAll(x =>
-                                            x.FirmName.Trim().ToLower() == maker.Trim().ToLower())
-                                            .FirstOrDefault() ?? new Firm();
-
-                                productSale.Maker = maker;
-                                productSale.FirmID = firm.ID;
-                                await _productSaleRepo.CreateAsync(productSale);
-                            }
-                            item.ProductSaleID = productSale.ID;
+                            productSale.Maker = maker;
+                            productSale.FirmID = firm.ID;
+                            await _productSaleRepo.CreateAsync(productSale);
                         }
+                        item.ProductSaleID = productSale.ID;
                     }
                     else
                     {
@@ -1075,7 +1178,28 @@ namespace RERPAPI.Controllers.Old
                             }
                         }
                     }
+                    #region Update lịch sử giá 
+                    HistoryProductPriceRequest historypur = lstHistoryProductPriceRequests.FirstOrDefault(x => x.ProductCode == item.ProductCode) ?? new HistoryProductPriceRequest();
+                    historypur.HistoryType = $"ProjectPartlistPurchaseRequestID - {item.ID}";
+                    historypur.SupplierSaleID = item.SupplierSaleID;
+                    historypur.CurrencyID = item.CurrencyID;
+                    historypur.ProductCode = item.ProductCode;
+                    historypur.ProductName = item.ProductName;
+                    historypur.UnitPrice = item.UnitPrice;
+                    historypur.Quantity = item.Quantity;
+                    historypur.VAT = item.VAT;
+                    historypur.TotalPrice = item.TotalPrice;
+                    historypur.TotaMoneyVAT = item.TotaMoneyVAT;
+                    historypur.TotalPriceExchange = item.TotalPriceExchange;
+                    historypur.TotalDayLeadTime = item.TotalDayLeadTime;
+                    historypur.Note = item.Note;
+                    historypur.HistoryPrice = item.HistoryPrice;
+                    historypur.IsDeleted = false;
 
+
+                    if (historypur.ID > 0) _historyProductPriceRequestRepo.Update(historypur);
+                    else _historyProductPriceRequestRepo.Create(historypur);
+                    #endregion
                     _repo.UpdateData(item);
                     if (item.ID <= 0)
                     {
@@ -1155,6 +1279,9 @@ namespace RERPAPI.Controllers.Old
                             if (priceRequest != null)
                             {
                                 priceRequest.IsDeleted = true;
+
+                                await _projectPartListPurchaseRequestLogRepo.
+                                        AddLog(priceRequest.ID, $"{currentUser.FullName} đã xóa yêu cầu báo giá!", "Xóa");
                                 await _projectPartlistPriceRequestRepo.UpdateAsync(priceRequest);
                             }
                         }
@@ -1350,7 +1477,13 @@ namespace RERPAPI.Controllers.Old
                         continue;
 
                     //var dt = SQLHelper<dynamic>.ProcedureToList("spGetInventory", new[] { "@ProductSaleID" }, new object[] { item.ProductSaleID });
-                    var dt = SQLHelper<dynamic>.ProcedureToList("spGetInventory_Test", new[] { "@ProductSaleID" }, new object[] { item.ProductSaleID });
+                    var warehouse = _warehouseRepo.GetByID(item.WarehouseID ?? 0);
+                    if (warehouse.ID <= 0)
+                    {
+                        return BadRequest(ApiResponseFactory.Fail(null, $"Không tìm thấy kho được chọn trên cơ sơ dữ liệu!"));
+                    }
+                    var dt = SQLHelper<dynamic>.ProcedureToList("spGetInventory_Test", new[] { "@ProductSaleID", "@WarehouseCode" }, new object[] { item.ProductSaleID, warehouse.WarehouseCode });
+
                     var inventoryData = SQLHelper<dynamic>.GetListData(dt, 0);
                     if (inventoryData.Count < 0) return BadRequest(ApiResponseFactory.Fail(null, $"Sản phẩm [{item.ProductName}] không có trong tồn kho!"));
                     var quantity = inventoryData[0]?.TotalQuantityLast;
@@ -1369,7 +1502,7 @@ namespace RERPAPI.Controllers.Old
                     inventoryProject.ProjectID = item.ProjectID;
                     inventoryProject.ProductSaleID = item.ProductSaleID;
                     inventoryProject.EmployeeID = item.EmployeeIDRequestApproved;
-                    inventoryProject.WarehouseID = 1;
+                    inventoryProject.WarehouseID = item.WarehouseID ?? 1;
                     inventoryProject.Quantity = item.Quantity;
                     inventoryProject.CustomerID = item.CustomerID;
                     inventoryProject.POKHDetailID = item.POKHDetailID;

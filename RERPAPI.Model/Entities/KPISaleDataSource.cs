@@ -20,4 +20,6 @@ public partial class KPISaleDataSource
     public string? ValueColumn { get; set; }
 
     public bool IsActive { get; set; }
+
+    public bool UseEmployeeID { get; set; }
 }

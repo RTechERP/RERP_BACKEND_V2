@@ -64,4 +64,12 @@ public partial class ProjectHistoryProblem
     public bool? IsApproved_PP { get; set; }
 
     public DateTime? DateApproved_PP { get; set; }
+
+    public string? Note { get; set; }
+
+    public string? ErrorLocation { get; set; }
+
+    public string? Impact { get; set; }
+
+    public int? ProjectManagerID { get; set; }
 }

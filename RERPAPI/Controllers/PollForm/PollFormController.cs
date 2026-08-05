@@ -146,26 +146,27 @@ namespace RERPAPI.Controllers.PollForm
                 var activePolls = _pollFormRepo.GetAll(x => x.IsDeleted != true && x.IsPublic == true && x.IsNotifycation == true)
                     .Where(x => (x.StartDate == null || x.StartDate <= now) &&
                                 (x.EndDate == null || x.EndDate >= now))
-                    .Select(x => x.ID)
                     .ToList();
 
                 if (activePolls.Count == 0)
-                    return Ok(ApiResponseFactory.Success(0, ""));
+                    return Ok(ApiResponseFactory.Success(new List<PollFormEntity>(), ""));
 
-                var responses = _pollResponseRepo.GetAll(x => x.EmployeeID == currentUser.EmployeeID && x.PollFormID.HasValue && activePolls.Contains(x.PollFormID.Value))
+                var activePollIds = activePolls.Select(x => x.ID).ToList();
+
+                var responses = _pollResponseRepo.GetAll(x => x.EmployeeID == currentUser.EmployeeID && x.PollFormID.HasValue && activePollIds.Contains(x.PollFormID.Value))
                     .ToList();
 
-                int pendingCount = 0;
-                foreach (var pollId in activePolls)
+                var pendingPolls = new List<PollFormEntity>();
+                foreach (var poll in activePolls)
                 {
-                    var response = responses.OrderByDescending(r => r.CreatedDate).FirstOrDefault(r => r.PollFormID == pollId);
+                    var response = responses.OrderByDescending(r => r.CreatedDate).FirstOrDefault(r => r.PollFormID == poll.ID);
                     if (response == null || response.IsCompleted != true)
                     {
-                        pendingCount++;
+                        pendingPolls.Add(poll);
                     }
                 }
 
-                return Ok(ApiResponseFactory.Success(pendingCount, ""));
+                return Ok(ApiResponseFactory.Success(pendingPolls, ""));
             }
             catch (Exception ex)
             {
@@ -1147,6 +1148,332 @@ namespace RERPAPI.Controllers.PollForm
             }
         }
 
+      
+        [HttpPost("{pollFormId}/mobile/submit-bulk")]
+        public IActionResult MobileSubmitPollBulk(int pollFormId, [FromBody] MobileSubmitPollBulkDTO dto)
+        {
+            try
+            {
+                var currentUser = GetCurrentUser();
+
+                var pollForm = _pollFormRepo.GetByID(pollFormId);
+                if (pollForm == null || pollForm.ID <= 0 || pollForm.IsDeleted == true)
+                    return NotFound(ApiResponseFactory.Fail(null, "Poll form not found"));
+
+                var voteFailure = EnsureCanVotePollForm(pollForm);
+                if (voteFailure != null)
+                    return voteFailure;
+
+                if (!CanEditPoll(pollForm, DateTime.Now, out var closedReason))
+                    return BadRequest(ApiResponseFactory.Fail(null, closedReason ?? "Poll is closed"));
+
+                var employeeId = GetCurrentEmployeeId(dto.EmployeeID);
+                var currentEmployee = GetCurrentEmployee(employeeId);
+
+                var sections = dto.Sections;
+                bool isFlatFormat = false;
+
+                if (sections == null || sections.Count == 0)
+                {
+                    if (dto.SectionID.HasValue)
+                    {
+                        isFlatFormat = true;
+                    }
+                    else
+                    {
+                        return BadRequest(ApiResponseFactory.Fail(null, "Sections is required and must not be empty"));
+                    }
+                }
+
+                if (isFlatFormat)
+                {
+                    using var flatDbContext = CreateDbContext(currentUser);
+                    using var flatTransaction = flatDbContext.Database.BeginTransaction();
+
+                    var flatAllSections = flatDbContext.PollSections
+                        .Where(x => x.PollFormID == pollFormId && x.IsDeleted != true)
+                        .OrderBy(x => x.SortOrder)
+                        .ThenBy(x => x.ID)
+                        .ToList();
+                    var flatAllQuestions = flatDbContext.PollQuestions.Where(x => x.PollFormID == pollFormId).ToList();
+
+                    // Derive hidden sections and questions from visible ones
+                    var derivedHiddenSectionIds = new List<int>();
+                    if (dto.VisibleSectionIds != null && dto.VisibleSectionIds.Count > 0)
+                    {
+                        derivedHiddenSectionIds = flatAllSections
+                            .Select(x => x.ID)
+                            .Except(dto.VisibleSectionIds)
+                            .ToList();
+                    }
+                    else if (dto.HiddenSectionIds != null)
+                    {
+                        derivedHiddenSectionIds = dto.HiddenSectionIds;
+                    }
+
+                    var derivedHiddenQuestionIds = new List<int>();
+                    if (dto.VisibleQuestionIds != null && dto.VisibleQuestionIds.Count > 0)
+                    {
+                        derivedHiddenQuestionIds = flatAllQuestions
+                            .Select(x => x.ID)
+                            .Except(dto.VisibleQuestionIds)
+                            .ToList();
+                    }
+                    else if (dto.HiddenQuestionIds != null)
+                    {
+                        derivedHiddenQuestionIds = dto.HiddenQuestionIds;
+                    }
+
+                    var visibleQuestions = flatAllQuestions;
+                    if (dto.VisibleQuestionIds != null && dto.VisibleQuestionIds.Count > 0)
+                    {
+                        visibleQuestions = flatAllQuestions
+                            .Where(x => dto.VisibleQuestionIds.Contains(x.ID))
+                            .ToList();
+                    }
+
+                    var submitSectionDto = new SubmitPollSectionDTO
+                    {
+                        PollResponseID = dto.PollResponseID,
+                        SectionID = dto.SectionID,
+                        EmployeeID = dto.EmployeeID,
+                        Answers = dto.Answers,
+                        HiddenSectionIds = derivedHiddenSectionIds,
+                        HiddenQuestionIds = derivedHiddenQuestionIds,
+                        ClearSectionIds = dto.ClearSectionIds,
+                        ClearQuestionIds = dto.ClearQuestionIds
+                    };
+
+                    var clearQuestionIds = ResolveResponseClearQuestionIds(
+                        submitSectionDto,
+                        flatAllSections,
+                        flatAllQuestions,
+                        visibleQuestions,
+                        out var invalidClearSectionIds,
+                        out var invalidClearQuestionIds);
+
+                    if (invalidClearSectionIds.Count > 0)
+                        return BadRequest(ApiResponseFactory.Fail(null, "Clear section ids contain sections outside this poll form", invalidClearSectionIds));
+
+                    if (invalidClearQuestionIds.Count > 0)
+                        return BadRequest(ApiResponseFactory.Fail(null, "Clear question ids contain questions outside this poll form", invalidClearQuestionIds));
+
+                    var answersForSave = dto.Answers?
+                        .Where(x => !x.QuestionID.HasValue || !clearQuestionIds.Contains(x.QuestionID.Value))
+                        .ToList() ?? new List<AnswerItemDTO>();
+                    var effectiveQuestions = visibleQuestions
+                        .Where(x => !clearQuestionIds.Contains(x.ID))
+                        .ToList();
+
+                    PollResponse flatResponse;
+                    if (dto.PollResponseID.HasValue)
+                    {
+                        flatResponse = flatDbContext.PollResponses
+                            .FirstOrDefault(x => x.ID == dto.PollResponseID.Value && x.PollFormID == pollFormId) ?? new PollResponse();
+                        if (flatResponse.ID <= 0)
+                            return BadRequest(ApiResponseFactory.Fail(null, "Poll response is invalid for this poll form"));
+
+                        if (!CanManagePoll(pollForm, currentUser) &&
+                            (employeeId <= 0 || flatResponse.EmployeeID != employeeId))
+                        {
+                            return BadRequest(ApiResponseFactory.Fail(null, "Cannot update another employee's poll response"));
+                        }
+                    }
+                    else
+                    {
+                        flatResponse = employeeId > 0
+                            ? GetLatestEmployeeResponse(flatDbContext, pollFormId, employeeId) ?? new PollResponse()
+                            : new PollResponse();
+
+                        if (flatResponse.ID <= 0)
+                        {
+                            flatResponse.PollFormID = pollFormId;
+                            flatResponse.EmployeeID = employeeId > 0 ? employeeId : dto.EmployeeID;
+                            flatResponse.IsCompleted = false;
+                            flatResponse.CreatedBy = currentUser.LoginName;
+                            flatResponse.CreatedDate = DateTime.Now;
+                            flatDbContext.PollResponses.Add(flatResponse);
+                            flatDbContext.SaveChanges();
+                        }
+                    }
+
+                    ClearResponseAnswers(flatDbContext, flatResponse.ID, clearQuestionIds);
+
+                    var answers = AddEmployeeMappedAnswers(answersForSave, effectiveQuestions, currentEmployee, flatDbContext);
+                    if (!TryValidateAnswers(answers, effectiveQuestions, flatDbContext, out var validationMessage, out var validationData))
+                        return BadRequest(ApiResponseFactory.Fail(null, validationMessage, validationData));
+
+                    var savedAnswerCount = SaveResponseAnswers(flatDbContext, flatResponse.ID, answers, currentUser);
+                    flatDbContext.SaveChanges();
+
+                    var allResponseAnswers = flatDbContext.PollResponseAnswers.Where(x => x.PollResponseID == flatResponse.ID).ToList();
+                    var answerMap = BuildAnswerMap(flatAllQuestions, allResponseAnswers);
+
+                    var visibleSectionIds = dto.VisibleSectionIds;
+                    if (visibleSectionIds == null || visibleSectionIds.Count == 0)
+                    {
+                        visibleSectionIds = flatAllSections.Select(x => x.ID).ToList();
+                    }
+
+                    var lastVisibleSection = flatAllSections
+                        .Where(x => visibleSectionIds.Contains(x.ID))
+                        .OrderBy(x => x.SortOrder)
+                        .ThenBy(x => x.ID)
+                        .LastOrDefault();
+
+                    var isCompleted = true;
+                    if (lastVisibleSection != null)
+                    {
+                        var nextSectionId = _pollBranchingRuleEvaluator.ResolveNextSectionId(lastVisibleSection, flatAllSections, answerMap);
+                        isCompleted = nextSectionId == null;
+                    }
+
+                    flatResponse.IsCompleted = flatResponse.IsCompleted == true || isCompleted;
+                    flatResponse.CompletedDate = flatResponse.IsCompleted == true
+                        ? flatResponse.CompletedDate ?? DateTime.Now
+                        : flatResponse.CompletedDate;
+                    flatResponse.UpdatedBy = currentUser.LoginName;
+                    flatResponse.UpdatedDate = DateTime.Now;
+                    flatDbContext.SaveChanges();
+                    flatTransaction.Commit();
+
+                    var flatSectionResults = new List<MobileSubmitPollBulkSectionResultDTO>();
+                    var questionToSectionMap = flatAllQuestions.ToDictionary(x => x.ID, x => x.PollSectionID);
+                    var savedAnswersGrouped = answers
+                        .GroupBy(x => x.QuestionID.HasValue && questionToSectionMap.TryGetValue(x.QuestionID.Value, out var sId) ? sId : null)
+                        .Where(g => g.Key.HasValue)
+                        .ToList();
+
+                    foreach (var group in savedAnswersGrouped)
+                    {
+                        flatSectionResults.Add(new MobileSubmitPollBulkSectionResultDTO
+                        {
+                            SectionID = group.Key!.Value,
+                            SavedAnswerCount = group.Count()
+                        });
+                    }
+
+                    var flatResult = new MobileSubmitPollBulkResultDTO
+                    {
+                        PollResponseID = flatResponse.ID,
+                        PollFormID = pollFormId,
+                        IsCompleted = flatResponse.IsCompleted == true,
+                        TotalSavedAnswerCount = savedAnswerCount,
+                        SectionResults = flatSectionResults
+                    };
+
+                    return Ok(ApiResponseFactory.Success(flatResult, "Poll answers submitted successfully"));
+                }
+
+                using var dbContext = CreateDbContext(currentUser);
+                using var transaction = dbContext.Database.BeginTransaction();
+
+                // Get or create poll response
+                PollResponse response;
+                var firstPollResponseId = sections.FirstOrDefault(s => s.PollResponseID.HasValue)?.PollResponseID;
+
+                if (firstPollResponseId.HasValue)
+                {
+                    response = dbContext.PollResponses
+                        .FirstOrDefault(x => x.ID == firstPollResponseId.Value && x.PollFormID == pollFormId) ?? new PollResponse();
+                    if (response.ID <= 0)
+                        return BadRequest(ApiResponseFactory.Fail(null, "Poll response is invalid for this poll form"));
+
+                    if (!CanManagePoll(pollForm, currentUser) &&
+                        (employeeId <= 0 || response.EmployeeID != employeeId))
+                    {
+                        return BadRequest(ApiResponseFactory.Fail(null, "Cannot update another employee's poll response"));
+                    }
+                }
+                else
+                {
+                    response = employeeId > 0
+                        ? GetLatestEmployeeResponse(dbContext, pollFormId, employeeId) ?? new PollResponse()
+                        : new PollResponse();
+
+                    if (response.ID <= 0)
+                    {
+                        response.PollFormID = pollFormId;
+                        response.EmployeeID = employeeId > 0 ? employeeId : dto.EmployeeID;
+                        response.IsCompleted = false;
+                        response.CreatedBy = currentUser.LoginName;
+                        response.CreatedDate = DateTime.Now;
+                        dbContext.PollResponses.Add(response);
+                        dbContext.SaveChanges();
+                    }
+                }
+
+                var allQuestions = dbContext.PollQuestions
+                    .Where(x => x.PollFormID == pollFormId)
+                    .OrderBy(x => x.PollSectionID)
+                    .ThenBy(x => x.SortOrder)
+                    .ThenBy(x => x.ID)
+                    .ToList();
+
+                var allSections = dbContext.PollSections
+                    .Where(x => x.PollFormID == pollFormId && x.IsDeleted != true)
+                    .OrderBy(x => x.SortOrder)
+                    .ThenBy(x => x.ID)
+                    .ToList();
+                var validSectionIds = allSections.Select(x => x.ID).ToHashSet();
+
+                var totalSavedAnswerCount = 0;
+                var sectionResults = new List<MobileSubmitPollBulkSectionResultDTO>();
+
+                foreach (var sectionDto in sections)
+                {
+                    if (!sectionDto.SectionID.HasValue)
+                        return BadRequest(ApiResponseFactory.Fail(null, "SectionID is required for each section item"));
+
+                    if (!validSectionIds.Contains(sectionDto.SectionID.Value))
+                        return BadRequest(ApiResponseFactory.Fail(null, $"Section {sectionDto.SectionID.Value} not found in this poll form"));
+
+                    var sectionQuestions = allQuestions
+                        .Where(x => x.PollSectionID == sectionDto.SectionID.Value)
+                        .ToList();
+
+                    var answersForSave = sectionDto.Answers ?? new List<AnswerItemDTO>();
+                    var answers = AddEmployeeMappedAnswers(answersForSave, sectionQuestions, currentEmployee, dbContext);
+
+                    if (!TryValidateAnswers(answers, sectionQuestions, dbContext, out var validationMessage, out var validationData))
+                        return BadRequest(ApiResponseFactory.Fail(null, $"Section {sectionDto.SectionID.Value}: {validationMessage}", validationData));
+
+                    var savedCount = SaveResponseAnswers(dbContext, response.ID, answers, currentUser);
+                    totalSavedAnswerCount += savedCount;
+
+                    sectionResults.Add(new MobileSubmitPollBulkSectionResultDTO
+                    {
+                        SectionID = sectionDto.SectionID.Value,
+                        SavedAnswerCount = savedCount
+                    });
+                }
+
+                // Mark as completed
+                response.IsCompleted = true;
+                response.CompletedDate = response.CompletedDate ?? DateTime.Now;
+                response.UpdatedBy = currentUser.LoginName;
+                response.UpdatedDate = DateTime.Now;
+
+                dbContext.SaveChanges();
+                transaction.Commit();
+
+                var result = new MobileSubmitPollBulkResultDTO
+                {
+                    PollResponseID = response.ID,
+                    PollFormID = pollFormId,
+                    IsCompleted = true,
+                    TotalSavedAnswerCount = totalSavedAnswerCount,
+                    SectionResults = sectionResults
+                };
+
+                return Ok(ApiResponseFactory.Success(result, "Poll answers submitted successfully"));
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
+            }
+        }
+
         /// <summary>
         /// Get all responses for a poll form
         /// </summary>
@@ -1683,6 +2010,99 @@ namespace RERPAPI.Controllers.PollForm
                 .Select(x => x.Last())
                 .ToList();
             var questionIds = submittedAnswers.Select(x => x.QuestionID!.Value).ToHashSet();
+            
+            var questions = dbContext.PollQuestions
+                .Where(x => questionIds.Contains(x.ID))
+                .ToDictionary(x => x.ID);
+
+            var choiceQuestionIds = questions.Values
+                .Where(x => string.Equals(x.QuestionType, "SingleChoice", StringComparison.OrdinalIgnoreCase) ||
+                            string.Equals(x.QuestionType, "MultipleChoice", StringComparison.OrdinalIgnoreCase))
+                .Select(x => x.ID)
+                .ToHashSet();
+
+            var optionsByQuestion = choiceQuestionIds.Count > 0
+                ? dbContext.PollQuestionOptions
+                    .Where(x => x.PollQuestionID.HasValue && choiceQuestionIds.Contains(x.PollQuestionID.Value))
+                    .GroupBy(x => x.PollQuestionID!.Value)
+                    .ToDictionary(x => x.Key, x => x.ToList())
+                : new Dictionary<int, List<PollQuestionOption>>();
+
+            foreach (var answer in submittedAnswers)
+            {
+                if (questions.TryGetValue(answer.QuestionID!.Value, out var question))
+                {
+                    if (string.Equals(question.QuestionType, "MultipleChoice", StringComparison.OrdinalIgnoreCase))
+                    {
+                        if (string.IsNullOrWhiteSpace(answer.AnswerJson) && !string.IsNullOrWhiteSpace(answer.AnswerText))
+                        {
+                            var values = answer.AnswerText.Split(new[] { ',', ';' }, StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
+                            answer.AnswerJson = JsonSerializer.Serialize(values);
+                        }
+                        else if (!string.IsNullOrWhiteSpace(answer.AnswerJson) && string.IsNullOrWhiteSpace(answer.AnswerText))
+                        {
+                            try
+                            {
+                                var values = JsonSerializer.Deserialize<List<string>>(answer.AnswerJson);
+                                if (values != null)
+                                {
+                                    answer.AnswerText = string.Join(", ", values);
+                                }
+                            }
+                            catch { }
+                        }
+                    }
+                    else
+                    {
+                        if (!string.IsNullOrWhiteSpace(answer.AnswerJson) && string.IsNullOrWhiteSpace(answer.AnswerText))
+                        {
+                            try
+                            {
+                                using var document = JsonDocument.Parse(answer.AnswerJson);
+                                var root = document.RootElement;
+                                if (root.ValueKind == JsonValueKind.Array)
+                                {
+                                    var values = root.EnumerateArray().Select(x => x.ToString()).ToList();
+                                    answer.AnswerText = string.Join(", ", values);
+                                }
+                                else
+                                {
+                                    answer.AnswerText = root.ToString();
+                                }
+                            }
+                            catch
+                            {
+                                answer.AnswerText = answer.AnswerJson;
+                            }
+                        }
+                    }
+
+                    if (choiceQuestionIds.Contains(question.ID) && string.IsNullOrWhiteSpace(answer.DisplayText))
+                    {
+                        if (optionsByQuestion.TryGetValue(question.ID, out var options))
+                        {
+                            var selectedValues = ExtractAnswerValues(answer);
+                            var selectedTexts = new List<string>();
+                            foreach (var val in selectedValues)
+                            {
+                                var opt = options.FirstOrDefault(o =>
+                                    string.Equals(o.ID.ToString(), val, StringComparison.OrdinalIgnoreCase) ||
+                                    string.Equals(o.OptionValue, val, StringComparison.OrdinalIgnoreCase) ||
+                                    string.Equals(o.OptionText, val, StringComparison.OrdinalIgnoreCase));
+                                if (opt != null)
+                                {
+                                    selectedTexts.Add(opt.OptionText);
+                                }
+                            }
+                            if (selectedTexts.Count > 0)
+                            {
+                                answer.DisplayText = string.Join(", ", selectedTexts);
+                            }
+                        }
+                    }
+                }
+            }
+
             var existingAnswers = dbContext.PollResponseAnswers
                 .Where(x => x.PollResponseID == responseId && x.PollQuestionID.HasValue && questionIds.Contains(x.PollQuestionID.Value))
                 .ToDictionary(x => x.PollQuestionID!.Value);

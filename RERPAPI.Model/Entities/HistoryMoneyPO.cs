@@ -58,4 +58,6 @@ public partial class HistoryMoneyPO
     public bool? IsDelivered { get; set; }
 
     public int? UserID { get; set; }
+
+    public int? PMUserID { get; set; }
 }

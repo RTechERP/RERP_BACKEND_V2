@@ -1,6 +1,7 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using RERPAPI.Model.Common;
+using RERPAPI.Model.DTO;
 using RERPAPI.Model.Entities;
 using RERPAPI.Repo.GenericEntity;
 
@@ -12,13 +13,16 @@ namespace RERPAPI.Controllers.Old.POKH
     public class PORequestPriceRTCController : ControllerBase
     {
         private readonly ProjectPartlistPriceRequestRepo _projectPartlistPriceRequests;
+        private readonly ProjectPartListPriceRequestLogRepo _projectPartlistPriceRequestLogs;
 
         public PORequestPriceRTCController(
 
-            ProjectPartlistPriceRequestRepo projectPartlistPriceRequests
+            ProjectPartlistPriceRequestRepo projectPartlistPriceRequests,
+            ProjectPartListPriceRequestLogRepo projectPartListPriceRequestLogRepo
             )
         {
             _projectPartlistPriceRequests = projectPartlistPriceRequests;
+            _projectPartlistPriceRequestLogs = projectPartListPriceRequestLogRepo;
         }
 
         [HttpGet("get-details")]
@@ -41,6 +45,9 @@ namespace RERPAPI.Controllers.Old.POKH
         {
             try
             {
+                var claims = User.Claims.ToDictionary(x => x.Type, x => x.Value);
+                var currentUser = ObjectMapper.GetCurrentUser(claims);
+
                 if (models == null || models.Count == 0)
                     return BadRequest(ApiResponseFactory.Fail(null, "Danh sách yêu cầu báo giá trống"));
 
@@ -102,6 +109,10 @@ namespace RERPAPI.Controllers.Old.POKH
                         {
                             req.IsDeleted = true;
                             req.UpdatedDate = DateTime.Now;
+
+                            var oldModel = _projectPartlistPriceRequests.GetByID(req.ID);
+                            await _projectPartlistPriceRequestLogs.updateLog(oldModel, req);
+
                             await _projectPartlistPriceRequests.UpdateAsync(req);
                         }
                     }
@@ -120,6 +131,8 @@ namespace RERPAPI.Controllers.Old.POKH
                         POKHDetailID = i.POKHDetailID
                     };
                     await _projectPartlistPriceRequests.CreateAsync(newRequest);
+                    await _projectPartlistPriceRequestLogs.
+                                AddLog(newRequest.ID, $"{currentUser.FullName} đã thêm mới yêu cầu báo giá!", "Thêm mới");
                 }
                 return Ok(ApiResponseFactory.Success(null, "Lưu thành công"));
             }
@@ -159,6 +172,9 @@ namespace RERPAPI.Controllers.Old.POKH
                     req.IsDeleted = true;
                     req.UpdatedDate = DateTime.Now;
                     req.UpdatedBy = User?.Identity?.Name ?? string.Empty;
+
+                    var oldModel = _projectPartlistPriceRequests.GetByID(req.ID);
+                    await _projectPartlistPriceRequestLogs.updateLog(oldModel, req);
 
                     await _projectPartlistPriceRequests.UpdateAsync(req);
                     deleted.Add(id);

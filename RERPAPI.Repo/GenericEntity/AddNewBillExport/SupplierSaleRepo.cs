@@ -10,9 +10,10 @@ namespace RERPAPI.Repo.GenericEntity
         {
         }
 
-        public bool Validate(SupplierSale item, out string message)
+        public bool Validate(SupplierSale item, out string message, out string warningMessage)
         {
             message = "";
+            warningMessage = "";
 
             // Regex pattern
             string patternCode = @"^[^àáảãạâầấẩẫậăằắẳẵặèéẻẽẹêềếểễệìíỉĩịòóỏõọôồốổỗộơờớởỡợùúủũụưừứửữựỳýỷỹỵÀÁẢÃẠÂẦẤẨẪẬĂẰẮẲẴẶÈÉẺẼẸÊỀẾỂỄỆÌÍỈĨỊÒÓỎÕỌÔỒỐỔỖỘƠỜỚỞỠỢÙÚỦŨỤƯỪỨỬỮỰỲÝỶỸỴ]+$";
@@ -72,7 +73,7 @@ namespace RERPAPI.Repo.GenericEntity
                 return false;
             }
 
-            //7. Validate trùng tên NCC
+            //7. Cảnh báo trùng mã số thuế (không chặn lưu)
             if (!string.IsNullOrWhiteSpace(item.MaSoThue))
             {
                 if (GetAll(x =>
@@ -81,8 +82,7 @@ namespace RERPAPI.Repo.GenericEntity
                     && (x.IsDeleted == false || x.IsDeleted == null)
                 ).Any())
                 {
-                    message = $"Mã số thuế đã tồn tại. Vui lòng nhập lại thông tin!";
-                    return false;
+                    warningMessage = $"Mã số thuế [{item.MaSoThue}] đã tồn tại!";
                 }
             }
 

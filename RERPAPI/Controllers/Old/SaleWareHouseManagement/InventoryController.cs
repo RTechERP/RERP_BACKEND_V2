@@ -33,8 +33,8 @@ namespace RERPAPI.Controllers.Old.SaleWareHouseManagement
                 if (filter.checkAll == true) filter.productGroupID = 0;
                 List<List<dynamic>> result = SQLHelper<dynamic>.ProcedureToList(
                        //"spGetInventory", new string[] { "@ID", "@Find", "@WarehouseCode", "@IsStock" },
-                       "spGetInventory_Test", new string[] { "@ID", "@Find", "@WarehouseCode", "@IsStock" },
-                    new object[] { filter.productGroupID, filter.Find, filter.WarehouseCode, filter.IsStock == false ? 0 : 1 }
+                       "spGetInventory_Test", new string[] { "@ID", "@Find", "@WarehouseCode", "@IsStock", "@IsStandardized" },
+                    new object[] { filter.productGroupID, filter.Find, filter.WarehouseCode, filter.IsStock == false ? 0 : 1, filter.IsStandardized == true ? 1 : 0}
                    );
                 return Ok(new
                 {
@@ -282,5 +282,74 @@ namespace RERPAPI.Controllers.Old.SaleWareHouseManagement
                 });
             }
         }
+        [HttpPost("inventory-not-export")]
+        public IActionResult getInventoryNotExport(InventoryPram filter)
+        {
+            try
+            {
+                if (filter.checkAll == true) filter.productGroupID = 0;
+                List<List<dynamic>> result = SQLHelper<dynamic>.ProcedureToList(
+                    "spGetInventoryNew_nhat",
+                    new string[] { "@ID", "@Find", "@WarehouseCode", "@IsStock", "@IsDeleted", "@ProductSaleID", "@PageSize", "@PageNumber", "@FromDate", "@ToDate" },
+                    new object[] {
+                        filter.productGroupID,
+                        filter.Find ?? "",
+                        filter.WarehouseCode ?? "",
+                        filter.IsStock ? 1 : 0,
+                        0,
+                        0,
+                        999999,
+                        1,
+                        filter.FromDate.HasValue ? (object)filter.FromDate.Value : DBNull.Value,
+                        filter.ToDate.HasValue ? (object)filter.ToDate.Value : DBNull.Value
+                    }
+                );
+                return Ok(new
+                {
+                    status = 1,
+                    data = SQLHelper<object>.GetListData(result, 0)
+                });
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(new
+                {
+                    status = 0,
+                    message = ex.Message,
+                    error = ex.ToString()
+                });
+            }
+        }
+
+        [HttpPost("inventory-approved-isfix")]
+        public async Task<IActionResult> InventoryApprovedIsfix([FromBody] List<Inventory> request)
+        {
+            try
+            {
+                var claims = User.Claims.ToDictionary(x => x.Type, x => x.Value);
+                var currentUser = ObjectMapper.GetCurrentUser(claims);
+
+                var ids = request.Select(x => x.ID).ToList();
+                var dict = request.ToDictionary(x => x.ID);
+
+                var inventories = _inventoryRepo
+                    .GetAll(x => ids.Contains(x.ID));
+
+                //foreach (var item in inventories)
+                //{
+                //    item.IsApproved = dict[item.ID].IsApproved;
+                //    item.ApprovedID = currentUser.ID;
+                //}
+
+                await _inventoryRepo.UpdateRangeAsync_Binh(inventories);
+
+                return Ok(ApiResponseFactory.Success(null, "Khôi phục thành công!"));
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ApiResponseFactory.Fail(ex, $"Lỗi:{ex.Message}"));
+            }
+        }
+
     }
 }

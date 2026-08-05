@@ -30,5 +30,6 @@
         public string PasswordHash { get; set; } = "";
         public int LeaderID { get; set; }
         public int TaxCompanyID { get; set; }
+        public string ImagePath { get; set; }
     }
 }

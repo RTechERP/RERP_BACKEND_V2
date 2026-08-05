@@ -24,4 +24,6 @@ public partial class ProjectHistoryProblemFile
     public DateTime? UpdatedDate { get; set; }
 
     public bool? IsDeleted { get; set; }
+
+    public int? FileType { get; set; }
 }

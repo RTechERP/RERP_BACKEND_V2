@@ -1,4 +1,4 @@
-﻿using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc;
 using RERPAPI.Attributes;
 using RERPAPI.Model.Common;
 using RERPAPI.Model.DTO;
@@ -27,7 +27,7 @@ namespace RERPAPI.Controllers.HRM.Employees
             _employeeBussinessVehicleRepo = employeeBussinessVehicleRepo;
         }
 
-        [RequiresPermission("N1,N2")]
+        [RequiresPermission("N1,N2,N113")]
         [HttpPost]
         public IActionResult getEmployeeBussiness(EmployeeBussinessParam param)
         {
@@ -65,10 +65,10 @@ namespace RERPAPI.Controllers.HRM.Employees
             {
                 var claims = User.Claims.ToDictionary(x => x.Type, x => x.Value);
                 CurrentUser currentUser = ObjectMapper.GetCurrentUser(claims);
-                var firstDay = new DateTime(DateTime.Now.Year, DateTime.Now.Month, 1);
-                var lastDay = firstDay.AddMonths(1).AddDays(-1);
+                param.DateStart = param.DateStart.Value.ToLocalTime().Date;
+                param.DateEnd = param.DateEnd.Value.ToLocalTime().Date.AddDays(+1).AddSeconds(-1);
                 var arrParamName = new string[] { "@DateStart", "@DateEnd", "@Keyword", "@EmployeeID", "@IsApproved", "@Type", "@VehicleID", "@NotCheckIn" };
-                var arrParamValue = new object[] { param.DateStart ?? firstDay, param.DateEnd ?? lastDay, param.Keyword ?? "", currentUser.EmployeeID, param.IsApproved ?? 0, param.Type ?? 0, param.VehicleID ?? 0, param.NotCheckIn ?? -1 };
+                var arrParamValue = new object[] { param.DateStart , param.DateEnd , param.Keyword ?? "", currentUser.EmployeeID, param.IsApproved ?? 0, param.Type ?? 0, param.VehicleID ?? 0, param.NotCheckIn ?? -1 };
                 var employeeBussiness = SQLHelper<object>.ProcedureToList("spGetEmployeeBussinessInWeb", arrParamName, arrParamValue);
 
                 var result = SQLHelper<object>.GetListData(employeeBussiness, 0);
@@ -130,6 +130,8 @@ namespace RERPAPI.Controllers.HRM.Employees
         {
             try
             {
+                request.DateStart = request.DateStart.ToLocalTime().Date;
+                request.DateEnd = request.DateEnd.ToLocalTime().Date.AddDays(+1).AddSeconds(-1);
                 var employeeOnLeaveSummary = SQLHelper<object>.ProcedureToList("spGetEmployeeOnLeaveInWeb", new string[] { "@Keyword", "@DateStart", "@DateEnd", "@IsApproved", "@Type", "@DepartmentID", "@EmployeeID", "VehicleID", "NotCheckIn" },
                new object[] { request.Keyword ?? "", request.DateStart, request.DateEnd, request.IsApproved, request.Type, request.DepartmentID ?? 0, request.EmployeeID ?? 0, request.VehicleID, request.NotCheckIn });
 
@@ -143,7 +145,7 @@ namespace RERPAPI.Controllers.HRM.Employees
             }
         }
 
-        [RequiresPermission("N1,N2")]
+        [RequiresPermission("N1,N2,N113")]
         [HttpPost("get-work-management")]
         public IActionResult GetWorkManagement([FromBody] EmployeeNightShiftSummaryRequestParam request)
         {
@@ -164,7 +166,7 @@ namespace RERPAPI.Controllers.HRM.Employees
             }
         }
 
-        [RequiresPermission("N1,N2")]
+        [RequiresPermission("N1,N2,N113")]
         [HttpGet("detail")]
         public IActionResult GetEmployeeBussinessDetail(int employeeId, DateTime dayBussiness)
         {
@@ -205,7 +207,7 @@ namespace RERPAPI.Controllers.HRM.Employees
             }
         }
 
-        [RequiresPermission("N1,N2")]
+        [RequiresPermission("N1,N2,N113")]
         [HttpPost("save-data")]
         public async Task<IActionResult> saveEmployeeBussiness([FromBody] List<EmployeeBussiness> employeeBussiness)
         {
@@ -234,7 +236,7 @@ namespace RERPAPI.Controllers.HRM.Employees
             }
         }
 
-        [RequiresPermission("N1")]
+        [RequiresPermission("N1,N113")]
         [HttpPost("save-approve-tbp")]
         public async Task<IActionResult> SaveApproveTBP([FromBody] List<EmployeeBussiness> employeeBussiness)
         {
@@ -263,7 +265,7 @@ namespace RERPAPI.Controllers.HRM.Employees
             }
         }
 
-        [RequiresPermission("N1,N2")]
+        [RequiresPermission("N1,N2,N113")]
         [HttpPost("save-approve-hr")]
         public async Task<IActionResult> SaveApproveHR([FromBody] List<EmployeeBussiness> employeeBussiness)
         {
@@ -375,6 +377,25 @@ namespace RERPAPI.Controllers.HRM.Employees
                 var employeeBussinessVehicle = SQLHelper<object>.ProcedureToList("spGetBussinessVehicle", arrParamName, arrParamValue);
 
                 var result = SQLHelper<object>.GetListData(employeeBussinessVehicle, 0);
+                return Ok(ApiResponseFactory.Success(result, ""));
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
+            }
+        }
+
+        // NXL Update 27/07/2026: Lấy danh sách phiếu đặt xe trong ngày công tác cho combobox (Phòng Sale)
+        [HttpGet("get-vehicle-bookings-for-bussiness")]
+        public IActionResult GetVehicleBookingsForBussiness(int employeeId, DateTime dateStart, DateTime dateEnd)
+        {
+            try
+            {
+                var arrParamName = new string[] { "@EmployeeID", "@DateStart", "@DateEnd" };
+                var arrParamValue = new object[] { employeeId, dateStart, dateEnd };
+                var vehicleBookings = SQLHelper<object>.ProcedureToList("spGetVehicleBookingForBussiness", arrParamName, arrParamValue);
+
+                var result = SQLHelper<object>.GetListData(vehicleBookings, 0);
                 return Ok(ApiResponseFactory.Success(result, ""));
             }
             catch (Exception ex)

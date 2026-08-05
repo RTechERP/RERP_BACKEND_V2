@@ -1,4 +1,4 @@
-﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using RERPAPI.Attributes;
 using RERPAPI.Middleware;
@@ -21,6 +21,7 @@ namespace RERPAPI.Controllers.Project
         private readonly ProjectRequestRepo _projectRequestRepo;
         private readonly ProjectSolutionFileRepo _projectSolutionFilRepo;
         private readonly ProjectRequestFileRepo _projectRequestFileRepo;
+        private readonly ProjectPartListHistoryLogRepo _partListHistoryLogRepo;
 
         public ProjectSolutionController(
             ProjectSolutionRepo projectSolutionRepo,
@@ -28,7 +29,8 @@ namespace RERPAPI.Controllers.Project
             ProjectRepo projectRepo,
             ProjectRequestRepo projectRequestRepo,
             ProjectSolutionFileRepo projectSolutionFilRepo,
-            ProjectRequestFileRepo projectRequestFileRepo)
+            ProjectRequestFileRepo projectRequestFileRepo,
+            ProjectPartListHistoryLogRepo partListHistoryLogRepo)
         {
             _projectSolutionRepo = projectSolutionRepo;
             _configuration = configuration;
@@ -36,6 +38,7 @@ namespace RERPAPI.Controllers.Project
             _projectRequestRepo = projectRequestRepo;
             _projectSolutionFilRepo = projectSolutionFilRepo;
             _projectRequestFileRepo = projectRequestFileRepo;
+            _partListHistoryLogRepo = partListHistoryLogRepo;
         }
 
         [HttpGet("get-all-project")]
@@ -131,6 +134,8 @@ namespace RERPAPI.Controllers.Project
         //        return BadRequest(ApiResponseFactory.Fail(ex, "Lỗi khi lưu giải pháp"));
         //    }
         //}
+
+
         [HttpPost("save-data-solution")]
         [RequiresPermission("N13,N1,,N27,N63")]
         public async Task<IActionResult> SaveData([FromBody] ProjectSolutionDTO request)
@@ -146,11 +151,12 @@ namespace RERPAPI.Controllers.Project
                     if (!_projectSolutionRepo.ValidateApprove(request.ID, request.IsApproveAction.Value, request.ApproveStatus.Value, out message))
                         return BadRequest(ApiResponseFactory.Fail(null, message));
 
-                    string key = _configuration.GetValue<string>("SessionKey") ?? "";
-                    CurrentUser currentUser = HttpContext.Session.GetObject<CurrentUser>(key);
+                    var claims = User.Claims.ToDictionary(x => x.Type, x => x.Value);
+                    var currentUser = ObjectMapper.GetCurrentUser(claims);
                     var solution = await _projectSolutionRepo.GetByIDAsync(request.ID);
 
                     //if (solution == null) return NotFound();
+                    bool? oldApproved = request.ApproveStatus == 1 ? solution.IsApprovedPrice : solution.IsApprovedPO;
 
                     if (request.ApproveStatus == 1)
                     {
@@ -164,13 +170,60 @@ namespace RERPAPI.Controllers.Project
                     }
 
                     await _projectSolutionRepo.UpdateAsync(solution);
+
+                    // Log history
+                    int? projectId = null;
+                    if (solution.ProjectRequestID.HasValue && solution.ProjectRequestID.Value > 0)
+                    {
+                        var pr = await _projectRequestRepo.GetByIDAsync(solution.ProjectRequestID.Value);
+                        projectId = pr?.ProjectID;
+                    }
+                    string appAction = request.ApproveStatus == 1 ? "Duyệt giá giải pháp" : "Duyệt PO giải pháp";
+                    string appStatusText = request.IsApproveAction == true ? "duyệt" : "hủy duyệt";
+                    string oldStatusStr = oldApproved == true ? "Đã duyệt" : "Chưa duyệt";
+                    string newStatusStr = request.IsApproveAction == true ? "Đã duyệt" : "Chưa duyệt";
+                    await _partListHistoryLogRepo.AddLog(projectId, null, null, appAction, $"[{currentUser.FullName}] đã {appStatusText} giải pháp mã [{solution.CodeSolution}]. Trạng thái: {oldStatusStr} → {newStatusStr}", currentUser.LoginName, currentUser.EmployeeID);
+
                     return Ok(ApiResponseFactory.Success(solution, "Duyệt thành công"));
                 }
                 if (!_projectSolutionRepo.Validate(request, out message))
                     return BadRequest(ApiResponseFactory.Fail(null, message));
                 // XỬ LÝ LƯU DỮ LIỆU THÔNG THƯỜNG
+                string actionText = request.ID > 0 ? "Cập nhật giải pháp" : "Thêm mới giải pháp";
+                if (request.IsDeleted == true) actionText = "Xóa giải pháp";
+
+                int? prId = request.ProjectRequestID;
+                string codeSolution = request.CodeSolution;
+                string contentSolution = request.ContentSolution;
+
+                ProjectSolution oldClone = null;
                 if (request.ID > 0)
                 {
+                    var oldSolution = await _projectSolutionRepo.GetByIDAsync(request.ID);
+                    if (oldSolution != null)
+                    {
+                        oldClone = new ProjectSolution
+                        {
+                            CodeSolution = oldSolution.CodeSolution,
+                            ContentSolution = oldSolution.ContentSolution,
+                            ProjectRequestID = oldSolution.ProjectRequestID,
+                            IsDeleted = oldSolution.IsDeleted
+                        };
+
+                        if (prId == null || prId <= 0)
+                        {
+                            prId = oldSolution.ProjectRequestID;
+                        }
+                        if (string.IsNullOrEmpty(codeSolution))
+                        {
+                            codeSolution = oldSolution.CodeSolution;
+                        }
+                        if (string.IsNullOrEmpty(contentSolution))
+                        {
+                            contentSolution = oldSolution.ContentSolution;
+                        }
+                    }
+
                     await _projectSolutionRepo.UpdateAsync(request);
                     projectSolutionID = request.ID;
                 }
@@ -178,6 +231,40 @@ namespace RERPAPI.Controllers.Project
                 {
                     await _projectSolutionRepo.CreateAsync(request);
                     projectSolutionID = request.ID;
+                }
+
+                // Log solution history
+                int? solutionProjId = null;
+                if (prId.HasValue && prId.Value > 0)
+                {
+                    var pr = await _projectRequestRepo.GetByIDAsync(prId.Value);
+                    solutionProjId = pr?.ProjectID;
+                }
+                var solutionClaims = User.Claims.ToDictionary(x => x.Type, x => x.Value);
+                CurrentUser solutionCurrentUser = ObjectMapper.GetCurrentUser(solutionClaims);
+                
+                string contentLog = $"[{solutionCurrentUser.FullName}] đã {actionText.ToLower()} giải pháp mã [{codeSolution}]";
+                bool shouldLog = true;
+                if (request.ID > 0 && oldClone != null)
+                {
+                    var diff = _partListHistoryLogRepo.BuildSolutionDiff(oldClone, request);
+                    if (string.IsNullOrEmpty(diff))
+                    {
+                        shouldLog = false;
+                    }
+                    else
+                    {
+                        contentLog += $".\nChi tiết thay đổi:\n{diff}";
+                    }
+                }
+                else
+                {
+                    contentLog += $". Nội dung: {contentSolution}";
+                }
+                
+                if (shouldLog)
+                {
+                    await _partListHistoryLogRepo.AddLog(solutionProjId, null, null, actionText, contentLog, solutionCurrentUser.LoginName, solutionCurrentUser.EmployeeID);
                 }
 
                 ///lohic them file
@@ -337,6 +424,9 @@ namespace RERPAPI.Controllers.Project
                     return Ok(new { status = 2, message });
                 }
                 // XỬ LÝ LƯU DỮ LIỆU THÔNG THƯỜNG
+                string reqActionText = request.ID > 0 ? "Cập nhật yêu cầu" : "Thêm mới yêu cầu";
+                if (request.IsDeleted == true) reqActionText = "Xóa yêu cầu";
+
                 if (request.ID > 0)
                 {
                     await _projectRequestRepo.UpdateAsync(request);
@@ -347,6 +437,11 @@ namespace RERPAPI.Controllers.Project
                     await _projectRequestRepo.CreateAsync(request);
                     projectRequestID = request.ID;
                 }
+
+                // Log project request history
+                var reqClaims = User.Claims.ToDictionary(x => x.Type, x => x.Value);
+                CurrentUser reqCurrentUser = ObjectMapper.GetCurrentUser(reqClaims);
+                await _partListHistoryLogRepo.AddLog(request.ProjectID, null, null, reqActionText, $"[{reqCurrentUser.FullName}] đã {reqActionText.ToLower()} mã {request.CodeRequest}. Nội dung: {request.ContentRequest}", reqCurrentUser.LoginName, reqCurrentUser.EmployeeID);
 
                 ///lohic them file
                 if (request.projectRequestFile?.Count > 0)

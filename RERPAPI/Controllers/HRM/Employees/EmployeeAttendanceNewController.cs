@@ -150,121 +150,228 @@ namespace RERPAPI.Controllers
         //}
 
         [HttpPost("save-attendance")]
-        public async Task<IActionResult> saveAttendance([FromBody] List<EmployeeAttendanceNewDTO> data)
+        public async Task<IActionResult> saveAttendance([FromBody] List<EmployeeAttendanceNewDTO>? data)
         {
             try
             {
-                if (data == null || data.Count == 0)
-                    return Ok(ApiResponseFactory.Success(null, "Không có dữ liệu"));
+                data ??= new List<EmployeeAttendanceNewDTO>();
 
-                var groups = data
-                    .Where(x => !string.IsNullOrWhiteSpace(x.employeeNoString))
-                    .GroupBy(x => x.employeeNoString.Trim().TrimStart('0').ToLower());
+                // Lấy tất cả nhân viên đang làm việc (active)
+                var activeEmployees = _employeeRepo.GetAll(x => x.Status != 1).ToList();
 
-                foreach (var group in groups)
+                // Lấy tất cả các ngày duy nhất từ dữ liệu chấm công được truyền lên
+                var dates = data.Any()
+                    ? data.Select(x => x.time.Date).Distinct().ToList()
+                    : new List<DateTime> { DateTime.Today };
+
+                foreach (var date in dates)
                 {
-                    string employeeCode = group.Key;
+                    string dayOfWeek = GetVietnameseDayOfWeek(date.DayOfWeek);
 
-                    if (string.IsNullOrEmpty(employeeCode))
-                        employeeCode = "0";
+                    // Lọc dữ liệu chấm công của ngày hiện tại
+                    var dataOnDate = data.Where(x => x.time.Date == date).ToList();
 
-                    var emp = _employeeRepo
-                        .GetAll(x =>
-                            x.IDChamCongMoi.ToLower() == employeeCode
-                        )
-                        .FirstOrDefault();
+                    var groups = dataOnDate
+                        .Where(x => !string.IsNullOrWhiteSpace(x.employeeNoString))
+                        .GroupBy(x => x.employeeNoString.Trim().TrimStart('0').ToLower());
 
-                    if (emp == null) continue;
+                    var processedEmployeeIds = new HashSet<int>();
 
-                    DateTime checkInTime = group.Min(x => x.time);
-                    DateTime checkOutTime = group.Max(x => x.time);
-
-                    DateTime attendanceDate = checkInTime.Date;
-
-                    var checkExist = _employeeAttendanceRepo
-                        .GetAll(x =>
-                            x.EmployeeID == emp.ID &&
-                            x.AttendanceDate == attendanceDate
-                        )
-                        .FirstOrDefault();
-
-                    string dayOfWeek = GetVietnameseDayOfWeek(attendanceDate.DayOfWeek);
-
-                    if (checkExist != null)
+                    foreach (var group in groups)
                     {
-                        DateTime finalCheckInTime = checkExist.CheckInDate.Value < checkInTime
-                            ? checkExist.CheckInDate.Value
-                            : checkInTime;
+                        string employeeCode = group.Key;
 
-                        DateTime finalCheckOutTime = checkExist.CheckOutDate.Value > checkOutTime
-                            ? checkExist.CheckOutDate.Value
-                            : checkOutTime;
+                        if (string.IsNullOrEmpty(employeeCode))
+                            employeeCode = "0";
 
-                        var compUpdate = ComputeAttendance(
-                            0,
-                            attendanceDate,
-                            finalCheckInTime,
-                            finalCheckOutTime
-                        );
+                        var emp = activeEmployees.FirstOrDefault(x =>
+                            !string.IsNullOrEmpty(x.IDChamCongMoi) &&
+                            x.IDChamCongMoi.Trim().TrimStart('0').ToLower() == employeeCode);
 
-                        checkExist.CheckInDate = finalCheckInTime;
-                        checkExist.CheckIn = finalCheckInTime.ToString("HH:mm:ss");
+                        if (emp == null)
+                        {
+                            // Tìm kiếm fallback trong DB nếu không tìm thấy trong danh sách active
+                            emp = _employeeRepo
+                                .GetAll(x =>
+                                    x.IDChamCongMoi.ToLower() == employeeCode
+                                )
+                                .FirstOrDefault();
+                        }
 
-                        checkExist.CheckOutDate = finalCheckOutTime;
-                        checkExist.CheckOut = finalCheckOutTime.ToString("HH:mm:ss");
+                        if (emp == null) continue;
 
-                        checkExist.DayWeek = dayOfWeek;
-                        checkExist.UpdatedDate = DateTime.Now;
+                        processedEmployeeIds.Add(emp.ID);
 
-                        checkExist.IsLate = compUpdate.IsLate;
-                        checkExist.TimeLate = compUpdate.TimeLate;
-                        checkExist.IsEarly = compUpdate.IsEarly;
-                        checkExist.TimeEarly = compUpdate.TimeEarly;
-                        checkExist.TotalHour = compUpdate.TotalHour;
-                        checkExist.TotalDay = compUpdate.TotalDay;
-                        checkExist.IsLunch = compUpdate.IsLunch;
+                        DateTime checkInTime = group.Min(x => x.time);
+                        DateTime checkOutTime = group.Max(x => x.time);
 
-                        await _employeeAttendanceRepo.UpdateAsync(checkExist);
-                        continue;
+                        var checkExist = _employeeAttendanceRepo
+                            .GetAll(x =>
+                                x.EmployeeID == emp.ID &&
+                                x.AttendanceDate == date
+                            )
+                            .FirstOrDefault();
+
+                        if (checkExist != null)
+                        {
+                            // Tự động dựng lại CheckInDate nếu CheckIn có giá trị nhưng CheckInDate bị null hoặc chỉ có ngày (00:00:00)
+                            if (!string.IsNullOrEmpty(checkExist.CheckIn) &&
+                                (!checkExist.CheckInDate.HasValue || checkExist.CheckInDate.Value.TimeOfDay == TimeSpan.Zero))
+                            {
+                                if (TimeSpan.TryParse(checkExist.CheckIn, out TimeSpan ts) && ts != TimeSpan.Zero)
+                                {
+                                    checkExist.CheckInDate = date.Date.Add(ts);
+                                }
+                            }
+
+                            // Tự động dựng lại CheckOutDate nếu CheckOut có giá trị nhưng CheckOutDate bị null hoặc chỉ có ngày (00:00:00)
+                            if (!string.IsNullOrEmpty(checkExist.CheckOut) &&
+                                (!checkExist.CheckOutDate.HasValue || checkExist.CheckOutDate.Value.TimeOfDay == TimeSpan.Zero))
+                            {
+                                if (TimeSpan.TryParse(checkExist.CheckOut, out TimeSpan ts) && ts != TimeSpan.Zero)
+                                {
+                                    checkExist.CheckOutDate = date.Date.Add(ts);
+                                }
+                            }
+
+                            DateTime finalCheckInTime;
+                            if (string.IsNullOrEmpty(checkExist.CheckIn) || !checkExist.CheckInDate.HasValue || checkExist.CheckInDate.Value.TimeOfDay == TimeSpan.Zero)
+                            {
+                                finalCheckInTime = checkInTime;
+                            }
+                            else
+                            {
+                                finalCheckInTime = checkExist.CheckInDate.Value < checkInTime
+                                    ? checkExist.CheckInDate.Value
+                                    : checkInTime;
+                            }
+
+                            DateTime finalCheckOutTime;
+                            if (string.IsNullOrEmpty(checkExist.CheckOut) || !checkExist.CheckOutDate.HasValue || checkExist.CheckOutDate.Value.TimeOfDay == TimeSpan.Zero)
+                            {
+                                finalCheckOutTime = checkOutTime;
+                            }
+                            else
+                            {
+                                finalCheckOutTime = checkExist.CheckOutDate.Value > checkOutTime
+                                    ? checkExist.CheckOutDate.Value
+                                    : checkOutTime;
+                            }
+
+                            var compUpdate = ComputeAttendance(
+                                0,
+                                date,
+                                finalCheckInTime,
+                                finalCheckOutTime
+                            );
+
+                            checkExist.CheckInDate = finalCheckInTime;
+                            checkExist.CheckIn = finalCheckInTime.ToString("HH:mm");
+
+                            checkExist.CheckOutDate = finalCheckOutTime;
+                            checkExist.CheckOut = finalCheckOutTime.ToString("HH:mm");
+
+                            checkExist.DayWeek = dayOfWeek;
+                            checkExist.UpdatedDate = DateTime.Now;
+
+                            checkExist.IsLate = compUpdate.IsLate;
+                            checkExist.TimeLate = compUpdate.TimeLate;
+                            checkExist.IsEarly = compUpdate.IsEarly;
+                            checkExist.TimeEarly = compUpdate.TimeEarly;
+                            checkExist.TotalHour = compUpdate.TotalHour;
+                            checkExist.TotalDay = compUpdate.TotalDay;
+                            checkExist.IsLunch = compUpdate.IsLunch;
+
+                            await _employeeAttendanceRepo.UpdateAsync(checkExist);
+                        }
+                        else
+                        {
+                            var comp = ComputeAttendance(
+                                0,
+                                date,
+                                checkInTime,
+                                checkOutTime
+                            );
+
+                            EmployeeAttendance attendance = new EmployeeAttendance
+                            {
+                                STT = 0,
+                                EmployeeID = emp.ID,
+                                IDChamCongMoi = emp.IDChamCongMoi ?? "",
+
+                                AttendanceDate = date,
+                                DayWeek = dayOfWeek,
+
+                                Interval = "(00:00:00-23:59:00)",
+
+                                CheckIn = checkInTime.ToString("HH:mm"),
+                                CheckOut = checkOutTime.ToString("HH:mm"),
+
+                                CheckInDate = checkInTime,
+                                CheckOutDate = checkOutTime,
+
+                                CreatedDate = DateTime.Now,
+                                UpdatedDate = DateTime.Now,
+
+                                IsLate = comp.IsLate,
+                                TimeLate = comp.TimeLate,
+                                IsEarly = comp.IsEarly,
+                                TimeEarly = comp.TimeEarly,
+                                TotalHour = comp.TotalHour,
+                                TotalDay = comp.TotalDay,
+                                IsLunch = comp.IsLunch,
+                            };
+
+                            await _employeeAttendanceRepo.CreateAsync(attendance);
+                        }
                     }
 
-                    var comp = ComputeAttendance(
-                        0,
-                        attendanceDate,
-                        checkInTime,
-                        checkOutTime
-                    );
-
-                    EmployeeAttendance attendance = new EmployeeAttendance
+                    // Tạo bản ghi trống cho những người không có vân tay trong ngày hiện tại
+                    foreach (var emp in activeEmployees)
                     {
-                        STT = 0,
-                        EmployeeID = emp.ID,
-                        IDChamCongMoi = emp.IDChamCongMoi,
+                        if (processedEmployeeIds.Contains(emp.ID))
+                            continue;
 
-                        AttendanceDate = attendanceDate,
-                        DayWeek = dayOfWeek,
+                        var checkExist = _employeeAttendanceRepo
+                            .GetAll(x =>
+                                x.EmployeeID == emp.ID &&
+                                x.AttendanceDate == date
+                            )
+                            .FirstOrDefault();
 
-                        Interval = "(00:00:00-23:59:00)",
+                        if (checkExist == null)
+                        {
+                            EmployeeAttendance attendance = new EmployeeAttendance
+                            {
+                                STT = 0,
+                                EmployeeID = emp.ID,
+                                IDChamCongMoi = emp.IDChamCongMoi ?? "",
 
-                        CheckIn = checkInTime.ToString("HH:mm:ss"),
-                        CheckOut = checkOutTime.ToString("HH:mm:ss"),
+                                AttendanceDate = date,
+                                DayWeek = dayOfWeek,
 
-                        CheckInDate = checkInTime,
-                        CheckOutDate = checkOutTime,
+                                Interval = "(00:00:00-23:59:00)",
 
-                        CreatedDate = DateTime.Now,
-                        UpdatedDate = DateTime.Now,
+                                CheckIn = "",
+                                CheckOut = "",
 
-                        IsLate = comp.IsLate,
-                        TimeLate = comp.TimeLate,
-                        IsEarly = comp.IsEarly,
-                        TimeEarly = comp.TimeEarly,
-                        TotalHour = comp.TotalHour,
-                        TotalDay = comp.TotalDay,
-                        IsLunch = comp.IsLunch,
-                    };
+                                CheckInDate = date,
+                                CheckOutDate = date,
+                                Note = "",
+                                CreatedDate = DateTime.Now,
+                                UpdatedDate = DateTime.Now,
+                                IsLate = false,
+                                TimeLate = 0,
+                                IsEarly = false,
+                                TimeEarly = 0,
+                                TotalHour = 0,
+                                TotalDay = 0,
+                                IsLunch = false,
+                            };
 
-                    await _employeeAttendanceRepo.CreateAsync(attendance);
+                            await _employeeAttendanceRepo.CreateAsync(attendance);
+                        }
+                    }
                 }
 
                 return Ok(ApiResponseFactory.Success(null, "Lưu thành công"));

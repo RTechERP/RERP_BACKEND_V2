@@ -27,6 +27,9 @@ namespace RERPAPI.Controllers.KPITechnical
         private EmployeeRepo _employeeRepo;
         private KPIEmployeeTeamRepo _kPIEmployeeTeamRepo;
         private KPIEmployeeTeamLinkRepo _kPIEmployeeTeamLinkRepo;
+        private KPIEvaluationLogRepo _kpiEvaluationLogRepo;
+        private KPIEvaluationRuleDetailRepo _kpiEvaluationRuleDetailRepo;
+        private KPIEvaluationFactorRepo _kpiEvaluationFactorRepo;
 
         public KPIEvaluationFactorScoringDetailsController(
             KPIEvaluationPointRepo kpiEvaluationPointRepo,
@@ -43,7 +46,10 @@ namespace RERPAPI.Controllers.KPITechnical
             UserTeamRepo userTeamRepo,
             EmployeeRepo employeeRepo,
             KPIEmployeeTeamRepo kPIEmployeeTeamRepo,
-            KPIEmployeeTeamLinkRepo kPIEmployeeTeamLinkRepo)
+            KPIEmployeeTeamLinkRepo kPIEmployeeTeamLinkRepo,
+            KPIEvaluationLogRepo kpiEvaluationLogRepo,
+            KPIEvaluationRuleDetailRepo kpiEvaluationRuleDetailRepo,
+            KPIEvaluationFactorRepo kpiEvaluationFactorRepo)
         {
             _kpiEvaluationPointRepo = kpiEvaluationPointRepo;
             _kpiSessionRepo = kpiSessionRepo;
@@ -60,6 +66,9 @@ namespace RERPAPI.Controllers.KPITechnical
             _employeeRepo = employeeRepo;
             _kPIEmployeeTeamLinkRepo = kPIEmployeeTeamLinkRepo;
             _kPIEmployeeTeamRepo = kPIEmployeeTeamRepo;
+            _kpiEvaluationLogRepo = kpiEvaluationLogRepo;
+            _kpiEvaluationRuleDetailRepo = kpiEvaluationRuleDetailRepo;
+            _kpiEvaluationFactorRepo = kpiEvaluationFactorRepo;
         }
 
         #region lấy dữ liệu combobox bài đánh giá
@@ -307,7 +316,7 @@ namespace RERPAPI.Controllers.KPITechnical
                 {
                     return -1;
                 }
-                KPIEmployeePoint model = _kpiEmployeePointRepo.GetAll().FirstOrDefault(x => x.EmployeeID == empID && x.KPIEvaluationRuleID == ruleID && x.IsDelete == false) ?? new KPIEmployeePoint();
+                KPIEmployeePoint model = _kpiEmployeePointRepo.GetAll(x => x.EmployeeID == empID && x.KPIEvaluationRuleID == ruleID && x.IsDelete == false).FirstOrDefault() ?? new KPIEmployeePoint();
                 model.EmployeeID = empID;
                 model.KPIEvaluationRuleID = ruleID;
                 model.Status = 1;
@@ -337,12 +346,26 @@ namespace RERPAPI.Controllers.KPITechnical
             try
             {
                 KPIEmployeePoint master = _kpiEmployeePointRepo.GetByID(request.employeeID);
+                var oldDetails = _kpiEmployeePointDetailRepo.GetAll(x => x.KPIEmployeePointID == request.employeeID)
+                    .Select(x => new KPIEmployeePointDetail
+                    {
+                        ID = x.ID,
+                        KPIEmployeePointID = x.KPIEmployeePointID,
+                        KPIEvaluationRuleDetailID = x.KPIEvaluationRuleDetailID,
+                        FirstMonth = x.FirstMonth,
+                        SecondMonth = x.SecondMonth,
+                        ThirdMonth = x.ThirdMonth,
+                        PercentBonus = x.PercentBonus,
+                        PercentRemaining = x.PercentRemaining
+                    }).ToList();
+
                 await _kpiEmployeePointDetailRepo.DeleteByAttributeAsync("KPIEmployeePointID", request.employeeID);
 
                 master.TotalPercent = request.totalPercentRemaining;
                 master.Status = 2;
                 await _kpiEmployeePointRepo.UpdateAsync(master);
 
+                var toCreateRuleDetails = new List<KPIEmployeePointDetail>();
                 foreach (var item in request.lstKPIEmployeePointDetail)
                 {
                     KPIEmployeePointDetail detail = new KPIEmployeePointDetail();
@@ -353,8 +376,124 @@ namespace RERPAPI.Controllers.KPITechnical
                     detail.ThirdMonth = item.ThirdMonth;
                     detail.PercentBonus = item.PercentBonus;
                     detail.PercentRemaining = item.PercentRemaining;
-                    await _kpiEmployeePointDetailRepo.CreateAsync(detail);
+                    toCreateRuleDetails.Add(detail);
                 }
+                if (toCreateRuleDetails.Count > 0)
+                {
+                    await _kpiEmployeePointDetailRepo.CreateRangeAsync(toCreateRuleDetails);
+                }
+                try
+                {
+                    var claims = User.Claims.ToDictionary(x => x.Type, x => x.Value);
+                    var currentUser = ObjectMapper.GetCurrentUser(claims);
+
+                    var employee = _employeeRepo.GetByID(master?.EmployeeID ?? 0);
+                    string employeeName = employee?.FullName ?? "";
+
+                    var changes = new List<string>();
+
+                    var ruleDetailIds = oldDetails.Select(x => x.KPIEvaluationRuleDetailID)
+                        .Union(request.lstKPIEmployeePointDetail.Select(x => (int?)x.ID))
+                        .Where(id => id.HasValue)
+                        .Select(id => id.Value)
+                        .Distinct()
+                        .ToList();
+                    var ruleDetails = _kpiEvaluationRuleDetailRepo.GetAll(x => ruleDetailIds.Contains(x.ID)).ToList();
+
+                    foreach (var item in request.lstKPIEmployeePointDetail)
+                    {
+                        var oldDetail = oldDetails.FirstOrDefault(x => x.KPIEvaluationRuleDetailID == item.ID);
+                        var ruleDetail = ruleDetails.FirstOrDefault(x => x.ID == item.ID);
+                        string ruleName = ruleDetail?.RuleContent ?? ruleDetail?.FormulaCode ?? $"ID {item.ID}";
+
+                        var itemChanges = new List<string>();
+                        if (oldDetail == null)
+                        {
+                            if (item.FirstMonth != null && item.FirstMonth != 0) itemChanges.Add($"T1: {item.FirstMonth}");
+                            if (item.SecondMonth != null && item.SecondMonth != 0) itemChanges.Add($"T2: {item.SecondMonth}");
+                            if (item.ThirdMonth != null && item.ThirdMonth != 0) itemChanges.Add($"T3: {item.ThirdMonth}");
+                            if (item.PercentBonus != null && item.PercentBonus != 0) itemChanges.Add($"% Thưởng: {item.PercentBonus}");
+                            if (item.PercentRemaining != null && item.PercentRemaining != 0) itemChanges.Add($"% Còn lại: {item.PercentRemaining}");
+                            if (itemChanges.Count > 0)
+                            {
+                                changes.Add($"Thêm mới dòng [{ruleName}]: {string.Join(", ", itemChanges)}");
+                            }
+                        }
+                        else
+                        {
+                            if ((oldDetail.FirstMonth ?? 0) != (item.FirstMonth ?? 0))
+                                itemChanges.Add($"T1 ({oldDetail.FirstMonth ?? 0} -> {item.FirstMonth ?? 0})");
+                            if ((oldDetail.SecondMonth ?? 0) != (item.SecondMonth ?? 0))
+                                itemChanges.Add($"T2 ({oldDetail.SecondMonth ?? 0} -> {item.SecondMonth ?? 0})");
+                            if ((oldDetail.ThirdMonth ?? 0) != (item.ThirdMonth ?? 0))
+                                itemChanges.Add($"T3 ({oldDetail.ThirdMonth ?? 0} -> {item.ThirdMonth ?? 0})");
+                            if ((oldDetail.PercentBonus ?? 0) != (item.PercentBonus ?? 0))
+                                itemChanges.Add($"% Thưởng ({oldDetail.PercentBonus ?? 0} -> {item.PercentBonus ?? 0})");
+                            if ((oldDetail.PercentRemaining ?? 0) != (item.PercentRemaining ?? 0))
+                                itemChanges.Add($"% Còn lại ({oldDetail.PercentRemaining ?? 0} -> {item.PercentRemaining ?? 0})");
+
+                            if (itemChanges.Count > 0)
+                            {
+                                changes.Add($"Dòng [{ruleName}]: {string.Join(", ", itemChanges)}");
+                            }
+                        }
+                    }
+
+                    // Check if totalPercent changed
+                    if ((master.TotalPercent ?? 0) != request.totalPercentRemaining)
+                    {
+                        changes.Add($"Tổng % còn lại: {master.TotalPercent ?? 0} -> {request.totalPercentRemaining}");
+                    }
+
+                    string contentLog = $"{currentUser.FullName} đã lưu điểm KPI Rule của nhân viên: {employeeName}";
+                    if (changes.Count > 0)
+                    {
+                        contentLog += "\nChi tiết thay đổi:\n" + string.Join("\n", changes);
+                    }
+                    else
+                    {
+                        contentLog += "\nKhông có thay đổi về điểm số.";
+                    }
+
+                    int? resolvedExamID = null;
+                    var rule = _kpiEvaluationRuleRepo.GetByID(master?.KPIEvaluationRuleID ?? 0);
+                    int? kpiSessionID = rule?.KPISessionID;
+                    if (kpiSessionID.HasValue && kpiSessionID > 0)
+                    {
+                        var kpiPositions = _kpiPositionRepo.GetAll(x => x.KPISessionID == kpiSessionID && x.IsDeleted == false);
+                        var kpiPositionEmployees = _kpiPositionEmployeeRepo.GetAll(x => x.EmployeeID == master.EmployeeID && x.IsDeleted == false);
+                        var positionEmp = (from p in kpiPositions
+                                           join pe in kpiPositionEmployees on p.ID equals pe.KPIPosiotionID
+                                           select pe).FirstOrDefault();
+
+                        int currentPositionID = positionEmp?.KPIPosiotionID ?? 1;
+
+                        var employeeExam = (from exam in _kpiExamRepo.GetAll(x => x.KPISessionID == kpiSessionID && x.IsDeleted == false)
+                                            join ep in _kpiExamPositionRepo.GetAll(x => x.IsDeleted == false) on exam.ID equals ep.KPIExamID
+                                            where ep.KPIPositionID == currentPositionID
+                                            select exam).FirstOrDefault();
+
+                        resolvedExamID = employeeExam?.ID;
+                        if (resolvedExamID == null)
+                        {
+                            var fallbackExam = _kpiExamRepo.GetAll(x => x.KPISessionID == kpiSessionID && x.IsDeleted != true).FirstOrDefault();
+                            resolvedExamID = fallbackExam?.ID;
+                        }
+                    }
+
+                    var log = new KPIEvaluationLog
+                    {
+                        KPIExamID = resolvedExamID,
+                        EmployeeID = master?.EmployeeID,
+                        ActionType = "Lưu điểm KPI Rule",
+                        ContentLog = contentLog,
+                        CreatedBy = currentUser.LoginName,
+                        CreatedDate = DateTime.Now,
+                        IsDeleted = false
+                    };
+                    await _kpiEvaluationLogRepo.CreateAsync(log);
+                }
+                catch (Exception) { }
                 return Ok(ApiResponseFactory.Success(true, "Lưu dữ liệu rule thành công"));
             }
             catch (Exception ex)
@@ -374,6 +513,8 @@ namespace RERPAPI.Controllers.KPITechnical
             {
                 var claims = User.Claims.ToDictionary(x => x.Type, x => x.Value);
                 var currentUser = ObjectMapper.GetCurrentUser(claims);
+                var changes = new List<string>();
+
                 //validate
                 if (request.KPISessionID == 0 || request.KPISessionID == null)
                 { return BadRequest(ApiResponseFactory.Fail(null, "Vui lòng chọn kỳ đánh giá")); }
@@ -382,12 +523,74 @@ namespace RERPAPI.Controllers.KPITechnical
                 if (request.employeeID == 0 || request.employeeID == null)
                 { return BadRequest(ApiResponseFactory.Fail(null, "Vui lòng chọn nhân viên")); }
 
-                //lưu dữ liệu kpi kỹ năng
+                // 1. Tải trước toàn bộ KPIEvaluationFactors liên quan đến các danh sách trong request
+                var factorIds = (request.kpiKyNang ?? new List<KPIEvaluationPoint>()).Select(x => x.KPIEvaluationFactorsID)
+                    .Union((request.kpiChuyenMon ?? new List<KPIEvaluationPoint>()).Select(x => x.KPIEvaluationFactorsID))
+                    .Union((request.kpiChung ?? new List<KPIEvaluationPoint>()).Select(x => x.KPIEvaluationFactorsID))
+                    .Where(id => id.HasValue)
+                    .Select(id => id.Value)
+                    .Distinct()
+                    .ToList();
+                var factors = _kpiEvaluationFactorRepo.GetAll(x => factorIds.Contains(x.ID)).ToList();
+                var factorsDict = factors.ToDictionary(x => x.ID);
+
+                // 2. Tải trước toàn bộ KPIEvaluationPoint hiện có liên quan đến các ID trong request
+                var pointIds = (request.kpiKyNang ?? new List<KPIEvaluationPoint>()).Select(x => x.ID)
+                    .Union((request.kpiChuyenMon ?? new List<KPIEvaluationPoint>()).Select(x => x.ID))
+                    .Union((request.kpiChung ?? new List<KPIEvaluationPoint>()).Select(x => x.ID))
+                    .Where(id => id > 0)
+                    .Distinct()
+                    .ToList();
+                var existingPoints = _kpiEvaluationPointRepo.GetAll(x => pointIds.Contains(x.ID)).ToList();
+                var pointsDict = existingPoints.ToDictionary(x => x.ID);
+
+                // 3. Tải trước toàn bộ KPISumaryEvaluation liên quan đến nhân viên và bài đánh giá
+                var existingSummaries = _kpiSumaryEvaluationRepo.GetAll(x => x.EmployeeID == request.employeeID && x.KPIExamID == request.KPIExamID).ToList();
+
+                var pointsToUpdate = new List<KPIEvaluationPoint>();
+                var pointsToCreate = new List<KPIEvaluationPoint>();
+
+                // lưu dữ liệu kpi kỹ năng
                 // Vòng lặp 1: Xử lý kpiKyNang (tương ứng treeData)
-                foreach (var item in request.kpiKyNang)
+                foreach (var item in request.kpiKyNang ?? new List<KPIEvaluationPoint>())
                 {
                     if (item.ID < 0) continue;
-                    KPIEvaluationPoint model = _kpiEvaluationPointRepo.GetByID(item.ID);
+                    pointsDict.TryGetValue(item.ID, out var model);
+                    if (model == null)
+                    {
+                        model = new KPIEvaluationPoint();
+                    }
+
+                    factorsDict.TryGetValue(item.KPIEvaluationFactorsID ?? 0, out var factor);
+                    string factorName = factor?.EvaluationContent ?? $"ID {item.KPIEvaluationFactorsID}";
+                    var itemChanges = new List<string>();
+
+                    if (request.typePoint == 1)
+                    {
+                        if (model.ID == 0 || (model.EmployeePoint ?? 0) != (item.EmployeePoint ?? 0))
+                            itemChanges.Add($"Điểm ({model.EmployeePoint ?? 0} -> {item.EmployeePoint ?? 0})");
+                        if (model.ID == 0 || (model.EmployeeEvaluation ?? 0) != (item.EmployeeEvaluation ?? 0))
+                            itemChanges.Add($"Tự đánh giá ({model.EmployeeEvaluation ?? 0} -> {item.EmployeeEvaluation ?? 0})");
+                    }
+                    else if (request.typePoint == 2)
+                    {
+                        if (model.ID == 0 || (model.TBPPoint ?? 0) != (item.TBPPoint ?? 0))
+                            itemChanges.Add($"Điểm TBP ({model.TBPPoint ?? 0} -> {item.TBPPoint ?? 0})");
+                        if (model.ID == 0 || (model.TBPEvaluation ?? 0) != (item.TBPEvaluation ?? 0))
+                            itemChanges.Add($"TBP đánh giá ({model.TBPEvaluation ?? 0} -> {item.TBPEvaluation ?? 0})");
+                    }
+                    else if (request.typePoint == 3)
+                    {
+                        if (model.ID == 0 || (model.BGDPoint ?? 0) != (item.BGDPoint ?? 0))
+                            itemChanges.Add($"Điểm BGĐ ({model.BGDPoint ?? 0} -> {item.BGDPoint ?? 0})");
+                        if (model.ID == 0 || (model.BGDEvaluation ?? 0) != (item.BGDEvaluation ?? 0))
+                            itemChanges.Add($"BGĐ đánh giá ({model.BGDEvaluation ?? 0} -> {item.BGDEvaluation ?? 0})");
+                    }
+
+                    if (itemChanges.Count > 0)
+                    {
+                        changes.Add($"[Kỹ năng] {factorName}: {string.Join(", ", itemChanges)}");
+                    }
 
                     model.EmployeeID = request.employeeID;
                     if (request.typePoint == 1)
@@ -423,15 +626,57 @@ namespace RERPAPI.Controllers.KPITechnical
 
                     model.TBPPointInput = item.TBPPointInput; // Lấy từ item của request
                     model.BGDPointInput = item.BGDPointInput; // Lấy từ item của request
-                    if (model.ID > 0) await _kpiEvaluationPointRepo.UpdateWithNullAsync(model);
-                    else await _kpiEvaluationPointRepo.CreateAsync(model);
+                    
+                    if (model.ID > 0)
+                    {
+                        if (!pointsToUpdate.Contains(model)) pointsToUpdate.Add(model);
+                    }
+                    else
+                    {
+                        if (!pointsToCreate.Contains(model)) pointsToCreate.Add(model);
+                    }
                 }
 
                 // Vòng lặp 2: Xử lý kpichuyenmon (tương ứng treeData2)
-                foreach (var item in request.kpiChuyenMon)
+                foreach (var item in request.kpiChuyenMon ?? new List<KPIEvaluationPoint>())
                 {
                     if (item.ID < 0) continue;
-                    KPIEvaluationPoint model = _kpiEvaluationPointRepo.GetByID(item.ID);
+                    pointsDict.TryGetValue(item.ID, out var model);
+                    if (model == null)
+                    {
+                        model = new KPIEvaluationPoint();
+                    }
+
+                    factorsDict.TryGetValue(item.KPIEvaluationFactorsID ?? 0, out var factor);
+                    string factorName = factor?.EvaluationContent ?? $"ID {item.KPIEvaluationFactorsID}";
+                    var itemChanges = new List<string>();
+
+                    if (request.typePoint == 1)
+                    {
+                        if (model.ID == 0 || (model.EmployeePoint ?? 0) != (item.EmployeePoint ?? 0))
+                            itemChanges.Add($"Điểm ({model.EmployeePoint ?? 0} -> {item.EmployeePoint ?? 0})");
+                        if (model.ID == 0 || (model.EmployeeEvaluation ?? 0) != (item.EmployeeEvaluation ?? 0))
+                            itemChanges.Add($"Tự đánh giá ({model.EmployeeEvaluation ?? 0} -> {item.EmployeeEvaluation ?? 0})");
+                    }
+                    else if (request.typePoint == 2)
+                    {
+                        if (model.ID == 0 || (model.TBPPoint ?? 0) != (item.TBPPoint ?? 0))
+                            itemChanges.Add($"Điểm TBP ({model.TBPPoint ?? 0} -> {item.TBPPoint ?? 0})");
+                        if (model.ID == 0 || (model.TBPEvaluation ?? 0) != (item.TBPEvaluation ?? 0))
+                            itemChanges.Add($"TBP đánh giá ({model.TBPEvaluation ?? 0} -> {item.TBPEvaluation ?? 0})");
+                    }
+                    else if (request.typePoint == 3)
+                    {
+                        if (model.ID == 0 || (model.BGDPoint ?? 0) != (item.BGDPoint ?? 0))
+                            itemChanges.Add($"Điểm BGĐ ({model.BGDPoint ?? 0} -> {item.BGDPoint ?? 0})");
+                        if (model.ID == 0 || (model.BGDEvaluation ?? 0) != (item.BGDEvaluation ?? 0))
+                            itemChanges.Add($"BGĐ đánh giá ({model.BGDEvaluation ?? 0} -> {item.BGDEvaluation ?? 0})");
+                    }
+
+                    if (itemChanges.Count > 0)
+                    {
+                        changes.Add($"[Chuyên môn] {factorName}: {string.Join(", ", itemChanges)}");
+                    }
 
                     model.EmployeeID = request.employeeID;
                     if (request.typePoint == 1)
@@ -467,15 +712,56 @@ namespace RERPAPI.Controllers.KPITechnical
                     model.TBPPointInput = item.TBPPointInput;
                     model.BGDPointInput = item.BGDPointInput;
 
-                    if (model.ID > 0) await _kpiEvaluationPointRepo.UpdateWithNullAsync(model);
-                    else await _kpiEvaluationPointRepo.CreateAsync(model);
+                    if (model.ID > 0)
+                    {
+                        if (!pointsToUpdate.Contains(model)) pointsToUpdate.Add(model);
+                    }
+                    else
+                    {
+                        if (!pointsToCreate.Contains(model)) pointsToCreate.Add(model);
+                    }
                 }
 
                 // Vòng lặp 3: Xử lý kpichung (tương ứng treeData3)
-                foreach (var item in request.kpiChung)
+                foreach (var item in request.kpiChung ?? new List<KPIEvaluationPoint>())
                 {
                     if (item.ID < 0) continue;
-                    KPIEvaluationPoint model = _kpiEvaluationPointRepo.GetByID(item.ID);
+                    pointsDict.TryGetValue(item.ID, out var model);
+                    if (model == null)
+                    {
+                        model = new KPIEvaluationPoint();
+                    }
+
+                    factorsDict.TryGetValue(item.KPIEvaluationFactorsID ?? 0, out var factor);
+                    string factorName = factor?.EvaluationContent ?? $"ID {item.KPIEvaluationFactorsID}";
+                    var itemChanges = new List<string>();
+
+                    if (request.typePoint == 1)
+                    {
+                        if (model.ID == 0 || (model.EmployeePoint ?? 0) != (item.EmployeePoint ?? 0))
+                            itemChanges.Add($"Điểm ({model.EmployeePoint ?? 0} -> {item.EmployeePoint ?? 0})");
+                        if (model.ID == 0 || (model.EmployeeEvaluation ?? 0) != (item.EmployeeEvaluation ?? 0))
+                            itemChanges.Add($"Tự đánh giá ({model.EmployeeEvaluation ?? 0} -> {item.EmployeeEvaluation ?? 0})");
+                    }
+                    else if (request.typePoint == 2)
+                    {
+                        if (model.ID == 0 || (model.TBPPoint ?? 0) != (item.TBPPoint ?? 0))
+                            itemChanges.Add($"Điểm TBP ({model.TBPPoint ?? 0} -> {item.TBPPoint ?? 0})");
+                        if (model.ID == 0 || (model.TBPEvaluation ?? 0) != (item.TBPEvaluation ?? 0))
+                            itemChanges.Add($"TBP đánh giá ({model.TBPEvaluation ?? 0} -> {item.TBPEvaluation ?? 0})");
+                    }
+                    else if (request.typePoint == 3)
+                    {
+                        if (model.ID == 0 || (model.BGDPoint ?? 0) != (item.BGDPoint ?? 0))
+                            itemChanges.Add($"Điểm BGĐ ({model.BGDPoint ?? 0} -> {item.BGDPoint ?? 0})");
+                        if (model.ID == 0 || (model.BGDEvaluation ?? 0) != (item.BGDEvaluation ?? 0))
+                            itemChanges.Add($"BGĐ đánh giá ({model.BGDEvaluation ?? 0} -> {item.BGDEvaluation ?? 0})");
+                    }
+
+                    if (itemChanges.Count > 0)
+                    {
+                        changes.Add($"[Chung] {factorName}: {string.Join(", ", itemChanges)}");
+                    }
 
                     model.EmployeeID = request.employeeID;
                     if (request.typePoint == 1)
@@ -507,14 +793,58 @@ namespace RERPAPI.Controllers.KPITechnical
 
                     model.TBPPointInput = item.TBPPointInput;
                     model.BGDPointInput = item.BGDPointInput;
-                    if (model.ID > 0) await _kpiEvaluationPointRepo.UpdateWithNullAsync(model);
+                    
+                    if (model.ID > 0)
+                    {
+                        if (!pointsToUpdate.Contains(model)) pointsToUpdate.Add(model);
+                    }
                     else
-                        await _kpiEvaluationPointRepo.CreateAsync(model);
+                    {
+                        if (!pointsToCreate.Contains(model)) pointsToCreate.Add(model);
+                    }
                 }
-                // Lưu thông tin tổng hợp đánh giá
-                foreach (var item in request.kpiSumaryEvaluation)
+
+                if (pointsToUpdate.Count > 0)
                 {
-                    KPISumaryEvaluation sumaryModel = _kpiSumaryEvaluationRepo.GetAll(x => x.EmployeeID == request.employeeID && x.KPIExamID == request.KPIExamID && x.SpecializationType == item.SpecializationType).FirstOrDefault() ?? new KPISumaryEvaluation();
+                    await _kpiEvaluationPointRepo.UpdateRangeWithNullAsync(pointsToUpdate);
+                }
+                if (pointsToCreate.Count > 0)
+                {
+                    await _kpiEvaluationPointRepo.CreateRangeAsync(pointsToCreate);
+                }
+
+                var summariesToUpdate = new List<KPISumaryEvaluation>();
+                var summariesToCreate = new List<KPISumaryEvaluation>();
+
+                // Lưu thông tin tổng hợp đánh giá
+                foreach (var item in request.kpiSumaryEvaluation ?? new List<KPISumaryEvaluation>())
+                {
+                    KPISumaryEvaluation sumaryModel = existingSummaries.FirstOrDefault(x => x.SpecializationType == item.SpecializationType) ?? new KPISumaryEvaluation();
+
+                    var specType = item.SpecializationType;
+                    string specName = specType == 1 ? "Kỹ năng" : specType == 2 ? "PLC, Robot" : specType == 3 ? "Vision" : specType == 4 ? "Software" : $"Loại {specType}";
+                    var sumChanges = new List<string>();
+
+                    if (sumaryModel.ID == 0)
+                    {
+                        if (item.EmployeePoint != null && item.EmployeePoint != 0) sumChanges.Add($"Điểm NV: {item.EmployeePoint}");
+                        if (item.TBPPoint != null && item.TBPPoint != 0) sumChanges.Add($"Điểm TBP: {item.TBPPoint}");
+                        if (item.BGDPoint != null && item.BGDPoint != 0) sumChanges.Add($"Điểm BGĐ: {item.BGDPoint}");
+                    }
+                    else
+                    {
+                        if ((sumaryModel.EmployeePoint ?? 0) != (item.EmployeePoint ?? 0))
+                            sumChanges.Add($"Điểm NV ({sumaryModel.EmployeePoint ?? 0} -> {item.EmployeePoint ?? 0})");
+                        if ((sumaryModel.TBPPoint ?? 0) != (item.TBPPoint ?? 0))
+                            sumChanges.Add($"Điểm TBP ({sumaryModel.TBPPoint ?? 0} -> {item.TBPPoint ?? 0})");
+                        if ((sumaryModel.BGDPoint ?? 0) != (item.BGDPoint ?? 0))
+                            sumChanges.Add($"Điểm BGĐ ({sumaryModel.BGDPoint ?? 0} -> {item.BGDPoint ?? 0})");
+                    }
+
+                    if (sumChanges.Count > 0)
+                    {
+                        changes.Add($"[Tổng hợp] {specName}: {string.Join(", ", sumChanges)}");
+                    }
 
                     sumaryModel.SpecializationType = item.SpecializationType;
                     sumaryModel.EmployeeID = request.employeeID;
@@ -522,9 +852,71 @@ namespace RERPAPI.Controllers.KPITechnical
                     sumaryModel.EmployeePoint = item.EmployeePoint;
                     sumaryModel.TBPPoint = item.TBPPoint;
                     sumaryModel.BGDPoint = item.BGDPoint;
-                    if (sumaryModel.ID > 0) await _kpiSumaryEvaluationRepo.UpdateAsync(sumaryModel);
-                    else await _kpiSumaryEvaluationRepo.CreateAsync(sumaryModel);
+                    
+                    if (sumaryModel.ID > 0)
+                    {
+                        summariesToUpdate.Add(sumaryModel);
+                    }
+                    else
+                    {
+                        summariesToCreate.Add(sumaryModel);
+                    }
                 }
+
+                if (summariesToUpdate.Count > 0)
+                {
+                    await _kpiSumaryEvaluationRepo.UpdateRangeAsync_Binh(summariesToUpdate);
+                }
+                if (summariesToCreate.Count > 0)
+                {
+                    await _kpiSumaryEvaluationRepo.CreateRangeAsync(summariesToCreate);
+                }
+                try
+                {
+                    var employee = _employeeRepo.GetByID(request.employeeID);
+                    string employeeName = employee?.FullName ?? "";
+
+                    string actionType = "Lưu điểm KPI";
+                    string contentLog = $"{currentUser.FullName} đã lưu điểm KPI của nhân viên: {employeeName}";
+
+                    if (request.typePoint == 1)
+                    {
+                        actionType = "NV tự đánh giá";
+                        contentLog = $"{currentUser.FullName} đã tự đánh giá điểm KPI";
+                    }
+                    else if (request.typePoint == 2)
+                    {
+                        actionType = "TBP đánh giá";
+                        contentLog = $"{currentUser.FullName} đã đánh giá điểm KPI cho nhân viên: {employeeName}";
+                    }
+                    else if (request.typePoint == 3)
+                    {
+                        actionType = "BGĐ đánh giá";
+                        contentLog = $"{currentUser.FullName} đã đánh giá điểm KPI cho nhân viên: {employeeName}";
+                    }
+
+                    if (changes.Count > 0)
+                    {
+                        contentLog += "\nChi tiết thay đổi:\n" + string.Join("\n", changes);
+                    }
+                    else
+                    {
+                        contentLog += "\nKhông có thay đổi về điểm số.";
+                    }
+
+                    var log = new KPIEvaluationLog
+                    {
+                        KPIExamID = request.KPIExamID,
+                        EmployeeID = request.employeeID,
+                        ActionType = actionType,
+                        ContentLog = contentLog,
+                        CreatedBy = currentUser.LoginName,
+                        CreatedDate = DateTime.Now,
+                        IsDeleted = false
+                    };
+                    await _kpiEvaluationLogRepo.CreateAsync(log);
+                }
+                catch (Exception) { }
                 return Ok(ApiResponseFactory.Success(true, "Lưu dữ liệu KPI thành công"));
             }
             catch (Exception ex)
@@ -698,6 +1090,10 @@ namespace RERPAPI.Controllers.KPITechnical
         {
             try
             {
+                var claims = User.Claims.ToDictionary(x => x.Type, x => x.Value);
+                var currentUser = ObjectMapper.GetCurrentUser(claims);
+                var employeeLogs = new List<KPIEvaluationLog>();
+
                 // 1. Lấy thông tin bài đánh giá (KPIExam) theo phong cách hiện tại
                 var kpiExam = _kpiExamRepo.GetAll(x => x.KPISessionID == request.KpiSessionID && x.IsDeleted == false).FirstOrDefault();
                 if (kpiExam == null) return BadRequest(ApiResponseFactory.Fail(null, "Không tìm thấy bài đánh giá cho kỳ này."));
@@ -739,11 +1135,11 @@ namespace RERPAPI.Controllers.KPITechnical
 
                     // Kiểm tra bảo vệ kỳ đã chốt
                     var masterPoint = _kpiEmployeePointRepo.GetByID(empPointId);
-                    if (masterPoint != null && masterPoint.IsPublish == true)
-                    {
-                        skippedCount++;
-                        continue;
-                    }
+                    //if (masterPoint != null && masterPoint.IsPublish == true)
+                    //{
+                    //    skippedCount++;
+                    //    continue;
+                    //}
 
                     // 6. Xử lý KPI Factor (Chuyên môn, Kỹ năng, Chung)
                     int currentPositionID = empPosition.KPIPosiotionID > 0 ? empPosition.KPIPosiotionID.Value : 1;
@@ -797,7 +1193,7 @@ namespace RERPAPI.Controllers.KPITechnical
                     foreach (var detail in ruleDetailsCalculated)
                     {
                         var dbDetail = _kpiEmployeePointDetailRepo.GetByID(detail.ID);
-                        if (dbDetail != null)
+                        if (dbDetail != null && dbDetail.KPIEmployeePointID != 0 && dbDetail.KPIEmployeePointID != null)
                         {
                             dbDetail.PercentBonus = detail.PercentBonus;
                             dbDetail.PercentRemaining = detail.PercentRemaining;
@@ -814,11 +1210,45 @@ namespace RERPAPI.Controllers.KPITechnical
                         await _kpiEmployeePointRepo.UpdateAsync(masterPoint);
                     }
 
+                    employeeLogs.Add(new KPIEvaluationLog
+                    {
+                        KPIExamID = examID,
+                        EmployeeID = emp.EmployeeID,
+                        ActionType = "Cập nhập điểm KPI",
+                        ContentLog = $"{currentUser.FullName} đã cập nhật điểm KPI cho bạn",
+                        CreatedBy = currentUser.LoginName,
+                        CreatedDate = DateTime.Now,
+                        IsDeleted = false
+                    });
+
                     updatedCount++;
                 }
 
+                try
+                {
+                    var teamName = _kPIEmployeeTeamRepo.GetByID(request.TeamID).Name;
+                    var kpiSessionName = _kpiSessionRepo.GetByID(request.KpiSessionID).Name;
+                    var log = new KPIEvaluationLog
+                    {
+                        KPIExamID = null,
+                        EmployeeID = null,
+                        ActionType = "Cập nhập điểm KPI",
+                        ContentLog = $"{currentUser.FullName} đã cập nhật điểm KPI của team {teamName} trong kỳ đánh giá {kpiSessionName}",
+                        CreatedBy = currentUser.LoginName,
+                        CreatedDate = DateTime.Now,
+                        IsDeleted = false
+                    };
+                    await _kpiEvaluationLogRepo.CreateAsync(log);
+
+                    if (employeeLogs.Any())
+                    {
+                        await _kpiEvaluationLogRepo.CreateRangeAsync(employeeLogs);
+                    }
+                }
+                catch (Exception) { }
+
                 return Ok(ApiResponseFactory.Success(new { updatedCount, skippedCount },
-                    $"Đã cập nhật thành công {updatedCount} nhân viên. Bỏ qua {skippedCount} nhân viên đã chốt."));
+                    $"Đã cập nhật thành công {updatedCount} nhân viên."));
             }
             catch (Exception ex)
             {

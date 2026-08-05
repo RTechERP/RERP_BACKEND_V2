@@ -84,24 +84,27 @@ namespace RERPAPI.Controllers.HRM
             {
                 var claims = User.Claims.ToDictionary(x => x.Type, x => x.Value);
                 CurrentUser currentUser = ObjectMapper.GetCurrentUser(claims);
-
+                int loginDepartmentID = -1;
                 var vUserHR = _vUserGroupLinksRepo.GetAll().FirstOrDefault(x =>
           (x.Code == "N2" || x.Code == "N1" || x.Code == "N94" || currentUser.IsAdmin == true) &&
           x.UserID == currentUser.ID);
                 int requestID;
                 if (vUserHR != null)
                 {
-                    requestID = 0;
+                    requestID = -1;
+                    loginDepartmentID = -1;
+
                 }
                 else
                 {
                     requestID = currentUser.EmployeeID;
+                    loginDepartmentID = currentUser.DepartmentID;
                 }
                 //     var data = _hRHiringCandidateInformationFormRepo.GetAll(x => x.IsDeleted != true);
                 var applicationForm = SQLHelper<dynamic>.ProcedureToList(
                                    "spGetHRCandidateApplicationForm",
-                                   new[] { "@FilterText", "@DepartmentID", "@RequestID" },
-                                   new object[] { filterText, departmentID, requestID });
+                                   new[] { "@FilterText", "@DepartmentID", "@RequestID", "@LoginDepartmentID" },
+                                   new object[] { filterText, departmentID, requestID,loginDepartmentID});
                 var dataList = SQLHelper<dynamic>.GetListData(applicationForm, 0);
 
                 return Ok(ApiResponseFactory.Success(dataList, ""));

@@ -23,12 +23,20 @@ namespace RERPAPI.Controllers.Old.TB
         private readonly FirmRepo _firmRepo;
         private readonly InventoryDemoRepo _inventoryDemoRepo;
         private readonly UnitCountKTRepo _unitCountKTRepo;
+        private readonly ProductGroupRTCLinkRepo _productGroupRTCLinkRepo;
+        private readonly ProductRTCFileRepo _productRTCFileRepo;
 
         public ProductRTCController(
             ProductGroupRTCRepo productGroupRTCRepo,
             ProductRTCRepo productRTCRepo,
             ProductLocationRepo productLocationRepo,
-            ConfigSystemRepo configSystemRepo, FirmRepo firmRepo, InventoryDemoRepo inventoryDemoRepo, UnitCountKTRepo unitCountKTRepo)
+            ConfigSystemRepo configSystemRepo,
+            FirmRepo firmRepo,
+            InventoryDemoRepo inventoryDemoRepo,
+            UnitCountKTRepo unitCountKTRepo,
+            ProductGroupRTCLinkRepo productGroupRTCLinkRepo,
+            ProductRTCFileRepo productRTCFileRepo
+            )
         {
             _productGroupRTCRepo = productGroupRTCRepo;
             _productRTCRepo = productRTCRepo;
@@ -37,6 +45,8 @@ namespace RERPAPI.Controllers.Old.TB
             _firmRepo = firmRepo;
             _inventoryDemoRepo = inventoryDemoRepo;
             _unitCountKTRepo = unitCountKTRepo;
+            _productGroupRTCLinkRepo = productGroupRTCLinkRepo;
+            _productRTCFileRepo = productRTCFileRepo;
         }
 
         [HttpPost("get-productRTC")]
@@ -70,7 +80,7 @@ namespace RERPAPI.Controllers.Old.TB
                 //{
                 //    status = 0,
                 //    message = ex.Message,
-                //    error = ex.ToString()
+                //    error = ex.ToString()get-productRTC
                 //});
 
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
@@ -492,9 +502,11 @@ namespace RERPAPI.Controllers.Old.TB
                 if (product.productGroupRTC != null)
                 {
                     if (product.productGroupRTC.ID <= 0)
+                    {
+                        //product.productGroupRTC.WarehouseID = 6;
                         await _productGroupRTCRepo.CreateAsync(product.productGroupRTC);
-                    else
-                        await _productGroupRTCRepo.UpdateAsync(product.productGroupRTC);
+                    }
+                    else await _productGroupRTCRepo.UpdateAsync(product.productGroupRTC);
                 }
 
                 // --- Lưu danh sách sản phẩm ---
@@ -515,12 +527,15 @@ namespace RERPAPI.Controllers.Old.TB
                                 await _productRTCRepo.CreateAsync(item);
                             }
                             else
+                            {
+                                item.Number = item.NumberInStore;
                                 await _productRTCRepo.UpdateAsync(item);
+                            }
                         }
                     }
                 }
 
-                return Ok(ApiResponseFactory.Success(null, "Lưu dữ liệu thành công."));
+                return Ok(ApiResponseFactory.Success(new { productRTCs = product.productRTCs }, "Lưu dữ liệu thành công."));
             }
             catch (Exception ex)
             {
@@ -603,6 +618,71 @@ namespace RERPAPI.Controllers.Old.TB
         //    }
 
         //}
+        [HttpGet("get-files")]
+        public IActionResult GetFiles(int productRTCID)
+        {
+            try
+            {
+                var files = _productRTCFileRepo.GetAll(x => x.ProductRTCID == productRTCID && x.IsDeleted != true);
+                return Ok(ApiResponseFactory.Success(files, ""));
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
+            }
+        }
+
+        [HttpPost("save-files")]
+        public async Task<IActionResult> SaveFiles([FromBody] List<ProductRTCFile> files)
+        {
+            try
+            {
+                if (files == null || !files.Any())
+                {
+                    return BadRequest(ApiResponseFactory.Fail(null, "Không có file để lưu."));
+                }
+
+                var claims = User.Claims.ToDictionary(x => x.Type, x => x.Value);
+                var currentUser = ObjectMapper.GetCurrentUser(claims);
+
+                foreach (var file in files)
+                {
+                    file.CreatedBy = currentUser.FullName;
+                    file.CreatedDate = DateTime.Now;
+                    await _productRTCFileRepo.CreateAsync(file);
+                }
+
+                return Ok(ApiResponseFactory.Success(files, "Lưu file thành công!"));
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
+            }
+        }
+
+        [HttpPost("delete-file")]
+        public async Task<IActionResult> DeleteFile(int id)
+        {
+            try
+            {
+                var claims = User.Claims.ToDictionary(x => x.Type, x => x.Value);
+                var currentUser = ObjectMapper.GetCurrentUser(claims);
+
+                await _productRTCFileRepo.UpdateAsync(new ProductRTCFile
+                {
+                    ID = id,
+                    IsDeleted = true,
+                    UpdatedBy = currentUser.FullName,
+                    UpdatedDate = DateTime.Now
+                });
+                return Ok(ApiResponseFactory.Success(null, "Xóa file thành công!"));
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
+            }
+        }
+
         [HttpPost("update-location")]
         public async Task<IActionResult> UpdateLocation(int id, int locationID)
         {
@@ -662,5 +742,83 @@ namespace RERPAPI.Controllers.Old.TB
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
+
+        #region Set ẩn hiện nhóm sản phẩm
+        [HttpGet("product-group-rtc-new")]
+        public async Task<IActionResult> getProductGroupNew(bool isVisible, bool isDeleted, int warehouseId, int warehouseType)
+        {
+            try
+            {
+                var claims = User.Claims.ToDictionary(x => x.Type, x => x.Value);
+                var currentUser = ObjectMapper.GetCurrentUser(claims);
+
+                var param = new
+                {
+                    WarehouseID = warehouseId,
+                    WarehouseType = warehouseType,
+                    IsDeleted = isDeleted,
+                    IsVisible = isVisible
+                };
+
+                var (allGroups, groupInWarehouse) =
+                    await SqlDapper<object>.QueryMultipleAsync<dynamic, dynamic>(
+                        "spGetProductGroupRTCs", param);
+
+                return Ok(ApiResponseFactory.Success(new
+                {
+                    data = allGroups,
+                    data1 = groupInWarehouse
+                }, null));
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
+            }
+        }
+
+        [HttpPost("visible-product-rtc-group")]
+        public async Task<IActionResult> visibleProductGroup([FromBody] List<ProductGroupRTCLink> data)
+        {
+            try
+            {
+                List<ProductGroupRTCLink> checkList = _productGroupRTCLinkRepo.GetAll();
+                var claims = User.Claims.ToDictionary(x => x.Type, x => x.Value);
+                var currentUser = ObjectMapper.GetCurrentUser(claims);
+
+                foreach (ProductGroupRTCLink item in data)
+                {
+                    ProductGroupRTCLink model = checkList.
+                        FirstOrDefault(x => x.WarehouseID == item.WarehouseID && x.ProductGroupRTCID == item.ProductGroupRTCID) ??
+                        new ProductGroupRTCLink();
+
+                    model.WarehouseID = item.WarehouseID;
+                    model.ProductGroupRTCID = item.ProductGroupRTCID;
+                    model.IsDeleted = item.IsDeleted;
+
+                    if (model.ID > 0)
+                    {
+                        model.UpdatedBy = currentUser.LoginName;
+                        model.UpdatedDate = DateTime.Now;
+                        await _productGroupRTCLinkRepo.UpdateAsync(model);
+                    }
+                    else
+                    {
+                        model.Createdby = currentUser.FullName;
+                        model.CreatedDate = DateTime.Now;
+                        model.UpdatedBy = currentUser.LoginName;
+                        model.UpdatedDate = DateTime.Now;
+                        await _productGroupRTCLinkRepo.CreateAsync(model);
+                    }
+                }
+
+                return Ok(ApiResponseFactory.Success(null, "Xử lý dữ liệu thành công!"));
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
+            }
+        }
+
+        #endregion
     }
 }

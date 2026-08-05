@@ -402,7 +402,7 @@ namespace RERPAPI.Controllers.KHOAHOC
             {
                 var examResult = _courseExamResultRepo.GetByID(courseExamResultID);
                 var courseExam = _courseExamRepo.GetByID(examResult.CourseExamId ?? 0);
-
+              
                 var courseQuestions = _courseQuestionRepo.GetAll(p => p.CourseExamId == courseExam.ID);
 
                 int numCorrectAnswers = 0;
@@ -439,8 +439,8 @@ namespace RERPAPI.Controllers.KHOAHOC
                 examResult.TotalCorrect = numCorrectAnswers;
                 examResult.TotalIncorrect = numIncorrectAnswers;
                 examResult.PercentageCorrect = numCorrectAnswers != 0 ? ((decimal)numCorrectAnswers / (numCorrectAnswers + numIncorrectAnswers)) * 100 : 0;
-
-                _courseExamResultRepo.Update(examResult);
+                examResult.UpdatedDate = DateTime.Now; // update thời gian kết thúc bài thi
+              var a =await _courseExamResultRepo.UpdateAsync(examResult);
 
                 return Ok(ApiResponseFactory.Success(new
                 {
@@ -627,6 +627,7 @@ namespace RERPAPI.Controllers.KHOAHOC
             {
                 var claims = User.Claims.ToDictionary(x => x.Type, x => x.Value);
                 var currentUser = ObjectMapper.GetCurrentUser(claims);
+                var canViewAll = currentUser.Permissions.Contains("N102");
                 var param = new
                 {
                     CourseCatalogID = 0,
@@ -731,7 +732,7 @@ namespace RERPAPI.Controllers.KHOAHOC
                     // 1. Là bài đầu danh mục HOẶC bài trước đã hoàn thành
                     // 2. VÀ thỏa điều kiện hiện tại (Evaluate == 1, IsLeader, IsAdmin...)
                     if ((isFirstInCatalog || prevCompleted)
-                        || (currentUser.IsLeader > 0 || currentUser.IsAdmin))
+                        || (currentUser.IsLeader > 0 || currentUser.IsAdmin) || canViewAll)
                     {
                         course.Status = 1;
                     }

@@ -163,4 +163,6 @@ public partial class ProjectPartlistPurchaseRequest
     public bool? IsPaidLater { get; set; }
 
     public int? ProjectPartlistPriceRequestID { get; set; }
+
+    public decimal? DiscountPercent { get; set; }
 }

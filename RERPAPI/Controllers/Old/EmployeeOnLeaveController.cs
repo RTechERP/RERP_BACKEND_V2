@@ -84,6 +84,24 @@ namespace RERPAPI.Controllers.Old
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
+        [HttpPost("get-onleave-person")]
+        public IActionResult GetOnLeavePerson(EmployeeOnLeaveParam param)
+        {
+            try
+            {
+                var claims = User.Claims.ToDictionary(x => x.Type, x => x.Value);
+                CurrentUser currentUser = ObjectMapper.GetCurrentUser(claims);
+                var employeeOnLeaves = SQLHelper<object>.ProcedureToList("spGetDayOff",
+                    new string[] { "@PageNumber", "@PageSize", "@Keyword", "@Month", "@Year", "@IDApprovedTP", "@Status", "@DepartmentID", "@EmployeeID" },
+                    new object[] { param.pageNumber, param.pageSize, param.keyWord, param.month, param.year, param.IDApprovedTP, param.status, param.departmentId, currentUser.EmployeeID });
+                var data = SQLHelper<object>.GetListData(employeeOnLeaves, 0);
+                return Ok(ApiResponseFactory.Success(data, ""));
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
+            }
+        }
 
         [HttpPost("get-employee-onleave-person")]
         public IActionResult GetEmployeeOnLeavePerson(EmployeeOnLeavePersonParam request)
@@ -362,7 +380,7 @@ namespace RERPAPI.Controllers.Old
                                     </p>";
                             var footer = _configuration["FooterMail:System:Footer"] ?? "";
 
-                          
+
                             _ = Task.Run(async () =>
                             {
                                 try

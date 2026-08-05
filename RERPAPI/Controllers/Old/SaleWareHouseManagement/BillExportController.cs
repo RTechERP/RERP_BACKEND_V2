@@ -1,6 +1,8 @@
 ﻿using ClosedXML.Excel;
+using DocumentFormat.OpenXml.Wordprocessing;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Options;
 using OfficeOpenXml;
 using RERPAPI.Attributes;
 using RERPAPI.Model.Common;
@@ -13,6 +15,7 @@ using RERPAPI.Repo.GenericEntity.Technical;
 using System.Data;
 using System.Drawing;
 using System.Drawing.Imaging;
+using System.IO.Compression;
 using ZXing;
 using ZXing.Common;
 
@@ -50,7 +53,14 @@ namespace RERPAPI.Controllers.Old.SaleWareHouseManagement
         private readonly POKHFilesRepo _pokhFilesRepo;
         private readonly BillExportSaleLogRepo _billExportSaleLogRepo;
 
+        private readonly List<PathStaticFile> _pathStaticFiles;
+
+        private readonly BillExportDetailFilesRepo _billExportDetailFilesRepo;
+        private readonly ConfigSystemRepo _configSystemRepo;
+
+        private readonly EmployeeSignatureFileRepo _employeeSignatureFileRepo;
         public BillExportController(
+             IOptions<List<PathStaticFile>> pathStaticFiles,
             ProductGroupRepo productgroupRepo,
             BillDocumentExportRepo billdocumentexportRepo,
             BillExportDetailRepo billExportDetailRepo,
@@ -62,7 +72,20 @@ namespace RERPAPI.Controllers.Old.SaleWareHouseManagement
             BillExportLogRepo billexportlogRepo,
             ProjectRepo projectRepo,
             HistoryDeleteBillRepo historyDeleteBillRepo,
-            WarehouseRepo warehouseRepo, InventoryProjectRepo inventoryProjectRepo, ProductSaleRepo productSaleRepo, Repo.GenericEntity.AddressStockRepo addressStockRepo, CustomerRepo customerRepo, SupplierSaleRepo supplierSaleRepo, UserRepo userRepo, IConfiguration configuration, DepartmentRepo departmentRepo, EmployeeRepo employeeRepo, POKHRepo pokhRepo, POKHFilesRepo pokhFilesRepo, BillExportSaleLogRepo billExportSaleLogRepo)
+            WarehouseRepo warehouseRepo,
+            InventoryProjectRepo inventoryProjectRepo,
+            ProductSaleRepo productSaleRepo,
+            Repo.GenericEntity.AddressStockRepo addressStockRepo,
+            CustomerRepo customerRepo,
+            SupplierSaleRepo supplierSaleRepo,
+            UserRepo userRepo, IConfiguration configuration,
+            DepartmentRepo departmentRepo, EmployeeRepo employeeRepo,
+            POKHRepo pokhRepo, POKHFilesRepo pokhFilesRepo,
+            BillExportSaleLogRepo billExportSaleLogRepo,
+            BillExportDetailFilesRepo billExportDetailFilesRepo,
+            ConfigSystemRepo configSystemRepo,
+            EmployeeSignatureFileRepo employeeSignatureFileRepo
+            )
         {
             _productgroupRepo = productgroupRepo;
             _billdocumentexportRepo = billdocumentexportRepo;
@@ -90,6 +113,10 @@ namespace RERPAPI.Controllers.Old.SaleWareHouseManagement
             _pokhRepo = pokhRepo;
             _pokhFilesRepo = pokhFilesRepo;
             _billExportSaleLogRepo = billExportSaleLogRepo;
+            _pathStaticFiles = pathStaticFiles.Value;
+            _billExportDetailFilesRepo = billExportDetailFilesRepo;
+            _configSystemRepo = configSystemRepo;
+            _employeeSignatureFileRepo = employeeSignatureFileRepo;
         }
 
         [HttpGet("get-all-project")]
@@ -349,7 +376,6 @@ namespace RERPAPI.Controllers.Old.SaleWareHouseManagement
         }
 
         #region
-
         [HttpGet("get-bill-code")]
         public ActionResult<string> LoadBillNumber(int billTypeId, int? billId = null, int? currentStatus = null, string currentCode = null)
         {
@@ -359,7 +385,6 @@ namespace RERPAPI.Controllers.Old.SaleWareHouseManagement
         }
 
         #endregion
-
         //đã xuất kho
         [HttpPost("shipped-out")]
         public async Task<IActionResult> ExportWareHouse([FromBody] BillExport billExport)
@@ -390,7 +415,6 @@ namespace RERPAPI.Controllers.Old.SaleWareHouseManagement
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
-
         [HttpGet("BillImportID/{billIDs}")]
         public IActionResult GetdetailByIDS(string billIDs)
         {
@@ -689,8 +713,8 @@ namespace RERPAPI.Controllers.Old.SaleWareHouseManagement
             {
                 List<List<dynamic>> result = SQLHelper<dynamic>.ProcedureToList(
                     "spGetListProductImportExportByProjectID_New",
-                    new string[] { "@projectId", "@projectCode", "@WarehouseCode" },
-                    new object[] { filter.projectID, filter.projectCode, filter.WarehouseCode }
+                    new string[] { "@projectId", "@projectCode", "@WarehouseCode", "@ProductGroupID" },
+                    new object[] { filter.projectID, filter.projectCode, filter.WarehouseCode, filter.ProductGroupID }
                     );
                 var dt = SQLHelper<object>.GetListData(result, 0);
                 return Ok(new
@@ -1240,29 +1264,69 @@ namespace RERPAPI.Controllers.Old.SaleWareHouseManagement
             }
         }
 
-        // GET: api/BillExport/get-pokh-files/{poNumber}
-        [HttpGet("get-pokh-files/{poNumber}")]
-        public IActionResult GetPOKHFiles(string poNumber)
+        [HttpGet("get-inventory-project-import-export-batch")]
+        public IActionResult GetInventoryProjectImportExportBatch(
+            int warehouseId,
+            int productId,
+            int projectId = 0,
+            int pokhDetailId = 0,
+            string billExportDetailIds = "")
         {
             try
             {
-                // Find POKH by PONumber
-                var pokh = _pokhRepo.GetAll(p => p.PONumber == poNumber && p.IsDeleted != true).FirstOrDefault();
-                if (pokh == null)
+                string productParamsJson = System.Text.Json.JsonSerializer.Serialize(new[]
                 {
-                    return BadRequest(ApiResponseFactory.Fail(null, $"Không tìm thấy PO với số {poNumber}"));
-                }
+                    new { ProductID = productId, ProjectID = projectId, POKHDetailID = pokhDetailId }
+                });
 
-                // Get all files for this POKH
-                var files = _pokhFilesRepo.GetAll(f => f.POKHID == pokh.ID && f.IsDeleted != true).ToList();
+                var rows = _billexportRepo.GetInventoryProjectImportExportBatch(warehouseId, productParamsJson, billExportDetailIds ?? "");
+                var row = rows.FirstOrDefault();
 
-                return Ok(ApiResponseFactory.Success(files, $"Tìm thấy {files.Count} file"));
+                return Ok(ApiResponseFactory.Success(row, "Lấy dữ liệu thành công!"));
             }
             catch (Exception ex)
             {
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
+
+
+        [HttpGet("download-pokh-files/{pokhID}")]
+        public IActionResult DownloadPOKHFiles(int pokhID)
+        {
+            try
+            {
+                var files = _pokhFilesRepo.GetAll(f => f.POKHID == pokhID && f.IsDeleted != true).ToList();
+                if (files == null || files.Count == 0)
+                {
+                    return BadRequest(ApiResponseFactory.Fail(null, "Không tìm thấy file nào cho PO này"));
+                }
+
+                using var memoryStream = new MemoryStream();
+                using (var archive = new ZipArchive(memoryStream, ZipArchiveMode.Create, true))
+                {
+                    foreach (var f in files)
+                    {
+                        string path = Path.Combine(f.ServerPath, f.FileName);
+                        if (!System.IO.File.Exists(path)) continue;
+
+                        var entry = archive.CreateEntry(f.FileName, System.IO.Compression.CompressionLevel.Fastest);
+                        using var entryStream = entry.Open();
+                        using var fileStream = System.IO.File.OpenRead(path);
+                        fileStream.CopyTo(entryStream);
+                    }
+                }
+
+                memoryStream.Position = 0;
+                return File(memoryStream.ToArray(), "application/zip", $"POKH_{pokhID}.zip");
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
+            }
+        }
+
+
 
         private string GetContentType(string fileName)
         {
@@ -1474,5 +1538,308 @@ namespace RERPAPI.Controllers.Old.SaleWareHouseManagement
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
+
+        #region API thêm mới 
+        [HttpPost("approved-incurred")]
+        [RequiresPermission("N32")]
+        public async Task<IActionResult> approvedIncurred([FromBody] List<BillExport> billexports)
+        {
+            try
+            {
+                var claims = User.Claims.ToDictionary(x => x.Type, x => x.Value);
+                var currentUser = ObjectMapper.GetCurrentUser(claims);
+                var ids = billexports.Select(x => x.ID).ToList();
+                var dict = billexports.ToDictionary(x => x.ID);
+
+                var billexps = _billexportRepo
+                    .GetAll(x => ids.Contains(x.ID));
+
+                foreach (var item in billexps)
+                {
+                    item.IsIncurredApproved = dict[item.ID].IsIncurredApproved;
+                    item.IncurredApprovedID = currentUser.ID;
+                }
+
+                await _billexportRepo.UpdateRangeAsync_Binh(billexps);
+
+                return Ok(new
+                {
+                    status = 1,
+                    data = ""
+                });
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
+            }
+        }
+
+        [HttpGet("data-print")]
+        public async Task<IActionResult> getDataPrint(int id)
+        {
+            try
+            {
+                var paramMaster = new { ID = id };
+                var result = await SqlDapper<object>.ProcedureToListTAsync("spGetExportExcel", paramMaster);
+                return Ok(ApiResponseFactory.Success(result[0], ""));
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
+            }
+        }
+
+        [HttpGet("data-print-detail")]
+        public async Task<IActionResult> getDataPrintDetail(int id)
+        {
+            try
+            {
+                var paramDetail = new { BillID = id };
+                var result = await SqlDapper<object>.ProcedureToListTAsync("spGetBillExportDetail", paramDetail);
+                return Ok(ApiResponseFactory.Success(result, ""));
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
+            }
+        }
+
+        [HttpGet("image-signature")]
+        public IActionResult getImageSignature(int id)
+        {
+            try
+            {
+                string message = "";
+                BillExport billExp = _billexportRepo.GetByID(id);
+
+                var pathStaticFile = _configSystemRepo.GetUploadPathByKey("SIGNATURE_PATH");
+                if (string.IsNullOrWhiteSpace(pathStaticFile))
+                    return BadRequest(ApiResponseFactory.Fail(null, $"Không tìm thấy cấu hình đường dẫn cho key: EmployeeSignature"));
+
+                Employee emReciver = _employeeRepo.GetAll(x=> x.UserID == billExp.UserID).FirstOrDefault(); // Người giao
+                Employee emDeliver = _employeeRepo.GetAll(x => x.UserID == billExp.SenderID).FirstOrDefault(); // Người nhận
+
+                var checkPicDeliver = _employeeSignatureFileRepo.GetAll(x => x.EmployeeID == emDeliver.ID && x.IsDeleted != true).FirstOrDefault();
+                var checkPicReciver = _employeeSignatureFileRepo.GetAll(x => x.EmployeeID == emReciver.ID && x.IsDeleted != true).FirstOrDefault();
+
+                string picDeliver = checkPicDeliver != null ? Path.Combine(pathStaticFile, $@"{emDeliver.Code.Trim()}.png") ?? "" : "";
+                string picReciver = checkPicReciver != null ? Path.Combine(pathStaticFile, $@"{emReciver.Code.Trim()}.png") ?? "" : "";
+                //string picDeliver = Path.Combine(pathImage, $@"test.png");
+                //string picReciver = Path.Combine(pathImage, $@"test.png");
+
+                var data = new
+                {
+                    picDeliver = ImageHelper.ImageToBase64(picDeliver),
+                    picReciver = ImageHelper.ImageToBase64(picReciver)
+                };
+
+                return Ok(new
+                {
+                    status = 1,
+                    data = data
+                });
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(new
+                {
+                    status = 0,
+                    message = ex.Message,
+                    error = ex.ToString()
+                });
+            }
+        }
+
+        [HttpGet("files")]
+        public IActionResult getFileImage(int billExportDetailId)
+        {
+            try
+            {
+                var billExportFiles = _billExportDetailFilesRepo.
+                    GetAll(x => x.BillExportDetailID == billExportDetailId && x.IsDeleted != true);
+
+                return Ok(ApiResponseFactory.Success(billExportFiles, ""));
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
+            }
+        }
+
+        [HttpPost("upload-files")]
+        [DisableRequestSizeLimit]
+        public async Task<IActionResult> UploadMultiple([FromForm] List<IFormFile> files, [FromForm] string key, [FromForm] string subPath = null)
+        {
+            try
+            {
+                if (files == null || files.Count == 0)
+                {
+                    return Ok(new { status = 0, message = "Không có file nào để tải lên." });
+                }
+
+                var savedFiles = new List<object>();
+
+                var uploadPath = _configSystemRepo.GetUploadPathByKey(key);
+                if (string.IsNullOrWhiteSpace(uploadPath))
+                    return BadRequest(ApiResponseFactory.Fail(null, $"Không tìm thấy cấu hình đường dẫn cho key: {key}"));
+
+                foreach (var file in files)
+                {
+                    if (file.Length <= 0) continue;
+
+                    var fileExtension = Path.GetExtension(file.FileName);
+                    var originalFileName = Path.GetFileNameWithoutExtension(file.FileName);
+                    var uniqueFileName = $"{originalFileName}{fileExtension}";
+                    var fullPath = Path.Combine(uploadPath, uniqueFileName);
+
+                    var checkExistsFile = _billExportDetailFilesRepo.GetAll(x => x.FileName == uniqueFileName && x.IsDeleted != false).FirstOrDefault();
+                    if (checkExistsFile != null)
+                    {
+                        checkExistsFile.ServerPath = uploadPath;
+                        checkExistsFile.OriginPath = uploadPath;
+                        checkExistsFile.IsDeleted = false;
+                        checkExistsFile.BillExportDetailID = 0;
+
+                        await _billExportDetailFilesRepo.UpdateAsync(checkExistsFile);
+
+                        savedFiles.Add(new
+                        {
+                            fileID = checkExistsFile.ID,
+                            filePath = uploadPath,
+                            ServerPath = uploadPath,
+                            fileName = file.FileName
+                        });
+                        continue;
+                    }
+
+                    // Lưu file trực tiếp vào targetFolder (không tạo file tạm khác)
+                    using (var stream = new FileStream(fullPath, FileMode.Create))
+                    {
+                        await file.CopyToAsync(stream);
+                    }
+
+                    var fileUpload = new BillExportDetailFile
+                    {
+                        FileName = uniqueFileName,
+                        OriginPath = uploadPath,
+                        ServerPath = uploadPath,
+                        IsDeleted = false
+                    };
+
+                    await _billExportDetailFilesRepo.CreateAsync(fileUpload);
+
+                    savedFiles.Add(new
+                    {
+                        fileID = fileUpload.ID,
+                        filePath = uploadPath,
+                        ServerPath = uploadPath,
+                        fileName = file.FileName
+                    });
+
+                }
+
+                return Ok(new
+                {
+                    status = 1,
+                    message = "Tải lên file thành công.",
+                    data = savedFiles
+                });
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(new
+                {
+                    status = 0,
+                    message = $"Lỗi tải file lên server: {ex.Message}"
+                });
+            }
+        }
+
+        [HttpPost("status-preparing")]
+        public async Task<IActionResult> updateStatusPreparing([FromBody] List<BillExport> billexports)
+        {
+            try
+            {
+                var claims = User.Claims.ToDictionary(x => x.Type, x => x.Value);
+                var currentUser = ObjectMapper.GetCurrentUser(claims);
+
+                var ids = billexports.Select(x => x.ID).ToList();
+                var dict = billexports.ToDictionary(x => x.ID);
+
+                var billexps = _billexportRepo
+                    .GetAll(x => ids.Contains(x.ID));
+
+                foreach (var item in billexps)
+                {
+                    item.IsOrderPrepared = dict[item.ID].IsOrderPrepared;
+                    item.OrderPreparedID = currentUser.ID;
+                }
+
+                await _billexportRepo.UpdateRangeAsync_Binh(billexps);
+
+                return Ok(new
+                {
+                    status = 1,
+                    data = ""
+                });
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
+            }
+        }
+
+        [HttpPost("status-receive")]
+        public async Task<IActionResult> updateStatusReceive([FromBody] List<BillExport> billexports)
+        {
+            try
+            {
+                var claims = User.Claims.ToDictionary(x => x.Type, x => x.Value);
+                var currentUser = ObjectMapper.GetCurrentUser(claims);
+
+                var ids = billexports.Select(x => x.ID).ToList();
+                var dict = billexports.ToDictionary(x => x.ID);
+
+                var billexps = _billexportRepo
+                    .GetAll(x => ids.Contains(x.ID));
+
+                foreach (var item in billexps)
+                {
+                    item.IsOrderReceived = dict[item.ID].IsOrderReceived;
+                    item.OrderReceivedID = currentUser.ID;
+                }
+
+                await _billexportRepo.UpdateRangeAsync_Binh(billexps);
+
+                return Ok(new
+                {
+                    status = 1,
+                    data = ""
+                });
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
+            }
+        }
+
+        //[HttpGet("inventory-project")]
+        //public IActionResult getInventoryProject(int projectId, int productSaleId)
+        //{
+        //    try
+        //    {
+        //        var inventoryPrj = _inventoryProjectRepo.
+        //            GetAll(x => x.ProjectID == projectId && x.ProductSaleID == productSaleId).FirstOrDefault();
+        //        var quantity = inventoryPrj != null ? inventoryPrj.Quantity : 0;
+
+        //        return Ok(ApiResponseFactory.Success(quantity, ""));
+        //    }
+        //    catch (Exception ex)
+        //    {
+        //        return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
+        //    }
+        //}
+
+        #endregion
     }
 }

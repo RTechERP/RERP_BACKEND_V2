@@ -1,4 +1,6 @@
-﻿using Microsoft.EntityFrameworkCore;
+﻿using System;
+using System.Collections.Generic;
+using Microsoft.EntityFrameworkCore;
 using RERPAPI.Model.Entities.RTCCourse;
 
 namespace RERPAPI.Model.Context;
@@ -34,15 +36,27 @@ public partial class RTCCourseDbContext : DbContext
 
     public virtual DbSet<CourseLesson> CourseLessons { get; set; }
 
+    public virtual DbSet<CourseLessonComment> CourseLessonComments { get; set; }
+
+    public virtual DbSet<CourseLessonCommentReaction> CourseLessonCommentReactions { get; set; }
+
     public virtual DbSet<CourseLessonHistory> CourseLessonHistories { get; set; }
 
+    public virtual DbSet<CourseLessonLike> CourseLessonLikes { get; set; }
+
+    public virtual DbSet<CourseNotification> CourseNotifications { get; set; }
+
     public virtual DbSet<CourseQuestion> CourseQuestions { get; set; }
+
+    public virtual DbSet<CourseRating> CourseRatings { get; set; }
 
     public virtual DbSet<CourseRightAnswer> CourseRightAnswers { get; set; }
 
     public virtual DbSet<CourseType> CourseTypes { get; set; }
 
     public virtual DbSet<Employee> Employees { get; set; }
+
+    public virtual DbSet<PasswordResetToken> PasswordResetTokens { get; set; }
 
     public virtual DbSet<User> Users { get; set; }
 
@@ -260,6 +274,36 @@ public partial class RTCCourseDbContext : DbContext
             entity.Property(e => e.UpdatedDate).HasColumnType("datetime");
         });
 
+        modelBuilder.Entity<CourseLessonComment>(entity =>
+        {
+            entity.HasKey(e => e.ID).HasName("PK__CourseLe__3214EC279924CF09");
+
+            entity.ToTable("CourseLessonComment");
+
+            entity.HasIndex(e => new { e.LessonID, e.CreatedDate }, "IX_Comment_LessonDate").IsDescending(false, true);
+
+            entity.HasIndex(e => e.ParentID, "IX_Comment_ParentID");
+
+            entity.Property(e => e.Content).HasMaxLength(1000);
+            entity.Property(e => e.CreatedDate)
+                .HasDefaultValueSql("(getdate())")
+                .HasColumnType("datetime");
+            entity.Property(e => e.ReplyToName).HasMaxLength(150);
+            entity.Property(e => e.UpdatedDate).HasColumnType("datetime");
+        });
+
+        modelBuilder.Entity<CourseLessonCommentReaction>(entity =>
+        {
+            entity.HasKey(e => e.ID).HasName("PK__CourseLe__3214EC277426406F");
+
+            entity.ToTable("CourseLessonCommentReaction");
+
+            entity.Property(e => e.CreatedDate)
+                .HasDefaultValueSql("(getdate())")
+                .HasColumnType("datetime");
+            entity.Property(e => e.ReactionType).HasMaxLength(50);
+        });
+
         modelBuilder.Entity<CourseLessonHistory>(entity =>
         {
             entity.HasKey(e => e.ID).HasName("PK__CourseLe__3214EC275E202016");
@@ -268,6 +312,36 @@ public partial class RTCCourseDbContext : DbContext
 
             entity.Property(e => e.ViewDate).HasColumnType("datetime");
             entity.Property(e => e.WatchedPercent).HasColumnType("decimal(5, 2)");
+        });
+
+        modelBuilder.Entity<CourseLessonLike>(entity =>
+        {
+            entity.HasKey(e => e.ID).HasName("PK__CourseLe__3214EC27B28E4B7D");
+
+            entity.ToTable("CourseLessonLike");
+
+            entity.HasIndex(e => e.LessonID, "IX_Like_LessonID");
+
+            entity.Property(e => e.CreatedDate)
+                .HasDefaultValueSql("(getdate())")
+                .HasColumnType("datetime");
+        });
+
+        modelBuilder.Entity<CourseNotification>(entity =>
+        {
+            entity.HasKey(e => e.Id).HasName("PK__CourseNo__3214EC0757629DFB");
+
+            entity.ToTable("CourseNotification");
+
+            entity.Property(e => e.Content).HasMaxLength(1000);
+            entity.Property(e => e.CreatedDate)
+                .HasDefaultValueSql("(getdate())")
+                .HasColumnType("datetime");
+            entity.Property(e => e.NotificationType)
+                .HasMaxLength(100)
+                .IsUnicode(false);
+            entity.Property(e => e.TargetUrl).HasMaxLength(500);
+            entity.Property(e => e.Title).HasMaxLength(200);
         });
 
         modelBuilder.Entity<CourseQuestion>(entity =>
@@ -279,6 +353,21 @@ public partial class RTCCourseDbContext : DbContext
             entity.Property(e => e.CreatedBy).HasMaxLength(100);
             entity.Property(e => e.CreatedDate).HasColumnType("datetime");
             entity.Property(e => e.UpdatedBy).HasMaxLength(100);
+            entity.Property(e => e.UpdatedDate).HasColumnType("datetime");
+        });
+
+        modelBuilder.Entity<CourseRating>(entity =>
+        {
+            entity.HasKey(e => e.ID).HasName("PK__CourseRa__3214EC2730D9BB2A");
+
+            entity.ToTable("CourseRating");
+
+            entity.HasIndex(e => e.CourseID, "IX_Rating_CourseID");
+
+            entity.Property(e => e.Comment).HasMaxLength(500);
+            entity.Property(e => e.CreatedDate)
+                .HasDefaultValueSql("(getdate())")
+                .HasColumnType("datetime");
             entity.Property(e => e.UpdatedDate).HasColumnType("datetime");
         });
 
@@ -420,6 +509,19 @@ public partial class RTCCourseDbContext : DbContext
             entity.Property(e => e.XangXe).HasColumnType("decimal(18, 2)");
         });
 
+        modelBuilder.Entity<PasswordResetToken>(entity =>
+        {
+            entity.ToTable("PasswordResetToken");
+
+            entity.Property(e => e.CreatedBy).HasMaxLength(50);
+            entity.Property(e => e.CreatedDate).HasColumnType("datetime");
+            entity.Property(e => e.ExpiredAt).HasColumnType("datetime");
+            entity.Property(e => e.IsUsed).HasDefaultValue(false);
+            entity.Property(e => e.Token).HasMaxLength(255);
+            entity.Property(e => e.UpdatedBy).HasMaxLength(50);
+            entity.Property(e => e.UpdatedDate).HasColumnType("datetime");
+        });
+
         modelBuilder.Entity<User>(entity =>
         {
             entity.HasKey(e => e.ID).HasName("PK__Users__3214EC2783EB53AE");
@@ -441,6 +543,7 @@ public partial class RTCCourseDbContext : DbContext
             entity.Property(e => e.HandPhone).HasMaxLength(100);
             entity.Property(e => e.HomeAddress).HasMaxLength(100);
             entity.Property(e => e.ImagePath).HasColumnType("ntext");
+            entity.Property(e => e.InterestedCatalogTypeIds).HasMaxLength(500);
             entity.Property(e => e.JobDescription).HasMaxLength(200);
             entity.Property(e => e.LoginName).HasMaxLength(50);
             entity.Property(e => e.MST).HasMaxLength(250);
@@ -449,6 +552,7 @@ public partial class RTCCourseDbContext : DbContext
                 .HasComment("Đơn vị công tác");
             entity.Property(e => e.PassExpireDate).HasColumnType("datetime");
             entity.Property(e => e.PasswordHash).HasMaxLength(250);
+            entity.Property(e => e.PhoneNumber).HasMaxLength(100);
             entity.Property(e => e.PinPassword).HasMaxLength(255);
             entity.Property(e => e.Position)
                 .HasMaxLength(550)
@@ -470,5 +574,5 @@ public partial class RTCCourseDbContext : DbContext
         OnModelCreatingPartial(modelBuilder);
     }
 
-    private partial void OnModelCreatingPartial(ModelBuilder modelBuilder);
+    partial void OnModelCreatingPartial(ModelBuilder modelBuilder);
 }

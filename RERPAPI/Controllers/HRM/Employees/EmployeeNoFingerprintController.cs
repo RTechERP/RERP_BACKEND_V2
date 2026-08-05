@@ -67,7 +67,33 @@ namespace RERPAPI.Controllers.HRM.Employees
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
+        /// <summary>
+        ///Lấy dữ liệu đăng ký quên chấm công cá nhân
+        /// </summary>
+        /// <param name="request"></param>
+        /// <returns></returns>
+        [HttpPost("person")]
+        public IActionResult GetEmployeeNoFingerprintPersonal([FromBody] EmployeeNoFingerPrintRequestParam request)
+        {
+            try
+            {
+                var claims = User.Claims.ToDictionary(x => x.Type, x => x.Value);
+                CurrentUser currentUser = ObjectMapper.GetCurrentUser(claims);
+                request.DateStart = request.DateStart.ToLocalTime().Date;
+                request.DateEnd = request.DateEnd.ToLocalTime().Date.AddDays(+1).AddSeconds(-1);
+                var dt = SQLHelper<object>.ProcedureToList("spGetEmployeeNoFingerprint",
+                                                   new string[] { "@PageNumber", "@PageSize", "@DateStart", "@DateEnd", "@DepartmentID", "@EmployeeID", "@IDApprovedTP", "@Status", @"Keyword" },
+                                                   new object[] { request.Page ?? 1, request.Size ?? 50, request.DateStart, request.DateEnd, request.DepartmentID ?? 0, currentUser.EmployeeID, request.IDApprovedTP, request.Status, request.KeyWord ?? "" });
+                var data = SQLHelper<object>.GetListData(dt, 0);
+                var totalPage = SQLHelper<object>.GetListData(dt, 1);
 
+                return Ok(ApiResponseFactory.Success(new { data, totalPage }, "Lấy dữ lệu thành công"));
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
+            }
+        }
         [HttpPost("get-employee-no-fingerprint-person")]
         public IActionResult GetEmployeeNoFingerprintPerson([FromBody] EmployeeNoFingerPrintRequestParam request)
         {

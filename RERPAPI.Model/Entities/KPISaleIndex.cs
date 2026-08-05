@@ -40,4 +40,8 @@ public partial class KPISaleIndex
     public string? UpdatedBy { get; set; }
 
     public DateTime? UpdatedDate { get; set; }
+
+    public int? ReportScoreAdjustmentType { get; set; }
+
+    public decimal? ReportScoreValue { get; set; }
 }

@@ -11,12 +11,14 @@ namespace RERPAPI.Repo.GenericEntity
         private InvoiceLinkRepo _invoicelinkrepo;
         private BillImportDetailSerialNumberRepo _billImportDetailSerialNumberRepo;
         private InventoryProjectRepo _inventoryProjectRepo;
+        private readonly CurrentUser _currentUser;
 
         public BillImportDetailRepo(CurrentUser currentUser, InvoiceLinkRepo invoicelinkrepo, BillImportDetailSerialNumberRepo billImportDetailSerialNumberRepo, InventoryProjectRepo inventoryProjectRepo) : base(currentUser)
         {
             _invoicelinkrepo = invoicelinkrepo;
             _billImportDetailSerialNumberRepo = billImportDetailSerialNumberRepo;
             _inventoryProjectRepo = inventoryProjectRepo;
+            _currentUser = currentUser;
         }
 
         #region lưu dữ liệu chi tiết phiếu nhập
@@ -139,5 +141,16 @@ namespace RERPAPI.Repo.GenericEntity
         }
 
         #endregion hàm lưu serial number
+        public bool HasPermission(params string[] requiredPermissions)
+        {
+            if (string.IsNullOrWhiteSpace(_currentUser.Permissions))
+                return false;
+
+            var userPermissions = _currentUser.Permissions
+                .Split(',', StringSplitOptions.RemoveEmptyEntries)
+                .Select(p => p.Trim());
+
+            return requiredPermissions.Any(rp => userPermissions.Contains(rp));
+        }
     }
 }
