@@ -126,4 +126,6 @@ public partial class PONCCDetail
     public bool? IsPurchase { get; set; }
 
     public bool? IsDeleted { get; set; }
+
+    public bool? IsNotKeep { get; set; }
 }

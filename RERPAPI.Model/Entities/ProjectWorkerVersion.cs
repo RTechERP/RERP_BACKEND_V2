@@ -38,4 +38,8 @@ public partial class ProjectWorkerVersion
     public DateTime? ApprovedTBPDate { get; set; }
 
     public int? ApprovedTBPID { get; set; }
+
+    public int? ProjectHistoryProblemID { get; set; }
+
+    public bool? IsProblem { get; set; }
 }

@@ -54,6 +54,7 @@ using tusdotnet.Models.Configuration;
 using tusdotnet.Models.Expiration;
 using tusdotnet.Stores;
 using RERPAPI.Repo.GenericEntity.HRM.Visa;
+using RERPAPI.Repo.GenericEntity.HRM.HotelBooking;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -754,6 +755,18 @@ builder.Services.AddScoped<KPISaleApprovalRepo>();
 builder.Services.AddScoped<KPISaleApprovalLogRepo>();
 builder.Services.AddScoped<KPISaleTeamMemberRepo>();
 builder.Services.AddScoped<KPISalePeroidRepo>();
+builder.Services.AddScoped<FlightBookingPassengerRepo>();
+builder.Services.AddScoped<HotelBookingManagementRepo>();
+builder.Services.AddScoped<HotelBookingProposalRepo>();
+builder.Services.AddScoped<HotelBookingEmployeeRepo>();
+builder.Services.AddScoped<SalaryIncreaseRepo>();
+builder.Services.AddScoped<SalaryIncreaseDetailRepo>();
+builder.Services.AddScoped<HotelBookingEmployeeRepo>();
+builder.Services.AddScoped<TravelRegistrationRepo>();
+builder.Services.AddScoped<BillExportDetailFilesRepo>();
+builder.Services.AddScoped<ExpectedPayableRepo>();
+builder.Services.AddScoped<EmployeeSignatureFileRepo>();
+builder.Services.AddScoped<BusinessConfigRepo>();
 
 builder.Services.AddScoped<ProjectGateRepo>();
 builder.Services.AddScoped<ProjectGateStepRepo>();
@@ -784,6 +797,10 @@ builder.Services.AddScoped<ProjectPartListPriceRequestLogRepo>();
 builder.Services.AddScoped<ProjectPartListLogRepo>();
 builder.Services.AddScoped<JobPerfomanceEvaluationNewLogRepo>();
 builder.Services.AddScoped<ProjectPartListHistoryLogRepo>();
+builder.Services.AddScoped<InventoryStockLogRepo>();
+builder.Services.AddScoped<ProductSaleImportExportLogRepo>();
+builder.Services.AddScoped<ProductRTCFileRepo>();
+builder.Services.AddScoped<ExpectedPayableLogRepo>();
 
 #endregion DI LOG
 
@@ -907,6 +924,7 @@ builder.Services.AddAuthentication();
 var smtpSettings = builder.Services.Configure<SmtpSettings>(builder.Configuration.GetSection("SmtpSettings"));
 builder.Services.Configure<SmtpSettingsHr>(builder.Configuration.GetSection("SmtpSettingsHr"));
 builder.Services.Configure<SmtpSettingsHrm>(builder.Configuration.GetSection("SmtpSettingsHrm"));
+builder.Services.Configure<SalaryIncreaseMailSettings>(builder.Configuration.GetSection("SalaryIncreaseMailSettings"));
 
 //Get list static file
 builder.Services.Configure<List<PathStaticFile>>(builder.Configuration.GetSection("PathStaticFiles"));

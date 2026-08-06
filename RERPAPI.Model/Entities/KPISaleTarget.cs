@@ -40,4 +40,10 @@ public partial class KPISaleTarget
     public string? RejectedBy { get; set; }
 
     public DateTime? RejectedDate { get; set; }
+
+    public bool? IsBoardApproved { get; set; }
+
+    public string? BoardApprovedBy { get; set; }
+
+    public DateTime? BoardApprovedDate { get; set; }
 }

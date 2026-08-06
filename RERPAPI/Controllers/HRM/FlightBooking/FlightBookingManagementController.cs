@@ -80,7 +80,7 @@ namespace RERPAPI.Controllers.HRM.FlightBooking
             {
                 string procedureName = "spGetFlightBookingManagement";
                 string[] paramNames = new string[] { "@StartDate", "@EndDate", "@Keyword", "@EmployeeID", "@ProjectID", "@EmployeeBookerID" };
-                object[] paramValues = new object[] { request.StartDate, request.EndDate, request.Keyword ?? "", request.EmployeeID ?? 0, request.ProjectID ?? 0, request.EmployeeBookerID ??0};
+                object[] paramValues = new object[] { request.StartDate, request.EndDate, request.Keyword ?? "", request.EmployeeID ?? 0, request.ProjectID ?? 0, request.EmployeeBookerID ?? 0 };
 
                 var data = SQLHelper<object>.ProcedureToList(procedureName, paramNames, paramValues);
                 var result = SQLHelper<object>.GetListData(data, 0);
@@ -383,9 +383,9 @@ namespace RERPAPI.Controllers.HRM.FlightBooking
                 if (maxPA < 2) maxPA = 2;
 
                 int startPACol = hasRoundTrip ? 15 : 13;
-                int hcnsProposalCol = startPACol + maxPA; // (startPACol-1) cột đầu + (maxPA cột/PA)
-                int diffCol = hcnsProposalCol + 1;
-                int hcnsReasonCol = diffCol + 1;
+                int diffCol = startPACol + maxPA;
+                int hcnsProposalCol = diffCol + 1;
+                int hcnsReasonCol = hcnsProposalCol + 1;
                 int totalCol = hcnsReasonCol + 1;
                 int approverCol = totalCol + 1;
                 int bookerCol = approverCol + 1;
@@ -462,11 +462,11 @@ namespace RERPAPI.Controllers.HRM.FlightBooking
                         colIndex++;
                     }
 
-                    sheet.Cells[2, colIndex].Value = "Phương án HCNS đề xuất";
+                    sheet.Cells[2, colIndex].Value = "Chênh lệch\nchi phí";
                     sheet.Cells[2, colIndex, 3, colIndex].Merge = true;
                     colIndex++;
 
-                    sheet.Cells[2, colIndex].Value = "Chênh lệch\nchi phí";
+                    sheet.Cells[2, colIndex].Value = "Phương án HCNS đề xuất";
                     sheet.Cells[2, colIndex, 3, colIndex].Merge = true;
                     colIndex++;
 
@@ -497,10 +497,6 @@ namespace RERPAPI.Controllers.HRM.FlightBooking
                     using (var range = sheet.Cells[2, 1, 3, totalCols])
                     {
                         range.Style.Font.Bold = true;
-                        range.Style.HorizontalAlignment = OfficeOpenXml.Style.ExcelHorizontalAlignment.Center;
-                        range.Style.VerticalAlignment = OfficeOpenXml.Style.ExcelVerticalAlignment.Center;
-                        range.Style.Fill.PatternType = OfficeOpenXml.Style.ExcelFillStyle.Solid;
-                        range.Style.Fill.BackgroundColor.SetColor(System.Drawing.Color.LightYellow);
                         range.Style.Border.Top.Style = OfficeOpenXml.Style.ExcelBorderStyle.Thin;
                         range.Style.Border.Bottom.Style = OfficeOpenXml.Style.ExcelBorderStyle.Thin;
                         range.Style.Border.Left.Style = OfficeOpenXml.Style.ExcelBorderStyle.Thin;
@@ -518,7 +514,7 @@ namespace RERPAPI.Controllers.HRM.FlightBooking
                         var items = group.ToList();
                         int proposalCount = items.Count;
                         var first = items[0];
-                        int masterID = Convert.ToInt32(first["MasterID"]);
+                        int masterID = GetDictInt(first, "MasterID");
 
                         List<IDictionary<string, object>> groupPassengers = null;
                         if (passengersGrouped.TryGetValue(masterID, out var pList))
@@ -547,31 +543,65 @@ namespace RERPAPI.Controllers.HRM.FlightBooking
                             if (i == 0)
                             {
                                 sheet.Cells[startRow, 1].Value = stt++;
-                                sheet.Cells[startRow, 2].Value = first["RequesterName"];
-                                sheet.Cells[startRow, 3].Value = first["Reason"];
-                                sheet.Cells[startRow, 4].Value = first["ProjectName"];
-                                sheet.Cells[startRow, 8].Value = (first["IsRoundTrip"] != null && Convert.ToBoolean(first["IsRoundTrip"])) ? "x" : "";
-                                sheet.Cells[startRow, 9].Value = first["DepartureAddress"];
-                                sheet.Cells[startRow, 10].Value = first["ArrivesAddress"];
+                                sheet.Cells[startRow, 2].Value = GetDictString(first, "RequesterName");
+                                sheet.Cells[startRow, 3].Value = GetDictString(first, "Reason");
+                                sheet.Cells[startRow, 4].Value = GetDictString(first, "ProjectName");
+                                sheet.Cells[startRow, 8].Value = GetDictBool(first, "IsRoundTrip") ? "x" : "";
+                                sheet.Cells[startRow, 9].Value = GetDictString(first, "DepartureAddress");
+                                sheet.Cells[startRow, 10].Value = GetDictString(first, "ArrivesAddress");
                             }
 
                             if (groupPassengers != null && i < passengerCount)
                             {
                                 var passenger = groupPassengers[i];
-                                sheet.Cells[row, 5].Value = passenger["PassengerName"];
-                                sheet.Cells[row, 6].Value = passenger["PositionName"];
-                                sheet.Cells[row, 7].Value = passenger["DepartmentName"];
+                                sheet.Cells[row, 5].Value = GetDictString(passenger, "PassengerName");
+                                sheet.Cells[row, 6].Value = GetDictString(passenger, "PositionName");
+                                sheet.Cells[row, 7].Value = GetDictString(passenger, "DepartmentName");
                             }
 
-                            if (i < proposalCount)
-                            {
-                                var item = items[i];
+                            row++;
+                        }
 
-                                string dayOfWeekStr = "";
-                                if (item["DepartureDate"] != null && item["DepartureDate"] != DBNull.Value)
+                        int endRow = row - 1;
+
+                        // Đổ dữ liệu các Phương án (Chia đều tổng số dòng maxRows cho các Phương án)
+                        for (int i = 0; i < proposalCount; i++)
+                        {
+                            var item = items[i];
+                            int pStartRow = startRow + (i * maxRows) / proposalCount;
+                            int pEndRow = startRow + ((i + 1) * maxRows) / proposalCount - 1;
+
+                            string dayOfWeekStr = "";
+                            var depDateVal = GetDictValue(item, "DepartureDate");
+                            if (depDateVal != null && depDateVal != DBNull.Value)
+                            {
+                                var dateVal = Convert.ToDateTime(depDateVal);
+                                dayOfWeekStr = dateVal.DayOfWeek switch
                                 {
-                                    var dateVal = (DateTime)item["DepartureDate"];
-                                    dayOfWeekStr = dateVal.DayOfWeek switch
+                                    DayOfWeek.Sunday => "Chủ Nhật",
+                                    DayOfWeek.Monday => "Thứ Hai",
+                                    DayOfWeek.Tuesday => "Thứ Ba",
+                                    DayOfWeek.Wednesday => "Thứ Tư",
+                                    DayOfWeek.Thursday => "Thứ Năm",
+                                    DayOfWeek.Friday => "Thứ Sáu",
+                                    DayOfWeek.Saturday => "Thứ Bảy",
+                                    _ => ""
+                                };
+                            }
+
+                            var depTimeVal = GetDictValue(item, "DepartureTime");
+                            string depTimeStr = depTimeVal != null && depTimeVal != DBNull.Value ? Convert.ToDateTime(depTimeVal).ToString("HH:mm") : "";
+                            sheet.Cells[pStartRow, 11].Value = string.IsNullOrEmpty(dayOfWeekStr) ? depTimeStr : $"{dayOfWeekStr} {depTimeStr}";
+                            sheet.Cells[pStartRow, 12].Value = depDateVal != null && depDateVal != DBNull.Value ? Convert.ToDateTime(depDateVal).ToString("dd/MM/yyyy") : "";
+
+                            if (hasRoundTrip)
+                            {
+                                string dayOfWeekReturnStr = "";
+                                var retDateVal = GetDictValue(item, "ReturnDate");
+                                if (retDateVal != null && retDateVal != DBNull.Value)
+                                {
+                                    var dateVal = Convert.ToDateTime(retDateVal);
+                                    dayOfWeekReturnStr = dateVal.DayOfWeek switch
                                     {
                                         DayOfWeek.Sunday => "Chủ Nhật",
                                         DayOfWeek.Monday => "Thứ Hai",
@@ -584,114 +614,103 @@ namespace RERPAPI.Controllers.HRM.FlightBooking
                                     };
                                 }
 
-                                string depTimeStr = item["DepartureTime"] != null && item["DepartureTime"] != DBNull.Value ? ((DateTime)item["DepartureTime"]).ToString("HH:mm") : "";
-                                sheet.Cells[row, 11].Value = string.IsNullOrEmpty(dayOfWeekStr) ? depTimeStr : $"{dayOfWeekStr} {depTimeStr}";
-                                sheet.Cells[row, 12].Value = item["DepartureDate"] != null && item["DepartureDate"] != DBNull.Value ? ((DateTime)item["DepartureDate"]).ToString("dd/MM/yyyy") : "";
+                                var retTimeVal = GetDictValue(item, "ReturnTime");
+                                string retTimeStr = retTimeVal != null && retTimeVal != DBNull.Value ? Convert.ToDateTime(retTimeVal).ToString("HH:mm") : "";
+                                sheet.Cells[pStartRow, 13].Value = string.IsNullOrEmpty(dayOfWeekReturnStr) ? retTimeStr : $"{dayOfWeekReturnStr} {retTimeStr}";
+                                sheet.Cells[pStartRow, 14].Value = retDateVal != null && retDateVal != DBNull.Value ? Convert.ToDateTime(retDateVal).ToString("dd/MM/yyyy") : "";
+                            }
 
+                            int paCol = startPACol + i;
+                            string airline = GetDictString(item, "Airline");
+                            var priceValObj = GetDictValue(item, "Price");
+                            decimal priceVal = priceValObj != null && priceValObj != DBNull.Value ? Convert.ToDecimal(priceValObj) : 0;
+                            string priceStr = priceVal > 0 ? priceVal.ToString("#,##0") : "";
+                            string baggage = GetDictString(item, "Baggage");
+
+                            var lines = new List<string>();
+                            if (!string.IsNullOrEmpty(airline)) lines.Add(airline);
+                            if (!string.IsNullOrEmpty(priceStr)) lines.Add(priceStr);
+                            if (!string.IsNullOrEmpty(baggage)) lines.Add(baggage);
+
+                            sheet.Cells[pStartRow, paCol].Value = string.Join("\n", lines);
+                            sheet.Cells[pStartRow, paCol].Style.WrapText = true;
+                            sheet.Cells[pStartRow, paCol].Style.Font.Color.SetColor(System.Drawing.Color.Black);
+
+                            if (pEndRow > pStartRow)
+                            {
+                                sheet.Cells[pStartRow, 11, pEndRow, 11].Merge = true;
+                                sheet.Cells[pStartRow, 12, pEndRow, 12].Merge = true;
                                 if (hasRoundTrip)
                                 {
-                                    string dayOfWeekReturnStr = "";
-                                    if (item["ReturnDate"] != null && item["ReturnDate"] != DBNull.Value)
-                                    {
-                                        var dateVal = (DateTime)item["ReturnDate"];
-                                        dayOfWeekReturnStr = dateVal.DayOfWeek switch
-                                        {
-                                            DayOfWeek.Sunday => "Chủ Nhật",
-                                            DayOfWeek.Monday => "Thứ Hai",
-                                            DayOfWeek.Tuesday => "Thứ Ba",
-                                            DayOfWeek.Wednesday => "Thứ Tư",
-                                            DayOfWeek.Thursday => "Thứ Năm",
-                                            DayOfWeek.Friday => "Thứ Sáu",
-                                            DayOfWeek.Saturday => "Thứ Bảy",
-                                            _ => ""
-                                        };
-                                    }
-
-                                    string retTimeStr = item["ReturnTime"] != null && item["ReturnTime"] != DBNull.Value ? ((DateTime)item["ReturnTime"]).ToString("HH:mm") : "";
-                                    sheet.Cells[row, 13].Value = string.IsNullOrEmpty(dayOfWeekReturnStr) ? retTimeStr : $"{dayOfWeekReturnStr} {retTimeStr}";
-                                    sheet.Cells[row, 14].Value = item["ReturnDate"] != null && item["ReturnDate"] != DBNull.Value ? ((DateTime)item["ReturnDate"]).ToString("dd/MM/yyyy") : "";
+                                    sheet.Cells[pStartRow, 13, pEndRow, 13].Merge = true;
+                                    sheet.Cells[pStartRow, 14, pEndRow, 14].Merge = true;
                                 }
-
-                                int paCol = startPACol + i;
-                                string airline = item["Airline"] != null ? item["Airline"].ToString() : "";
-                                decimal priceVal = item["Price"] != null && item["Price"] != DBNull.Value ? Convert.ToDecimal(item["Price"]) : 0;
-                                string priceStr = priceVal > 0 ? priceVal.ToString("#,##0") : "";
-                                string baggage = item["Baggage"] != null ? item["Baggage"].ToString() : "";
-
-                                var lines = new List<string>();
-                                if (!string.IsNullOrEmpty(airline)) lines.Add(airline);
-                                if (!string.IsNullOrEmpty(priceStr)) lines.Add(priceStr);
-                                if (!string.IsNullOrEmpty(baggage)) lines.Add(baggage);
-
-                                sheet.Cells[row, paCol].Value = string.Join("\n", lines);
-                                sheet.Cells[row, paCol].Style.WrapText = true;
-                                sheet.Cells[row, paCol].Style.Font.Color.SetColor(System.Drawing.Color.Black);
-
-                                bool isHCNS = item["HCNSProposal"] != null && item["HCNSProposal"] != DBNull.Value && Convert.ToBoolean(item["HCNSProposal"]);
-                                if (isHCNS)
+                                for (int c = startPACol; c < startPACol + maxPA; c++)
                                 {
-                                    hcnsReason = item["ReasonHCNSProposal"] != null ? item["ReasonHCNSProposal"].ToString() : "";
-                                    hcnsProposalsList.Add("Phương án " + (i + 1));
-                                }
-
-                                decimal price = priceVal;
-                                if (i == 0) pa1Price = price;
-                                if (i == 1) pa2Price = price;
-
-                                if (price > 0 && price < minPrice)
-                                {
-                                    minPrice = price;
-                                }
-
-                                int isApprove = item["IsApprove"] != null && item["IsApprove"] != DBNull.Value ? Convert.ToInt32(item["IsApprove"]) : 0;
-                                if (isApprove == 1)
-                                {
-                                    totalApproved += price;
-                                    hasApproved = true;
-                                    if (item["ApproverName"] != null && item["ApproverName"] != DBNull.Value)
-                                    {
-                                        approverName = item["ApproverName"].ToString();
-                                    }
-                                }
-                                else if (string.IsNullOrEmpty(approverName) && item["ApproverName"] != null && item["ApproverName"] != DBNull.Value)
-                                {
-                                    approverName = item["ApproverName"].ToString();
+                                    sheet.Cells[pStartRow, c, pEndRow, c].Merge = true;
                                 }
                             }
 
-                            row++;
+                            bool isHCNS = GetDictBool(item, "HCNSProposal");
+                            if (isHCNS)
+                            {
+                                hcnsReason = GetDictString(item, "ReasonHCNSProposal");
+                                hcnsProposalsList.Add("Phương án " + (i + 1));
+                            }
+
+                            decimal price = priceVal;
+                            if (i == 0) pa1Price = price;
+                            if (i == 1) pa2Price = price;
+
+                            if (price > 0 && price < minPrice)
+                            {
+                                minPrice = price;
+                            }
+
+                            int isApprove = GetDictInt(item, "IsApprove");
+                            string appNameStr = GetDictString(item, "ApproverName");
+                            if (isApprove == 1)
+                            {
+                                totalApproved += price;
+                                hasApproved = true;
+                                if (!string.IsNullOrEmpty(appNameStr))
+                                {
+                                    approverName = appNameStr;
+                                }
+                            }
+                            else if (string.IsNullOrEmpty(approverName) && !string.IsNullOrEmpty(appNameStr))
+                            {
+                                approverName = appNameStr;
+                            }
                         }
 
-                        int endRow = row - 1;
+                        sheet.Cells[startRow, diffCol].Value = Math.Abs(pa1Price - pa2Price);
+                        sheet.Cells[startRow, diffCol].Style.Numberformat.Format = "#,##0";
 
                         sheet.Cells[startRow, hcnsProposalCol].Value = string.Join("\n\n", hcnsProposalsList);
                         sheet.Cells[startRow, hcnsProposalCol].Style.WrapText = true;
 
                         sheet.Cells[startRow, hcnsReasonCol].Value = hcnsReason;
 
-                        sheet.Cells[startRow, diffCol].Value = Math.Abs(pa1Price - pa2Price);
-                        sheet.Cells[startRow, diffCol].Style.Numberformat.Format = "#,##0";
-
                         decimal totalVal = hasApproved ? totalApproved : (minPrice == decimal.MaxValue ? 0 : minPrice);
                         sheet.Cells[startRow, totalCol].Value = totalVal;
                         sheet.Cells[startRow, totalCol].Style.Numberformat.Format = "#,##0";
 
                         sheet.Cells[startRow, approverCol].Value = approverName;
-                        sheet.Cells[startRow, bookerCol].Value = first["BookerName"];
-                        sheet.Cells[startRow, bookedDateCol].Value = first["BookedDate"] != null && first["BookedDate"] != DBNull.Value ? ((DateTime)first["BookedDate"]).ToString("dd/MM/yyyy HH:mm") : "";
-                        sheet.Cells[startRow, noteCol].Value = first["Note"];
+                        sheet.Cells[startRow, bookerCol].Value = GetDictString(first, "BookerName");
+                        var bookedDateVal = GetDictValue(first, "BookedDate");
+                        sheet.Cells[startRow, bookedDateCol].Value = bookedDateVal != null && bookedDateVal != DBNull.Value ? Convert.ToDateTime(bookedDateVal).ToString("dd/MM/yyyy HH:mm") : "";
+                        sheet.Cells[startRow, noteCol].Value = GetDictString(first, "Note");
 
                         if (endRow > startRow)
                         {
-                            int[] colsToMerge = { 1, 2, 3, 4, 8, 9, 10, hcnsProposalCol, diffCol, hcnsReasonCol, totalCol, approverCol, bookerCol, bookedDateCol, noteCol };
+                            int[] colsToMerge = { 1, 2, 3, 4, 8, 9, 10, diffCol, hcnsProposalCol, hcnsReasonCol, totalCol, approverCol, bookerCol, bookedDateCol, noteCol };
                             foreach (int col in colsToMerge)
                             {
                                 sheet.Cells[startRow, col, endRow, col].Merge = true;
                             }
                         }
                     }
-
-                    // 4. Định dạng (Styling)
                     var allRange = sheet.Cells[1, 1, row - 1, totalCols];
                     allRange.Style.VerticalAlignment = OfficeOpenXml.Style.ExcelVerticalAlignment.Center;
                     allRange.Style.HorizontalAlignment = OfficeOpenXml.Style.ExcelHorizontalAlignment.Center;
@@ -726,10 +745,11 @@ namespace RERPAPI.Controllers.HRM.FlightBooking
                         sheet.Column(14).Width = 12; // Ngày về
                     }
 
-                    for (int i = startPACol; i < hcnsProposalCol; i++)
+                    for (int i = startPACol; i < diffCol; i++)
                     {
                         sheet.Column(i).Width = 20;
                     }
+                    sheet.Column(diffCol).Width = 20;
                     sheet.Column(hcnsProposalCol).Width = 25;
                     sheet.Column(hcnsReasonCol).Width = 35;
                     sheet.Column(diffCol).Width = 20;
@@ -748,6 +768,43 @@ namespace RERPAPI.Controllers.HRM.FlightBooking
             {
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
+        }
+
+        private static object? GetDictValue(IDictionary<string, object> dict, string key)
+        {
+            if (dict == null) return null;
+            var matchKey = dict.Keys.FirstOrDefault(k => string.Equals(k, key, StringComparison.OrdinalIgnoreCase));
+            if (matchKey != null && dict.TryGetValue(matchKey, out var val))
+            {
+                return val;
+            }
+            return null;
+        }
+
+        private static string GetDictString(IDictionary<string, object> dict, string key)
+        {
+            var val = GetDictValue(dict, key);
+            return (val != null && val != DBNull.Value) ? val.ToString() ?? "" : "";
+        }
+
+        private static bool GetDictBool(IDictionary<string, object> dict, string key)
+        {
+            var val = GetDictValue(dict, key);
+            if (val != null && val != DBNull.Value)
+            {
+                try { return Convert.ToBoolean(val); } catch { }
+            }
+            return false;
+        }
+
+        private static int GetDictInt(IDictionary<string, object> dict, string key)
+        {
+            var val = GetDictValue(dict, key);
+            if (val != null && val != DBNull.Value)
+            {
+                try { return Convert.ToInt32(val); } catch { }
+            }
+            return 0;
         }
     }
 

@@ -1,6 +1,8 @@
 using ClosedXML.Excel;
+using FirebaseAdmin.Messaging;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Options;
 using OfficeOpenXml;
 using RERPAPI.Attributes;
 using RERPAPI.Model.Common;
@@ -35,6 +37,7 @@ namespace RERPAPI.Controllers.Old.SaleWareHouseManagement
         private readonly IConfiguration _configuration;
         private readonly DocumentImportPONCCRepo _documentImportPONCCRepo;
         private readonly EmployeeRepo _employeeRepo;
+        private readonly ConfigSystemRepo _configSystemRepo;
 
         //private readonly PONCCDetailRepo _pONCCDetailRepo;
         private readonly PONCCRepo _pONCCRepo;
@@ -47,7 +50,11 @@ namespace RERPAPI.Controllers.Old.SaleWareHouseManagement
 
         private List<InvoiceDTO> listInvoice = new List<InvoiceDTO>();
 
+        private readonly List<PathStaticFile> _pathStaticFiles;
+        private readonly EmployeeSignatureFileRepo _employeeSignatureFileRepo;
+
         public BillImportController(
+            IOptions<List<PathStaticFile>> pathStaticFiles,
             BillImportRepo billImportRepo,
             BillImportLogRepo billImportLogRepo,
             DocumentImportRepo documentImportRepo,
@@ -62,8 +69,11 @@ namespace RERPAPI.Controllers.Old.SaleWareHouseManagement
             , PONCCRepo pONCCRepo
             , ProductSaleGroupWarehouseLinkRepo productSaleGroupWarehouseLinkRepo,
             ProductGroupWareHouseRepo productGroupWareHouseRepo, ProductSaleRepo productSaleRepo,
-            BillImportSaleLogRepo billImportSaleLogRepo)
+            BillImportSaleLogRepo billImportSaleLogRepo,
+            ConfigSystemRepo configSystemRepo,
+            EmployeeSignatureFileRepo employeeSignatureFileRepo)
         {
+            _pathStaticFiles = pathStaticFiles.Value;
             _billImportRepo = billImportRepo;
             _billImportLogRepo = billImportLogRepo;
             _documentImportRepo = documentImportRepo;
@@ -81,6 +91,8 @@ namespace RERPAPI.Controllers.Old.SaleWareHouseManagement
             _productSaleGroupWarehouseLinkRepo = productSaleGroupWarehouseLinkRepo;
             _productSaleRepo = productSaleRepo;
             _billImportSaleLogRepo = billImportSaleLogRepo;
+            _configSystemRepo = configSystemRepo;
+            _employeeSignatureFileRepo = employeeSignatureFileRepo;
         }
 
         /// <summary>
@@ -170,30 +182,32 @@ namespace RERPAPI.Controllers.Old.SaleWareHouseManagement
             }
         }
 
-        [HttpGet("get-product-new")]
-        public async Task<IActionResult> getOptionProductNew()
-        {
-            try
-            {
-                List<ProductSale> result = _productSaleRepo.GetAll(p => p.IsDeleted.HasValue && !p.IsDeleted.Value);
-                /* List<dynamic> billList = result[0]; // dữ liệu hóa đơn*/
-
-                return Ok(new
-                {
-                    status = 1,
-                    data = result
-                });
-            }
-            catch (Exception ex)
-            {
-                return BadRequest(new
-                {
-                    status = 0,
-                    message = ex.Message,
-                    error = ex.ToString()
-                });
-            }
-        }
+		[HttpGet("get-product-new")]
+		public async Task<IActionResult> getOptionProductNew()
+		{
+			try
+			{
+				List<ProductSale> result = _productSaleRepo.
+					GetAll(p => 
+					p.IsDeleted.HasValue && !p.IsDeleted.Value &
+					p.IsStandardized == true
+					);
+				return Ok(new
+				{
+					status = 1,
+					data = result
+				});
+			}
+			catch (Exception ex)
+			{
+				return BadRequest(new
+				{
+					status = 0,
+					message = ex.Message,
+					error = ex.ToString()
+				});
+			}
+		}
 
         /// <summary>
         /// lấy dữ liệu phiếu nhâp theo id
@@ -1775,6 +1789,7 @@ namespace RERPAPI.Controllers.Old.SaleWareHouseManagement
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
+
         [HttpPost("delete-bill-import")]
         public async Task<IActionResult> DeleteBillImport([FromBody] List<int> billImportIDs)
         {
@@ -1785,6 +1800,67 @@ namespace RERPAPI.Controllers.Old.SaleWareHouseManagement
                 return Ok(ApiResponseFactory.Success(billImportIDs, "Đã xóa thành công danh sách phiếu nhập được chọn!"));
             }
             else return Ok(ApiResponseFactory.Fail(null, "Xóa danh sách phiếu nhập không thành công!"));
+        }
+
+        [HttpGet("data-print")]
+        public async Task<IActionResult> getDataPrint(int id)
+        {
+            try
+            {
+                var paramDetail = new { ID = id };
+                var result = await SqlDapper<object>.ProcedureToListTAsync("spGetBillImportDetail", paramDetail);
+                return Ok(ApiResponseFactory.Success(result[0], ""));
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
+            }
+        }
+
+        [HttpGet("image-signature")]
+        public IActionResult getImageSignature(int id)
+        {
+            try
+            {
+                string message = "";
+                BillImport billImp = _billImportRepo.GetByID(id);
+
+                var pathStaticFile = _configSystemRepo.GetUploadPathByKey("SIGNATURE_PATH");
+                if (string.IsNullOrWhiteSpace(pathStaticFile))
+                    return BadRequest(ApiResponseFactory.Fail(null, $"Không tìm thấy cấu hình đường dẫn cho key: EmployeeSignature"));
+
+                Employee emReciver = _employeeRepo.GetAll(x => x.UserID == billImp.ReciverID).FirstOrDefault(); // Người giao
+                Employee emDeliver = _employeeRepo.GetAll(x => x.UserID == billImp.DeliverID).FirstOrDefault(); // Người nhận
+
+                var checkPicDeliver = _employeeSignatureFileRepo.GetAll(x => x.EmployeeID == emDeliver.ID && x.IsDeleted != true).FirstOrDefault();
+                var checkPicReciver = _employeeSignatureFileRepo.GetAll(x => x.EmployeeID == emReciver.ID && x.IsDeleted != true).FirstOrDefault();
+
+                string picDeliver = checkPicDeliver != null ? Path.Combine(pathStaticFile, $@"{emDeliver.Code.Trim()}.png") ?? "" : "";
+                string picReciver = checkPicReciver != null ? Path.Combine(pathStaticFile, $@"{emReciver.Code.Trim()}.png") ?? "" : "";
+                //string picDeliver = Path.Combine(pathImage, $@"test.png");
+                //string picReciver = Path.Combine(pathImage, $@"test.png");
+
+                var data = new
+                {
+                    picDeliver = ImageHelper.ImageToBase64(picDeliver),
+                    picReciver = ImageHelper.ImageToBase64(picReciver)
+                };
+
+                return Ok(new
+                {
+                    status = 1,
+                    data = data
+                });
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(new
+                {
+                    status = 0,
+                    message = ex.Message,
+                    error = ex.ToString()
+                });
+            }
         }
     }
 }

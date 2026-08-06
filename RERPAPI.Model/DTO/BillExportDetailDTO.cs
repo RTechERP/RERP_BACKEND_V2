@@ -1,4 +1,5 @@
-﻿using RERPAPI.Model.Entities;
+﻿using Microsoft.AspNetCore.Http;
+using RERPAPI.Model.Entities;
 
 namespace RERPAPI.Model.DTO
 {
@@ -67,5 +68,7 @@ namespace RERPAPI.Model.DTO
         public int? ImportDetailID { get; set; }
 
         public bool? ForceReallocate { get; set; }
+
+        public List<int>? FileIds { get; set; }
     }
 }

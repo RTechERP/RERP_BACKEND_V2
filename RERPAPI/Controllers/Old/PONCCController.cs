@@ -701,7 +701,7 @@ namespace RERPAPI.Controllers.Old
 
 				#region Xử lý rulePay
 
-				if (data.RulePayID > 0)
+                if (data.RulePayID.HasValue && data.RulePayID > 0)
 				{
 					var rulePay = _pONCCRulePayRepo.GetAll(x => x.PONCCID == data.poncc.ID);
 					var ruleNew = _rulePayRepo.GetByID((int)data.RulePayID);

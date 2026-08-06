@@ -479,6 +479,16 @@ namespace RERPAPI.Controllers
 
                 // Gán dữ liệu
                 vehicleBooking.Status = vehicleBooking.Category == 4 ? 4 : 1;
+                // MDNhat Update 30/07/2026: 
+                // dòng ~292-298) — khi Chủ động phương tiện, không có bước đội xe xử lý nên phải tự copy
+                // các trường Actual ngay tại đây; nếu không, spGetVehicleBookingManagement đọc *Actual cho
+                // Status IN (2,4) sẽ luôn ra rỗng cho các phiếu Category=4.
+                if (vehicleBooking.Category == 4)
+                {
+                    vehicleBooking.DepartureAddressActual = vehicleBooking.DepartureAddress;
+                    vehicleBooking.DepartureDateActual = vehicleBooking.DepartureDate;
+                    vehicleBooking.DepartureAddressStatusActual = vehicleBooking.DepartureAddressStatus;
+                }
                 vehicleBooking.IsCancel = false;
                 vehicleBooking.IsSend = false;
                 vehicleBooking.IsNotifiled = false;

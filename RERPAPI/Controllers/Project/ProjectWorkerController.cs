@@ -4,6 +4,7 @@ using RERPAPI.Model.Common;
 using RERPAPI.Model.Entities;
 using RERPAPI.Model.Param;
 using RERPAPI.Repo.GenericEntity;
+using RERPAPI.Repo.GenericEntity.Duan.MeetingMinutes;
 
 namespace RERPAPI.Controllers.Project
 {
@@ -15,12 +16,14 @@ namespace RERPAPI.Controllers.Project
         private readonly ProjectTypeRepo projectTypeRepo;
         private readonly ProjectSolutionFileRepo projectSolutionFileRepo;
         private readonly ProjectWorkerRepo projectWorkerRepo;
+        private readonly ProjectHistoryProblemRepo _projectHistoryProblemRepo;
 
-        public ProjectWorkerController(ProjectTypeRepo projectTypeRepo, ProjectSolutionFileRepo projectSolutionFileRepo, ProjectWorkerRepo projectWorkerRepo)
+        public ProjectWorkerController(ProjectTypeRepo projectTypeRepo, ProjectSolutionFileRepo projectSolutionFileRepo, ProjectWorkerRepo projectWorkerRepo, ProjectHistoryProblemRepo projectHistoryProblemRepo)
         {
             this.projectTypeRepo = projectTypeRepo;
             this.projectSolutionFileRepo = projectSolutionFileRepo;
             this.projectWorkerRepo = projectWorkerRepo;
+            this._projectHistoryProblemRepo = projectHistoryProblemRepo;
         }
 
         //load giải pháp
@@ -112,7 +115,9 @@ namespace RERPAPI.Controllers.Project
         {
             try
             {
-                var rs = projectTypeRepo.GetAll(x => x.IsDeleted == false && x.IsProject == false);
+                var rs = projectTypeRepo.GetAll(x => x.IsDeleted == false
+                && x.IsProject == false
+                );
                 return Ok(ApiResponseFactory.Success(rs, "Lấy dữ liệu thành công"));
             }
             catch (Exception ex)
@@ -157,6 +162,36 @@ namespace RERPAPI.Controllers.Project
                     }
                 }
                 return Ok(ApiResponseFactory.Success(null, "Lưu dữ liệu thành công"));
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
+            }
+        }
+        [HttpGet("get-project-history-problem")]
+        public IActionResult GetProjectHistoryProblemByProject(int projectID)
+        {
+            try
+            {
+                var data = _projectHistoryProblemRepo
+                    .GetAll(x => x.ProjectID == projectID && x.IsDeleted != true)
+                    .OrderByDescending(x => x.DateProblem)
+                    .ThenByDescending(x => x.ID)
+                    .Select(x => new
+                    {
+                        x.ID,
+                        x.ProjectID,
+                        x.DateProblem,
+                        x.ContentError,
+                        x.Remedies,
+                        x.EmployeeID,
+                        x.IsApproved_PM,
+                        x.IsApproved_PP,
+                        x.IsApproved_TP
+                    })
+                    .ToList();
+
+                return Ok(ApiResponseFactory.Success(data, "Lấy danh sách ProjectHistoryProblem thành công"));
             }
             catch (Exception ex)
             {

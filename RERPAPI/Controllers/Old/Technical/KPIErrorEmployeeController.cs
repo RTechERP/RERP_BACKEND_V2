@@ -119,15 +119,15 @@ namespace RERPAPI.Controllers.Old.Technical
         }
 
         [HttpGet("load-data")]
-        public IActionResult GetKPIErrorEmployeeData(DateTime startDate, DateTime endDate, int kpiErrorID, int employeeID, int typeID, string departmentIDs = "", string keywords = "")
+        public IActionResult GetKPIErrorEmployeeData(DateTime startDate, DateTime endDate, int kpiErrorID, int employeeID, int typeID, string departmentIDs = "", string keywords = "", int userLoginDepartmentID = 0)
         {
             try
             {
                 //DateTime dateStartLocal = startDate.ToLocalTime();
                 //DateTime dateEndLocal = endDate.ToLocalTime();
                 var dataKpiError = SQLHelper<object>.ProcedureToList("spGetKPIErrorEmployee_New",
-                                                new string[] { "@StartDate", "@EndDate", "@KPIErrorID", "@EmployeeID", "@Keyword", "@TypeID", "@DepartmentIDs" },
-                                                new object[] { startDate, endDate, kpiErrorID, employeeID, keywords, typeID, departmentIDs });
+                                                new string[] { "@StartDate", "@EndDate", "@KPIErrorID", "@EmployeeID", "@Keyword", "@TypeID", "@DepartmentIDs", "@UserLoginDepartmentID" },
+                                                new object[] { startDate, endDate, kpiErrorID, employeeID, keywords, typeID, departmentIDs, userLoginDepartmentID });
                 var data = SQLHelper<object>.GetListData(dataKpiError, 0);
 
                 return Ok(ApiResponseFactory.Success(data, ""));

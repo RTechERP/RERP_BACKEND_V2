@@ -1,23 +1,11 @@
-using DocumentFormat.OpenXml.Office2010.Excel;
-using DocumentFormat.OpenXml.Spreadsheet;
-using iTextSharp.text.pdf;
-using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.IdentityModel.Tokens;
 using RERPAPI.Attributes;
 using RERPAPI.Model.Common;
-using RERPAPI.Model.DTO;
 using RERPAPI.Model.DTO.ESL;
-using RERPAPI.Model.DTO.Project.Procedure;
 using RERPAPI.Model.Entities;
 using RERPAPI.Repo.GenericEntity;
 using RERPAPI.Repo.GenericEntity.ESL;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Net.NetworkInformation;
-using System.Security;
-using System.Threading.Tasks;
 
 namespace RERPAPI.Controllers.ESL
 {
@@ -57,10 +45,10 @@ namespace RERPAPI.Controllers.ESL
         {
             try
             {
-                var masters = _registrationRepo.GetAll().ToList();
-                var details = _detailRepo.GetAll().ToList();
-                var tables = _testTableRepo.GetAll().ToList();
-                var employees = _employeeRepo.GetAll().ToList();
+                var masters = _registrationRepo.GetAll(x => x.IsDeleted != true);
+                var details = _detailRepo.GetAll(x => x.IsDeleted != true);
+                var tables = _testTableRepo.GetAll(x => x.IsDeleted != true);
+                var employees = _employeeRepo.GetAll();
 
                 var list = new List<ESLRegistrationListDto>();
 
@@ -161,7 +149,7 @@ namespace RERPAPI.Controllers.ESL
 
                 var param = new
                 {
-                    @Permistion = "N1,N32"
+                    @Permistion = "N1,N32,N85"
                 };
                 var result = await SqlDapper<object>.ProcedureToListTAsync("spGetTBPApprove", param);
                 return Ok(ApiResponseFactory.Success(new
@@ -345,6 +333,8 @@ namespace RERPAPI.Controllers.ESL
                 var detailExit = _detailRepo.GetAll(x => x.RegistrationID == masterID && x.IsDeleted != true);
                 if (detailExit == null || detailExit.Count() <= 0) return Ok(ApiResponseFactory.Fail(null, "Bản demo chi tiết không tồn tại"));
 
+                if (detailExit.Any(x => x.Status == 1)) return Ok(ApiResponseFactory.Fail(null, "Đăng ký đã được duyệt, không thể xóa"));
+
                 masterExist.IsDeleted = true;
 
                 _registrationRepo.Update(masterExist);
@@ -380,6 +370,8 @@ namespace RERPAPI.Controllers.ESL
 
                 var detailExit = _detailRepo.GetByID(detailID);
                 if (detailExit == null || detailExit.ID <= 0) return Ok(ApiResponseFactory.Fail(null, "Bản demo chi tiết không tồn tại"));
+
+                if (detailExit.Status == 1) return Ok(ApiResponseFactory.Fail(null, "Bản ghi đã được duyệt, không thể xóa"));
 
                 detailExit.IsDeleted = true;
                 _detailRepo.Update(detailExit);
@@ -482,7 +474,7 @@ namespace RERPAPI.Controllers.ESL
             }
         }
 
-        [RequiresPermission("N1,N32")]
+        [RequiresPermission("N1,N32,N85")]
         [HttpPost("approve")]
         public async Task<IActionResult> Approve([FromBody] ESLApproveRequest request)
         {
@@ -546,21 +538,6 @@ namespace RERPAPI.Controllers.ESL
 
                 var master = _registrationRepo.GetByID(masterID);
                 var table = _testTableRepo.GetByID(master.TestTableID);
-                var tables = _testTableRepo.GetAll(x => x.Barcode == table.Barcode).ToList();
-                var tableIds = tables.Select(t => t.ID).ToList();
-                var allMasters = _registrationRepo.GetAll(x => tableIds.Contains(x.TestTableID) && x.IsReturned != true && x.IsDeleted != true).ToList();
-
-                if (allMasters.Any()) 
-                {
-                    foreach (var item in allMasters)
-                    {
-                        var exitDetail = _detailRepo.GetAll(x => x.RegistrationID == item.ID && x.IsDeleted != true && x.Status != 1).ToList();
-                        if(exitDetail.Any())
-                        {
-                            return BadRequest(ApiResponseFactory.Fail(null, $"Mã {item.RegistrationCode} chưa được duyệt!"));
-                        }
-                    }
-                }
 
                 var bindResponse = await SyncESLProductAsync(table.Barcode);
 
@@ -764,7 +741,7 @@ namespace RERPAPI.Controllers.ESL
             var activeDetails3 = new Dictionary<int, ESLTestTableRegistrationDetail>();
 
             var allMasters = _registrationRepo.GetAll(x => tableIds.Contains(x.TestTableID) && x.IsReturned != true && x.IsDeleted != true).ToList();
-            var allDetails = _detailRepo.GetAll().ToList();
+            var allDetails = _detailRepo.GetAll(x => x.IsDeleted != true && x.Status == 1);
 
             foreach (var m in allMasters)
             {
@@ -799,7 +776,7 @@ namespace RERPAPI.Controllers.ESL
 
             payload["pn"] = table1?.TestTableName?.Replace(" - Mặt 1", "") ?? table2?.TestTableName?.Replace(" - Mặt 2", "") ?? "Bàn Test";
             payload["extend"] = new object();
-            payload[$"f1"] =  table1?.TestTableName ?? "Bàn 1";
+            payload[$"f1"] = table1?.TestTableName ?? "Bàn 1";
             payload[$"f16"] = table2?.TestTableName ?? "Bàn 2";
 
 
@@ -929,12 +906,12 @@ namespace RERPAPI.Controllers.ESL
 
             return await _eslBindService.UpdateProductAsync(payload);
         }
-        private async Task<bool>  getESLInfor()
+        private async Task<bool> getESLInfor()
         {
             var listESLInformation = await _eslBindService.GetEslDevicesAsync();
 
             var tables = _testTableRepo.GetAll(x => x.IsDeleted != true).ToList();
-            foreach ( var table in tables)
+            foreach (var table in tables)
             {
                 var exitEslInfor = listESLInformation.Where(x => x.EslCode.ToLower().Trim().Equals(table.Barcode.ToLower().Trim())).FirstOrDefault();
                 if (exitEslInfor != null && (table.online != exitEslInfor.IsOnline || table.esl_battery != exitEslInfor.EslBattery))
@@ -944,7 +921,7 @@ namespace RERPAPI.Controllers.ESL
                     await _testTableRepo.UpdateAsync(table);
                 }
 
-                if(exitEslInfor == null)
+                if (exitEslInfor == null)
                 {
                     table.online = false;
                     table.esl_battery = 0;

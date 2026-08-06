@@ -169,6 +169,28 @@
         public bool? ApprovalStatus { get; set; }
 
         /// <summary>
+        /// Trạng thái gộp để hiển thị (tính sẵn trong SP bằng dbo.fnGetProjectTaskDisplayStatus,
+        /// khớp logic computeDisplayStatus() phía FE): 0/10, 1/11, 2/21/22/23, 3, 4.
+        /// </summary>
+        public int? DisplayStatus { get; set; }
+
+        /// <summary>
+        /// Text hiển thị của DisplayStatus (đã gồm hậu tố "Quá hạn" nếu có), tính sẵn
+        /// trong SP bằng dbo.fnGetProjectTaskDisplayStatusInfo, join bảng ProjectTaskStatus.
+        /// </summary>
+        public string? DisplayStatusLabel { get; set; }
+
+        /// <summary>
+        /// Màu nền tương ứng DisplayStatus.
+        /// </summary>
+        public string? DisplayStatusBgColor { get; set; }
+
+        /// <summary>
+        /// Màu chữ tương ứng DisplayStatus.
+        /// </summary>
+        public string? DisplayStatusFontColor { get; set; }
+
+        /// <summary>
         /// Độ ưu tiên dự án 1: Thấp, 2. Trung bình, 3. Cao, 4. Khẩn cấp
         /// </summary>
         public int? Priority { get; set; }

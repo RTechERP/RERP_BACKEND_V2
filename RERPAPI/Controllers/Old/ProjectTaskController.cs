@@ -112,7 +112,8 @@ namespace RERPAPI.Controllers.Project
                         IsApprove = isApprove,
                         ViewNumber = viewNumber
                     };
-                    var projectTasksnew = await SqlDapper<spGetProjectTaskByEmployeeID>.ProcedureToListTAsync("spGetProjectTaskByEmployeeID", param1);
+                    //var projectTasksnew = await SqlDapper<spGetProjectTaskByEmployeeID>.ProcedureToListTAsync("spGetProjectTaskByEmployeeID", param1);
+                    var projectTasksnew = await SqlDapper<spGetProjectTaskByEmployeeID>.ProcedureToListTAsync("spGetProjectTaskByEmployeeID_Nhat", param1);
                     return Ok(ApiResponseFactory.Success(new
                     {
                         ProjectTask = projectTasksnew.OrderByDescending(x => x.UpdatedDate),
@@ -129,7 +130,8 @@ namespace RERPAPI.Controllers.Project
                     IsApprove = isApprove,
                     ViewNumber = viewNumber
                 };
-                var projectTasks = await SqlDapper<spGetProjectTaskByEmployeeID>.ProcedureToListTAsync("spGetProjectTaskByEmployeeID", param);
+                //var projectTasks = await SqlDapper<spGetProjectTaskByEmployeeID>.ProcedureToListTAsync("spGetProjectTaskByEmployeeID", param);
+                var projectTasks = await SqlDapper<spGetProjectTaskByEmployeeID>.ProcedureToListTAsync("spGetProjectTaskByEmployeeID_Nhat", param);
                 return Ok(ApiResponseFactory.Success(new
                 {
                     ProjectTask = projectTasks.OrderByDescending(x => x.UpdatedDate),

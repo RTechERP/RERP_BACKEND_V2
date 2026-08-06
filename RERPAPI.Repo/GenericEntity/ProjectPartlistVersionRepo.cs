@@ -78,25 +78,26 @@ namespace RERPAPI.Repo.GenericEntity
             }
 
             // Nếu IsActive = true thì phải đảm bảo không có phiên bản khác đã active cùng ProjectType + Solution + Status
-            if (item.IsActive == true)
-            {
-                List<ProjectPartListVersion> projectPartListVersions = GetAll(
-                    x => x.ID != item.ID
-                         && x.ProjectTypeID == item.ProjectTypeID
-                         && x.ProjectSolutionID == item.ProjectSolutionID
-                         && x.IsActive == true
-                         && x.StatusVersion == item.StatusVersion
-                         && x.IsDeleted == false
-                         && x.IsConsumable == item.IsConsumable
-                );
+            //if (item.IsActive == true)
+            //{
+            //    List<ProjectPartListVersion> projectPartListVersions = GetAll(
+            //        x => x.ID != item.ID
+            //             && x.ProjectTypeID == item.ProjectTypeID
+            //             && x.ProjectSolutionID == item.ProjectSolutionID
+            //             && x.IsActive == true
+            //             && x.StatusVersion == item.StatusVersion
+            //             && x.IsDeleted == false
+            //             && x.IsConsumable == item.IsConsumable
+            //    );
 
-                if (projectPartListVersions.Count > 0)
-                {
-                    ProjectType current = _projectTypeRepo.GetByID(item.ProjectTypeID ?? 0);
-                    message = $"Danh mục [{current.ProjectTypeName}] đã có phiên bản khác được sử dụng.\nVui lòng kiểm tra lại!";
-                    return false;
-                }
-            }
+            //    if (projectPartListVersions.Count > 0)
+            //    {
+            //        ProjectType current = _projectTypeRepo.GetByID(item.ProjectTypeID ?? 0);
+            //        message = $"Danh mục [{current.ProjectTypeName}] đã có phiên bản khác được sử dụng.\nVui lòng kiểm tra lại!";
+            //        return false;
+            //    }
+            //} //VTNam update 27726
+
             if (item.StatusVersion == 2)
             {
                 var exists = GetAll().Any(x =>
@@ -106,15 +107,18 @@ namespace RERPAPI.Repo.GenericEntity
                     && x.IsDeleted == false
                     && x.ID != item.ID
                     && x.IsConsumable == item.IsConsumable
+                    && x.IsProblem == item.IsProblem
+                    && x.IsActive == item.IsActive
                 );
 
                 if (exists)
                 {
                     var current = _projectTypeRepo.GetByID(item.ProjectTypeID ?? 0);
 
-                    message = item.IsConsumable == true
-                        ? $"Danh mục [{current.ProjectTypeName}] đã có phiên bản PO VTTH!"
-                        : $"Danh mục [{current.ProjectTypeName}] đã có phiên bản PO tiêu chuẩn!";
+                    message = $"Danh mục [{current.ProjectTypeName}] đã tồn tại phiên bản PO với cấu hình:\n" +
+                              $"- VTTH: {((bool)item.IsConsumable ? "Có" : "Không")}\n" +
+                              $"- Phát sinh: {((bool)item.IsProblem ? "Có" : "Không")}\n" +
+                              $"- Sử dụng: {((bool)item.IsActive ? "Có" : "Không")}";
 
                     return false;
                 }

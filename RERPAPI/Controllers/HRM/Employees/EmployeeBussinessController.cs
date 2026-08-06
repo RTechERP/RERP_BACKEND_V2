@@ -1,4 +1,4 @@
-﻿using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc;
 using RERPAPI.Attributes;
 using RERPAPI.Model.Common;
 using RERPAPI.Model.DTO;
@@ -27,7 +27,7 @@ namespace RERPAPI.Controllers.HRM.Employees
             _employeeBussinessVehicleRepo = employeeBussinessVehicleRepo;
         }
 
-        [RequiresPermission("N1,N2")]
+        [RequiresPermission("N1,N2,N113")]
         [HttpPost]
         public IActionResult getEmployeeBussiness(EmployeeBussinessParam param)
         {
@@ -145,7 +145,7 @@ namespace RERPAPI.Controllers.HRM.Employees
             }
         }
 
-        [RequiresPermission("N1,N2")]
+        [RequiresPermission("N1,N2,N113")]
         [HttpPost("get-work-management")]
         public IActionResult GetWorkManagement([FromBody] EmployeeNightShiftSummaryRequestParam request)
         {
@@ -166,7 +166,7 @@ namespace RERPAPI.Controllers.HRM.Employees
             }
         }
 
-        [RequiresPermission("N1,N2")]
+        [RequiresPermission("N1,N2,N113")]
         [HttpGet("detail")]
         public IActionResult GetEmployeeBussinessDetail(int employeeId, DateTime dayBussiness)
         {
@@ -207,7 +207,7 @@ namespace RERPAPI.Controllers.HRM.Employees
             }
         }
 
-        [RequiresPermission("N1,N2")]
+        [RequiresPermission("N1,N2,N113")]
         [HttpPost("save-data")]
         public async Task<IActionResult> saveEmployeeBussiness([FromBody] List<EmployeeBussiness> employeeBussiness)
         {
@@ -236,7 +236,7 @@ namespace RERPAPI.Controllers.HRM.Employees
             }
         }
 
-        [RequiresPermission("N1")]
+        [RequiresPermission("N1,N113")]
         [HttpPost("save-approve-tbp")]
         public async Task<IActionResult> SaveApproveTBP([FromBody] List<EmployeeBussiness> employeeBussiness)
         {
@@ -265,7 +265,7 @@ namespace RERPAPI.Controllers.HRM.Employees
             }
         }
 
-        [RequiresPermission("N1,N2")]
+        [RequiresPermission("N1,N2,N113")]
         [HttpPost("save-approve-hr")]
         public async Task<IActionResult> SaveApproveHR([FromBody] List<EmployeeBussiness> employeeBussiness)
         {
@@ -377,6 +377,25 @@ namespace RERPAPI.Controllers.HRM.Employees
                 var employeeBussinessVehicle = SQLHelper<object>.ProcedureToList("spGetBussinessVehicle", arrParamName, arrParamValue);
 
                 var result = SQLHelper<object>.GetListData(employeeBussinessVehicle, 0);
+                return Ok(ApiResponseFactory.Success(result, ""));
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
+            }
+        }
+
+        // NXL Update 27/07/2026: Lấy danh sách phiếu đặt xe trong ngày công tác cho combobox (Phòng Sale)
+        [HttpGet("get-vehicle-bookings-for-bussiness")]
+        public IActionResult GetVehicleBookingsForBussiness(int employeeId, DateTime dateStart, DateTime dateEnd)
+        {
+            try
+            {
+                var arrParamName = new string[] { "@EmployeeID", "@DateStart", "@DateEnd" };
+                var arrParamValue = new object[] { employeeId, dateStart, dateEnd };
+                var vehicleBookings = SQLHelper<object>.ProcedureToList("spGetVehicleBookingForBussiness", arrParamName, arrParamValue);
+
+                var result = SQLHelper<object>.GetListData(vehicleBookings, 0);
                 return Ok(ApiResponseFactory.Success(result, ""));
             }
             catch (Exception ex)

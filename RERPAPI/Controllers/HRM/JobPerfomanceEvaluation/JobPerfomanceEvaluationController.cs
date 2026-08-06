@@ -1087,7 +1087,7 @@ namespace RERPAPI.Controllers.HRM.JobPerfomanceEvaluation
                     if (req.IsApprove == 1) // DUYỆT
                     {
                         record.StatusApprove = 1;
-                        record.StepName = info.curName + ": Xác nhận";
+                        record.StepName = info.cur == 4 ? "BGĐ: Phê duyệt" : info.curName + ": Xác nhận";
                         record.DateApproved = DateTime.Now;
                         record.ReasonUnApproved = null;
                         await _jobPerfomanceEvaluationApproveRepo.UpdateAsync(record);
@@ -1102,7 +1102,7 @@ namespace RERPAPI.Controllers.HRM.JobPerfomanceEvaluation
 
                             string nextStepName = info.cur == 1
                                 ? info.nextName + ": Chờ đánh giá"
-                                : info.nextName + ": Chờ xác nhận";
+                                : (info.next == 4 ? "BGĐ: Chờ phê duyệt" : info.nextName + ": Chờ xác nhận");
 
                             if (nextRec == null)
                             {
@@ -1141,7 +1141,7 @@ namespace RERPAPI.Controllers.HRM.JobPerfomanceEvaluation
                         record.StatusApprove = 0;
                         record.DateApproved = null;
                         record.ReasonUnApproved = null;
-                        record.StepName = info.curName + ": Chờ xác nhận";
+                        record.StepName = info.cur == 4 ? "BGĐ: Chờ phê duyệt" : info.curName + ": Chờ xác nhận";
                         await _jobPerfomanceEvaluationApproveRepo.UpdateAsync(record);
 
                         if (info.next > 0)
@@ -1581,7 +1581,7 @@ namespace RERPAPI.Controllers.HRM.JobPerfomanceEvaluation
             int asBGD = approveQuery.Count(a =>
                 a.Step == 4 &&
                 a.StatusApprove == 0 &&
-                a.StepName == "BGĐ: Chờ xác nhận" &&
+                a.StepName == "BGĐ: Chờ phê duyệt" &&
                 evalQuery.Any(j => j.ID == a.JobPerfomanceEvaluationID && vUserGroupBGD != null)
             );
 
