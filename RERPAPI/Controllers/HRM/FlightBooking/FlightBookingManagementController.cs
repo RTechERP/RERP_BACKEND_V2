@@ -424,7 +424,7 @@ namespace RERPAPI.Controllers.HRM.FlightBooking
                     }
 
                     int colIndex = 8;
-                    sheet.Cells[2, colIndex].Value = "Khứ hồi";
+                    sheet.Cells[2, colIndex].Value = "Loại bay";
                     sheet.Cells[2, colIndex, 3, colIndex].Merge = true;
                     colIndex++;
 
@@ -546,7 +546,7 @@ namespace RERPAPI.Controllers.HRM.FlightBooking
                                 sheet.Cells[startRow, 2].Value = GetDictString(first, "RequesterName");
                                 sheet.Cells[startRow, 3].Value = GetDictString(first, "Reason");
                                 sheet.Cells[startRow, 4].Value = GetDictString(first, "ProjectName");
-                                sheet.Cells[startRow, 8].Value = GetDictBool(first, "IsRoundTrip") ? "x" : "";
+                                sheet.Cells[startRow, 8].Value = GetDictBool(first, "IsRoundTrip") ? "Khứ hồi" : "Một chiều";
                                 sheet.Cells[startRow, 9].Value = GetDictString(first, "DepartureAddress");
                                 sheet.Cells[startRow, 10].Value = GetDictString(first, "ArrivesAddress");
                             }
@@ -733,7 +733,7 @@ namespace RERPAPI.Controllers.HRM.FlightBooking
                     sheet.Column(5).Width = 20;  // Người đi/Hành khách
                     sheet.Column(6).Width = 15;  // Vị trí/Chức vụ
                     sheet.Column(7).Width = 20;  // Phòng ban
-                    sheet.Column(8).Width = 12;  // Khứ hồi
+                    sheet.Column(8).Width = 14;  // Loại bay
                     sheet.Column(9).Width = 20;  // Điểm đi
                     sheet.Column(10).Width = 20; // Điểm đến
                     sheet.Column(11).Width = 10; // Giờ đi (Giờ bay)

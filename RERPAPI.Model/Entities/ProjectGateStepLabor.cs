@@ -6,7 +6,7 @@ namespace RERPAPI.Model.Entities;
 /// <summary>
 /// Bảng lưu danh sách nhân viên tham gia thực hiện từng bước của dự án
 /// </summary>
-public partial class ProjectGateStepWorker
+public partial class ProjectGateStepLabor
 {
     /// <summary>
     /// Khóa chính tự tăng
@@ -26,7 +26,7 @@ public partial class ProjectGateStepWorker
     /// <summary>
     /// Số ngày làm việc của nhân viên
     /// </summary>
-    public decimal? DayCount { get; set; }
+    public double? DayCount { get; set; }
 
     /// <summary>
     /// Đơn giá công của nhân viên

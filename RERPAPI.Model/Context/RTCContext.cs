@@ -14,12 +14,6 @@ public partial class RTCContext : DbContext
 
     public virtual DbSet<AGVBillDocumentExport> AGVBillDocumentExports { get; set; }
 
-    public virtual DbSet<SalaryIncrease> SalaryIncreases { get; set; }
-    public virtual DbSet<SalaryIncreaseDetail> SalaryIncreaseDetails { get; set; }
-
-    public virtual DbSet<VehicleRentalRequest> VehicleRentalRequests { get; set; }
-    public virtual DbSet<BusinessVisaRequest> BusinessVisaRequest { get; set; }
-
     public virtual DbSet<AGVBillDocumentExportLog> AGVBillDocumentExportLogs { get; set; }
 
     public virtual DbSet<AGVBillDocumentImport> AGVBillDocumentImports { get; set; }
@@ -486,12 +480,6 @@ public partial class RTCContext : DbContext
 
     public virtual DbSet<FlightBookingProposal> FlightBookingProposals { get; set; }
 
-    public virtual DbSet<HotelBookingManagement> HotelBookingManagements { get; set; }
-
-    public virtual DbSet<HotelBookingProposal> HotelBookingProposals { get; set; }
-
-    public virtual DbSet<HotelBookingEmployee> HotelBookingEmployees { get; set; }
-
     public virtual DbSet<FollowProject> FollowProjects { get; set; }
 
     public virtual DbSet<FollowProjectBase> FollowProjectBases { get; set; }
@@ -618,7 +606,11 @@ public partial class RTCContext : DbContext
 
     public virtual DbSet<Holiday> Holidays { get; set; }
 
+    public virtual DbSet<HotelBookingEmployee> HotelBookingEmployees { get; set; }
 
+    public virtual DbSet<HotelBookingManagement> HotelBookingManagements { get; set; }
+
+    public virtual DbSet<HotelBookingProposal> HotelBookingProposals { get; set; }
 
     public virtual DbSet<Inventory> Inventories { get; set; }
 
@@ -793,6 +785,8 @@ public partial class RTCContext : DbContext
     public virtual DbSet<MakerTrainingVideoLink> MakerTrainingVideoLinks { get; set; }
 
     public virtual DbSet<Manufacturer> Manufacturers { get; set; }
+
+    public virtual DbSet<MechanicalDrawing> MechanicalDrawings { get; set; }
 
     public virtual DbSet<MeetingMinute> MeetingMinutes { get; set; }
 
@@ -976,30 +970,23 @@ public partial class RTCContext : DbContext
 
     public virtual DbSet<ProjectFile> ProjectFiles { get; set; }
 
-    public virtual DbSet<ProjectGate> ProjectGate { get; set; }
+    public virtual DbSet<ProjectGate> ProjectGates { get; set; }
 
-    public virtual DbSet<ProjectGateCheckListType> ProjectGateCheckListType { get; set; }
+    public virtual DbSet<ProjectGateCheckListType> ProjectGateCheckListTypes { get; set; }
 
-    public virtual DbSet<FileFormat> FileFormat { get; set; }
+    public virtual DbSet<ProjectGateDepartment> ProjectGateDepartments { get; set; }
 
-    public virtual DbSet<ProjectGateStep> ProjectGateStep { get; set; }
-    public virtual DbSet<ProjectGateStepTemplate> ProjectGateStepTemplate { get; set; }
-    public virtual DbSet<ProjectGateDepartment> ProjectGateDepartment { get; set; }
+    public virtual DbSet<ProjectGateStep> ProjectGateSteps { get; set; }
 
-    public virtual DbSet<ProjectGateStepPosition> ProjectGateStepPosition { get; set; }
+    public virtual DbSet<ProjectGateStepLabor> ProjectGateStepLabors { get; set; }
 
-    public virtual DbSet<ProjectGateStepCheckList> ProjectGateStepCheckList { get; set; }
+    public virtual DbSet<ProjectGateStepLink> ProjectGateStepLinks { get; set; }
 
-    public virtual DbSet<ProjectGateStepCheckListDetail> ProjectGateStepCheckListDetail { get; set; }
-    public virtual DbSet<ProjectGateStepCheckListDetailLink> ProjectGateStepCheckListDetailLink { get; set; }
+    public virtual DbSet<ProjectGateStepPosition> ProjectGateStepPositions { get; set; }
 
-    public virtual DbSet<ProjectGateStepCheckListLink> ProjectGateStepCheckListLink { get; set; }
+    public virtual DbSet<ProjectGateStepTemplate> ProjectGateStepTemplates { get; set; }
 
-    public virtual DbSet<ProjectGateStepFile> ProjectGateStepFile { get; set; }
-
-    public virtual DbSet<ProjectGateStepLink> ProjectGateStepLink { get; set; }
-
-    public virtual DbSet<ProjectGateStepWorker> ProjectGateStepWorker { get; set; }
+    public virtual DbSet<ProjectGateStepWorker> ProjectGateStepWorkers { get; set; }
 
     public virtual DbSet<ProjectHistoryProblem> ProjectHistoryProblems { get; set; }
 
@@ -1131,13 +1118,13 @@ public partial class RTCContext : DbContext
 
     public virtual DbSet<ProjectTypeBase> ProjectTypeBases { get; set; }
 
+    public virtual DbSet<ProjectTypeDepartment> ProjectTypeDepartments { get; set; }
+
     public virtual DbSet<ProjectTypeDetail> ProjectTypeDetails { get; set; }
 
     public virtual DbSet<ProjectTypeLink> ProjectTypeLinks { get; set; }
 
     public virtual DbSet<ProjectTypeTechnologyLink> ProjectTypeTechnologyLinks { get; set; }
-
-    public virtual DbSet<ProjectTypeDepartment> ProjectTypeDepartments { get; set; }
 
     public virtual DbSet<ProjectUser> ProjectUsers { get; set; }
 
@@ -1386,6 +1373,8 @@ public partial class RTCContext : DbContext
     public virtual DbSet<VehicleCategory> VehicleCategories { get; set; }
 
     public virtual DbSet<VehicleManagement> VehicleManagements { get; set; }
+
+    public virtual DbSet<VehicleRentalRequest> VehicleRentalRequests { get; set; }
 
     public virtual DbSet<VehicleRepair> VehicleRepairs { get; set; }
 
@@ -8210,33 +8199,25 @@ public partial class RTCContext : DbContext
 
         modelBuilder.Entity<JobPerfomanceEvaluationNewLog>(entity =>
         {
-            entity.HasKey(e => e.ID).HasName("PK__JobPerfo__3214EC27_LOG_NEW");
+            entity.HasKey(e => e.ID).HasName("PK__JobPerfo__3214EC277DBAAB36");
 
             entity.ToTable("JobPerfomanceEvaluationNewLog", tb => tb.HasComment("Bảng lưu lịch sử các thao tác của phiếu đánh giá chuyển hợp đồng"));
 
-            entity.Property(e => e.ID).HasComment("Khóa chính tự tăng");
-            entity.Property(e => e.JobPerfomanceEvaluationNewID).HasComment("ID phiếu đánh giá chuyển hợp đồng (JobPerfomanceEvaluationNew.ID)");
-            entity.Property(e => e.EmployeeID).HasComment("ID nhân viên được đánh giá");
             entity.Property(e => e.ActionType)
                 .HasMaxLength(100)
                 .HasComment("Loại thao tác: HR tạo phiếu, NLĐ/TBP/HR/BGĐ xác nhận, ...");
             entity.Property(e => e.ContentLog).HasComment("Nội dung chi tiết của thao tác được ghi nhận");
-            entity.Property(e => e.CreatedBy)
-                .HasMaxLength(200)
-                .HasComment("Người thực hiện thao tác");
+            entity.Property(e => e.CreatedBy).HasMaxLength(200);
             entity.Property(e => e.CreatedDate)
                 .HasDefaultValueSql("(getdate())")
-                .HasComment("Thời gian thực hiện thao tác")
                 .HasColumnType("datetime");
-            entity.Property(e => e.UpdatedBy)
-                .HasMaxLength(200)
-                .HasComment("Người cập nhật bản ghi gần nhất");
-            entity.Property(e => e.UpdatedDate)
-                .HasComment("Thời gian cập nhật bản ghi gần nhất")
-                .HasColumnType("datetime");
+            entity.Property(e => e.EmployeeID).HasComment("ID nhân viên được đánh giá");
             entity.Property(e => e.IsDeleted)
                 .HasDefaultValue(false)
                 .HasComment("Cờ đánh dấu xóa mềm: 0 - Đang sử dụng, 1 - Đã xóa");
+            entity.Property(e => e.JobPerfomanceEvaluationNewID).HasComment("ID phiếu đánh giá chuyển hợp đồng (JobPerfomanceEvaluationNew.ID)");
+            entity.Property(e => e.UpdatedBy).HasMaxLength(200);
+            entity.Property(e => e.UpdatedDate).HasColumnType("datetime");
         });
 
         modelBuilder.Entity<JobRequirement>(entity =>
@@ -9455,6 +9436,20 @@ public partial class RTCContext : DbContext
             entity.Property(e => e.ManufacturerName).HasMaxLength(100);
             entity.Property(e => e.Note).HasMaxLength(250);
             entity.Property(e => e.UpdatedBy).HasMaxLength(50);
+            entity.Property(e => e.UpdatedDate).HasColumnType("datetime");
+        });
+
+        modelBuilder.Entity<MechanicalDrawing>(entity =>
+        {
+            entity.HasKey(e => e.ID).HasName("PK__Mechanic__3214EC275D16BCC5");
+
+            entity.ToTable("MechanicalDrawing");
+
+            entity.Property(e => e.CreatedBy).HasMaxLength(150);
+            entity.Property(e => e.CreatedDate).HasColumnType("datetime");
+            entity.Property(e => e.Name).HasMaxLength(150);
+            entity.Property(e => e.ThumbnailPath).HasMaxLength(500);
+            entity.Property(e => e.UpdatedBy).HasMaxLength(150);
             entity.Property(e => e.UpdatedDate).HasColumnType("datetime");
         });
 
@@ -11449,6 +11444,223 @@ public partial class RTCContext : DbContext
             entity.Property(e => e.UpdatedDate).HasColumnType("datetime");
         });
 
+        modelBuilder.Entity<ProjectGate>(entity =>
+        {
+            entity.HasKey(e => e.ID).HasName("PK__ProjectG__3214EC27F5478AEB");
+
+            entity.ToTable("ProjectGate", tb => tb.HasComment("Bảng khai báo các Gate kiểm soát trong quy trình dự án"));
+
+            entity.Property(e => e.ID).HasComment("Khóa chính tự tăng");
+            entity.Property(e => e.ActionIfRejected)
+                .HasMaxLength(550)
+                .HasComment("Hành động xử lý khi Gate không đạt");
+            entity.Property(e => e.ApproverRole)
+                .HasMaxLength(250)
+                .HasComment("Vai trò hoặc nhóm người phê duyệt");
+            entity.Property(e => e.CreatedBy)
+                .HasMaxLength(50)
+                .HasComment("Người tạo");
+            entity.Property(e => e.CreatedDate)
+                .HasComment("Ngày tạo")
+                .HasColumnType("datetime");
+            entity.Property(e => e.GateCode)
+                .HasMaxLength(200)
+                .HasComment("Mã Gate");
+            entity.Property(e => e.GateName)
+                .HasMaxLength(550)
+                .HasComment("Tên Gate");
+            entity.Property(e => e.RequireInput)
+                .HasMaxLength(550)
+                .HasComment("Các đầu vào bắt buộc trước khi duyệt Gate");
+            entity.Property(e => e.RequireOuput)
+                .HasMaxLength(550)
+                .HasComment("Các đầu ra bắt buộc sau khi hoàn thành Gate");
+            entity.Property(e => e.STT).HasComment("Số thứ tự hiển thị");
+            entity.Property(e => e.StepName)
+                .HasMaxLength(550)
+                .HasComment("Tên bước trong quy trình");
+            entity.Property(e => e.Target)
+                .HasMaxLength(550)
+                .HasComment("Mục tiêu của Gate");
+            entity.Property(e => e.UpdatedBy)
+                .HasMaxLength(50)
+                .HasComment("Người cập nhật");
+            entity.Property(e => e.UpdatedDate)
+                .HasComment("Ngày cập nhật gần nhất")
+                .HasColumnType("datetime");
+        });
+
+        modelBuilder.Entity<ProjectGateCheckListType>(entity =>
+        {
+            entity.HasKey(e => e.ID).HasName("PK__ProjectG__3214EC27B9B8B9BC");
+
+            entity.ToTable("ProjectGateCheckListType", tb => tb.HasComment("Danh mục loại checklist của Project Gate"));
+
+            entity.Property(e => e.ID).HasComment("Khóa chính");
+            entity.Property(e => e.CreatedBy)
+                .HasMaxLength(100)
+                .HasComment("Người tạo");
+            entity.Property(e => e.CreatedDate)
+                .HasDefaultValueSql("(getdate())")
+                .HasComment("Ngày tạo")
+                .HasColumnType("datetime");
+            entity.Property(e => e.Description).HasMaxLength(550);
+            entity.Property(e => e.IsDeleted).HasComment("Cờ đánh dấu xóa mềm (0: Hoạt động, 1: Đã xóa)");
+            entity.Property(e => e.STT).HasComment("Số thứ tự hiển thị");
+            entity.Property(e => e.TypeCode)
+                .HasMaxLength(100)
+                .HasComment("Mã loại checklist");
+            entity.Property(e => e.UpdatedBy)
+                .HasMaxLength(100)
+                .HasComment("Người cập nhật gần nhất");
+            entity.Property(e => e.UpdatedDate)
+                .HasComment("Ngày cập nhật gần nhất")
+                .HasColumnType("datetime");
+        });
+
+        modelBuilder.Entity<ProjectGateDepartment>(entity =>
+        {
+            entity
+                .HasNoKey()
+                .ToTable("ProjectGateDepartment", tb => tb.HasComment("Bảng khai báo phòng ban liên kết với từng bước/công đoạn trong Gate của dự án"));
+
+            entity.Property(e => e.DepartmentID).HasComment("ID bảng Department, dùng để xác định phòng ban phụ trách hoặc tham gia bước/công đoạn");
+            entity.Property(e => e.ID)
+                .ValueGeneratedOnAdd()
+                .HasComment("Khóa chính tự tăng của bảng ProjectGateDepartment");
+            entity.Property(e => e.ProjectGateStepID).HasComment("ID bảng ProjectGateStep, dùng để liên kết phòng ban với từng bước/công đoạn trong Gate");
+        });
+
+        modelBuilder.Entity<ProjectGateStep>(entity =>
+        {
+            entity
+                .HasNoKey()
+                .ToTable("ProjectGateStep", tb => tb.HasComment("Bảng khai báo các bước/công đoạn thực hiện theo Gate của dự án"));
+
+            entity.Property(e => e.ChucVuID).HasComment("ID chức vụ thực hiện hoặc phụ trách bước/công đoạn này");
+            entity.Property(e => e.Content)
+                .HasMaxLength(550)
+                .HasComment("Nội dung công việc, bước thực hiện hoặc yêu cầu cần xử lý trong Gate");
+            entity.Property(e => e.CreatedBy)
+                .HasMaxLength(50)
+                .HasComment("ID người tạo bản ghi");
+            entity.Property(e => e.CreatedDate)
+                .HasComment("Ngày tạo bản ghi")
+                .HasColumnType("datetime");
+            entity.Property(e => e.ID)
+                .ValueGeneratedOnAdd()
+                .HasComment("Khóa chính tự tăng của bảng ProjectGateStep");
+            entity.Property(e => e.IsRepeat).HasComment("Đánh dấu bước/công đoạn có được lặp lại hay không: 0 - Không, 1 - Có");
+            entity.Property(e => e.ProjectGateDepartmentID).HasComment("ID bảng ProjectGateDepartment");
+            entity.Property(e => e.ProjectGateID).HasComment("ID bảng ProjectGate");
+            entity.Property(e => e.SortOrder).HasComment("Thứ tự sắp xếp dữ liệu của bước/công đoạn");
+            entity.Property(e => e.TT)
+                .HasMaxLength(200)
+                .HasComment("Thứ tự hiển thị của bước/công đoạn trên giao diện hoặc báo cáo");
+            entity.Property(e => e.UpdatedBy)
+                .HasMaxLength(50)
+                .HasComment("ID người cập nhật gần nhất bản ghi");
+            entity.Property(e => e.UpdatedDate)
+                .HasComment("Ngày cập nhật gần nhất của bản ghi")
+                .HasColumnType("datetime");
+        });
+
+        modelBuilder.Entity<ProjectGateStepLabor>(entity =>
+        {
+            entity.ToTable("ProjectGateStepLabor", tb => tb.HasComment("Bảng lưu danh sách nhân viên tham gia thực hiện từng bước của dự án"));
+
+            entity.Property(e => e.ID).HasComment("Khóa chính tự tăng");
+            entity.Property(e => e.DayCount).HasComment("Số ngày làm việc của nhân viên");
+            entity.Property(e => e.EmployeeID).HasComment("ID nhân viên được chỉ định thực hiện công việc");
+            entity.Property(e => e.ProjectGateStepLinkID).HasComment("ID liên kết đến ProjectGateStepLink");
+            entity.Property(e => e.TotalAmount)
+                .HasComment("Thành tiền (thường = DayCount × UnitPrice)")
+                .HasColumnType("decimal(18, 2)");
+            entity.Property(e => e.UnitPrice)
+                .HasComment("Đơn giá công của nhân viên")
+                .HasColumnType("decimal(18, 2)");
+        });
+
+        modelBuilder.Entity<ProjectGateStepLink>(entity =>
+        {
+            entity.ToTable("ProjectGateStepLink", tb => tb.HasComment("Bảng quản lý các bước/tiến độ được cấu hình cho dự án"));
+
+            entity.Property(e => e.ID).HasComment("Khóa chính tự tăng");
+            entity.Property(e => e.ActualContent).HasMaxLength(500);
+            entity.Property(e => e.ApprovedBy).HasMaxLength(200);
+            entity.Property(e => e.ApprovedDate).HasColumnType("datetime");
+            entity.Property(e => e.CreatedBy).HasMaxLength(50);
+            entity.Property(e => e.CreatedDate).HasColumnType("datetime");
+            entity.Property(e => e.DateEnd).HasColumnType("datetime");
+            entity.Property(e => e.IsApproved).HasDefaultValue(false);
+            entity.Property(e => e.IsDeleted).HasDefaultValue(false);
+            entity.Property(e => e.IsRepeat)
+                .HasDefaultValue(false)
+                .HasComment("Trạng thái lặp lại của công việc (0: Không, 1: Có)");
+            entity.Property(e => e.ProjectGateStepID).HasComment("ID bước chuẩn (Master Step) liên kết để lấy tên bước và nội dung");
+            entity.Property(e => e.ProjectID).HasComment("ID dự án đang cấu hình");
+            entity.Property(e => e.ProjectTypeID).HasComment("ID loại dự án, lưu để truy vấn nhanh");
+            entity.Property(e => e.SortOrder).HasDefaultValue(0);
+            entity.Property(e => e.StartDate).HasComment("Ngày bắt đầu thực hiện công việc");
+            entity.Property(e => e.UpdatedBy).HasMaxLength(50);
+            entity.Property(e => e.UpdatedDate).HasColumnType("datetime");
+        });
+
+        modelBuilder.Entity<ProjectGateStepPosition>(entity =>
+        {
+            entity.HasKey(e => e.ID).HasName("PK__ProjectG__3214EC2752674D8E");
+
+            entity.ToTable("ProjectGateStepPosition", tb => tb.HasComment("Bảng khai báo chức vụ được phép thực hiện hoặc phụ trách một bước (Step) trong quy trình Gate của dự án"));
+
+            entity.Property(e => e.ID).HasComment("ID bản ghi");
+            entity.Property(e => e.ChucVuID).HasComment("ID chức vụ thuộc bảng ChucVu");
+            entity.Property(e => e.CreatedBy)
+                .HasMaxLength(50)
+                .HasComment("Người tạo bản ghi");
+            entity.Property(e => e.CreatedDate)
+                .HasDefaultValueSql("(getdate())")
+                .HasComment("Ngày tạo bản ghi")
+                .HasColumnType("datetime");
+            entity.Property(e => e.ProjectGateStepID).HasComment("ID Step thuộc bảng ProjectGateStep");
+            entity.Property(e => e.UpdatedBy)
+                .HasMaxLength(50)
+                .HasComment("Người cập nhật gần nhất");
+            entity.Property(e => e.UpdatedDate)
+                .HasComment("Ngày cập nhật gần nhất")
+                .HasColumnType("datetime");
+        });
+
+        modelBuilder.Entity<ProjectGateStepTemplate>(entity =>
+        {
+            entity.ToTable("ProjectGateStepTemplate");
+
+            entity.Property(e => e.Code).HasMaxLength(50);
+            entity.Property(e => e.CreatedBy).HasMaxLength(50);
+            entity.Property(e => e.CreatedDate).HasColumnType("datetime");
+            entity.Property(e => e.IsDeleted).HasDefaultValue(false);
+            entity.Property(e => e.Name).HasMaxLength(255);
+            entity.Property(e => e.UpdatedBy).HasMaxLength(50);
+            entity.Property(e => e.UpdatedDate).HasColumnType("datetime");
+        });
+
+        modelBuilder.Entity<ProjectGateStepWorker>(entity =>
+        {
+            entity.ToTable("ProjectGateStepWorker", tb => tb.HasComment("Bảng lưu danh sách nhân viên tham gia thực hiện từng bước của dự án"));
+
+            entity.Property(e => e.ID).HasComment("Khóa chính tự tăng");
+            entity.Property(e => e.DayCount)
+                .HasComment("Số ngày làm việc của nhân viên")
+                .HasColumnType("decimal(18, 2)");
+            entity.Property(e => e.EmployeeID).HasComment("ID nhân viên được chỉ định thực hiện công việc");
+            entity.Property(e => e.ProjectGateStepLinkID).HasComment("ID liên kết đến ProjectGateStepLink");
+            entity.Property(e => e.TotalAmount)
+                .HasComment("Thành tiền (thường = DayCount × UnitPrice)")
+                .HasColumnType("decimal(18, 2)");
+            entity.Property(e => e.UnitPrice)
+                .HasComment("Đơn giá công của nhân viên")
+                .HasColumnType("decimal(18, 2)");
+        });
+
         modelBuilder.Entity<ProjectHistoryProblem>(entity =>
         {
             entity.ToTable("ProjectHistoryProblem");
@@ -12901,6 +13113,20 @@ public partial class RTCContext : DbContext
 
             entity.Property(e => e.ProjectTypeCode).HasMaxLength(250);
             entity.Property(e => e.ProjectTypeName).HasMaxLength(250);
+        });
+
+        modelBuilder.Entity<ProjectTypeDepartment>(entity =>
+        {
+            entity
+                .HasNoKey()
+                .ToTable("ProjectTypeDepartment");
+
+            entity.Property(e => e.CreatedBy).HasMaxLength(50);
+            entity.Property(e => e.CreatedDate).HasColumnType("datetime");
+            entity.Property(e => e.ID).ValueGeneratedOnAdd();
+            entity.Property(e => e.IsDeleted).HasDefaultValue(false);
+            entity.Property(e => e.UpdatedBy).HasMaxLength(50);
+            entity.Property(e => e.UpdatedDate).HasColumnType("datetime");
         });
 
         modelBuilder.Entity<ProjectTypeDetail>(entity =>
@@ -14456,14 +14682,6 @@ public partial class RTCContext : DbContext
             entity.Property(e => e.Note)
                 .HasMaxLength(550)
                 .HasComment("Ghi chú");
-            entity.Property(e => e.Website)
-                .HasMaxLength(550)
-                .HasComment("Website của đại lý/nhà cung cấp");
-            entity.Property(e => e.AgencyTime)
-                .HasMaxLength(550)
-                .HasComment("Thời điểm trở thành đại lý (nhập tự do)");
-            entity.Property(e => e.IsAgencyCertified)
-                .HasComment("Đánh dấu đại lý có chứng nhận hay không (Yes/No)");
             entity.Property(e => e.SupplierSaleID).HasComment("ID bảng SupplierSale");
             entity.Property(e => e.UpdatedBy).HasMaxLength(50);
             entity.Property(e => e.UpdatedDate).HasColumnType("datetime");
