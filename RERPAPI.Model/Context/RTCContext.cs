@@ -786,6 +786,8 @@ public partial class RTCContext : DbContext
 
     public virtual DbSet<Manufacturer> Manufacturers { get; set; }
 
+    public virtual DbSet<MechanicalDrawing> MechanicalDrawings { get; set; }
+
     public virtual DbSet<MeetingMinute> MeetingMinutes { get; set; }
 
     public virtual DbSet<MeetingMinutesAttendance> MeetingMinutesAttendances { get; set; }
@@ -9393,6 +9395,20 @@ public partial class RTCContext : DbContext
             entity.Property(e => e.ManufacturerName).HasMaxLength(100);
             entity.Property(e => e.Note).HasMaxLength(250);
             entity.Property(e => e.UpdatedBy).HasMaxLength(50);
+            entity.Property(e => e.UpdatedDate).HasColumnType("datetime");
+        });
+
+        modelBuilder.Entity<MechanicalDrawing>(entity =>
+        {
+            entity.HasKey(e => e.ID).HasName("PK__Mechanic__3214EC275D16BCC5");
+
+            entity.ToTable("MechanicalDrawing");
+
+            entity.Property(e => e.CreatedBy).HasMaxLength(150);
+            entity.Property(e => e.CreatedDate).HasColumnType("datetime");
+            entity.Property(e => e.Name).HasMaxLength(150);
+            entity.Property(e => e.ThumbnailPath).HasMaxLength(500);
+            entity.Property(e => e.UpdatedBy).HasMaxLength(150);
             entity.Property(e => e.UpdatedDate).HasColumnType("datetime");
         });
 
