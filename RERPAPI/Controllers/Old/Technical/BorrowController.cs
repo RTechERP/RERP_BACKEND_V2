@@ -493,10 +493,20 @@ namespace RERPAPI.Controllers
                     quantitySemiExpired = semiExpiredData.QuantitySemiExpired;
                 }
 
+                // Số lượng sản phẩm mượn quá hạn 3 tháng
+                var quantityOverdue3MonthsList = SQLHelper<object>.GetListData(productHistory, 3);
+                var quantityOverdue3Months = 0;
+                if (quantityOverdue3MonthsList != null && quantityOverdue3MonthsList.Count > 0)
+                {
+                    dynamic quantityOverdue3MonthsData = quantityOverdue3MonthsList[0];
+                    quantityOverdue3Months = quantityOverdue3MonthsData.QuantityOverdue3Months;
+                }
+
                 var result = new
                 {
                     QuantityExpired = quantityExpired,
                     QuantitySemiExpired = quantitySemiExpired,
+                    QuantityOverdue3Months = quantityOverdue3Months,
                 };
 
                 return Ok(ApiResponseFactory.Success(result, ""));
