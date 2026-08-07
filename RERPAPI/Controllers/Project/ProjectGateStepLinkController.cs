@@ -966,5 +966,20 @@ namespace RERPAPI.Controllers.Project
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
+
+        [HttpGet("GetGateDepartmentReport/{projectId}")]
+        public async Task<IActionResult> GetGateDepartmentReport(int projectId, [FromQuery] string? gateCode = null)
+        {
+            try
+            {
+                var param = new { ProjectID = projectId, GateCode = gateCode };
+                var list = await SqlDapper<ProjectGateDepartmentReportDto>.ProcedureToListTAsync("spGetProjectGateDepartmentReport", param);
+                return Ok(ApiResponseFactory.Success(list));
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
+            }
+        }
     }
 }

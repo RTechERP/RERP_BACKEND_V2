@@ -236,4 +236,30 @@ namespace RERPAPI.Model.DTO
         public long? FileSize { get; set; }
         public string? Description { get; set; }
     }
+
+    public class ProjectGateDepartmentReportDto
+    {
+        public int ProjectGateStepLinkID { get; set; }
+        public int ProjectID { get; set; }
+        public int ProjectGateStepID { get; set; }
+        public int? ParentID { get; set; }
+        public int? ProjectGateID { get; set; }
+        public string? GateCode { get; set; }
+        public string? GateName { get; set; }
+        public int GateSTT { get; set; }
+        public int? DepartmentID { get; set; }
+        public string? DepartmentName { get; set; }
+        public string? Content { get; set; }
+        public DateTime? StartDate { get; set; }
+        public DateTime? DateEnd { get; set; }
+        public decimal? DayCount { get; set; }
+        public DateTime? PlanEndDate { get; set; }
+        public bool IsApproved { get; set; }
+        public string? ApprovedBy { get; set; }
+        public DateTime? ApprovedDate { get; set; }
+        public int TotalChecklists { get; set; }
+        public int PassedChecklists { get; set; }
+        public bool IsCompleted { get; set; }
+        public bool IsDelayed { get; set; }
+    }
 }
