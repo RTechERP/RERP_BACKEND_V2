@@ -26,4 +26,6 @@ public partial class ProjectType
     public bool IsPurchase { get; set; }
 
     public bool IsProject { get; set; }
+
+    public int? DepartmentID { get; set; }
 }
