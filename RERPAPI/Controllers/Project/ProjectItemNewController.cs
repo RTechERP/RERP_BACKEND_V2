@@ -1,4 +1,4 @@
-﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using RERPAPI.Model.Common;
 using RERPAPI.Model.DTO;
@@ -64,8 +64,6 @@ namespace RERPAPI.Controllers.Project
                 return Ok(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
-        //Hàm lấy mã hạng mục công việc
-        // [Authorize]
         [HttpGet("get-project-item-code")]
         public IActionResult GetProjectItemCode([FromQuery] int projectId)
         {
@@ -80,6 +78,7 @@ namespace RERPAPI.Controllers.Project
                 return Ok(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
+
         // Hàm upload file
         [HttpPost("upload")]
         public IActionResult Upload(IFormFile file)

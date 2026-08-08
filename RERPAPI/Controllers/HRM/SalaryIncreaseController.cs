@@ -1,4 +1,4 @@
-﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Options;
 using RERPAPI.Attributes;
@@ -7,6 +7,9 @@ using RERPAPI.Model.DTO;
 using RERPAPI.Model.Entities;
 using RERPAPI.Model.Param;
 using RERPAPI.Repo.GenericEntity.HRM;
+using System;
+using System.Collections.Generic;
+using System.Threading.Tasks;
 
 namespace RERPAPI.Controllers.HRM
 {

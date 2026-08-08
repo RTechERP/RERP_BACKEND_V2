@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using Microsoft.EntityFrameworkCore;
 using RERPAPI.Model.Entities;
@@ -3106,6 +3106,28 @@ public partial class RTCContext : DbContext
             entity.Property(e => e.UpdatedDate).HasColumnType("datetime");
         });
 
+        modelBuilder.Entity<ConfigNotificationKey>(entity =>
+        {
+            entity.ToTable("ConfigNotificationKey");
+
+            entity.Property(e => e.CreatedBy).HasMaxLength(50);
+            entity.Property(e => e.CreatedDate)
+                .HasDefaultValueSql("(getdate())")
+                .HasColumnType("datetime");
+            entity.Property(e => e.IsDeleted).HasDefaultValue(false);
+            entity.Property(e => e.KeyContent).HasMaxLength(550);
+            entity.Property(e => e.KeyName).HasMaxLength(500);
+            entity.Property(e => e.UpdatedBy).HasMaxLength(50);
+            entity.Property(e => e.UpdatedDate).HasColumnType("datetime");
+        });
+
+        modelBuilder.Entity<ConfigNotificationKeyLink>(entity =>
+        {
+            entity.ToTable("ConfigNotificationKeyLink");
+
+            entity.Property(e => e.IsActive).HasDefaultValue(true);
+        });
+
         modelBuilder.Entity<ConfigSystem>(entity =>
         {
             entity.ToTable("ConfigSystem");
@@ -6098,6 +6120,9 @@ public partial class RTCContext : DbContext
             entity.Property(e => e.UpdatedDate)
                 .HasComment("Ngày cập nhật")
                 .HasColumnType("datetime");
+            entity.Property(e => e.IsRoundTrip)
+                .HasDefaultValue(false)
+                .HasComment("Vé khứ hồi");
         });
 
         modelBuilder.Entity<FlightBookingPassenger>(entity =>
@@ -6159,6 +6184,22 @@ public partial class RTCContext : DbContext
             entity.Property(e => e.UpdatedDate)
                 .HasComment("Ngày cập nhật")
                 .HasColumnType("datetime");
+            entity.Property(e => e.ReturnDate)
+                .HasComment("thời gian về")
+                .HasColumnType("datetime");
+            entity.Property(e => e.ReturnTime)
+                .HasComment("giờ về")
+                .HasColumnType("datetime");
+        });
+
+        modelBuilder.Entity<FlightBookingPassenger>(entity =>
+        {
+            entity.HasKey(e => e.ID);
+            entity.ToTable("FlightBookingPassenger", tb => tb.HasComment("Bảng lưu hành khách đặt vé máy bay"));
+            entity.Property(e => e.FullName).HasMaxLength(250).HasComment("Họ tên");
+            entity.Property(e => e.Type).HasComment("Loại hành khách (1: CBNV, 2: Khách ngoài)");
+            entity.Property(e => e.EmployeeID).HasComment("ID nhân viên");
+            entity.Property(e => e.FlightBookingManagementID).HasComment("ID master");
         });
 
         modelBuilder.Entity<FollowProject>(entity =>
@@ -13320,6 +13361,15 @@ public partial class RTCContext : DbContext
             entity.Property(e => e.UpdatedDate)
                 .HasComment("Ngày cập nhật")
                 .HasColumnType("datetime");
+        });
+
+        modelBuilder.Entity<ProjectTypeDepartment>(entity =>
+        {
+            entity.ToTable("ProjectTypeDepartment");
+            entity.Property(e => e.CreatedBy).HasMaxLength(50);
+            entity.Property(e => e.CreatedDate).HasColumnType("datetime");
+            entity.Property(e => e.UpdatedBy).HasMaxLength(50);
+            entity.Property(e => e.UpdatedDate).HasColumnType("datetime");
         });
 
         modelBuilder.Entity<ProjectUser>(entity =>

@@ -491,8 +491,8 @@ namespace RERPAPI.Controllers.Old.Technical
                 {
                     Subject = subject,
                     Body = emailBody,
-                    EmailTo = "nguyenvan.thao@rtc.edu.vn", // Email người nhận
-                    //EmailTo = "nhubinh2104@gmail.com", // Email người nhận
+                    //EmailTo = "nguyenvan.thao@rtc.edu.vn", // Email người nhận
+                    EmailTo = "nhubinh2104@gmail.com", // Email người nhận
                     StatusSend = 1, // 1: Đã gửi
                     DateSend = DateTime.Now,
                     EmployeeID = currentUser.EmployeeID,

@@ -1,1442 +1,73 @@
-﻿using ClosedXML.Excel;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using OfficeOpenXml;
+using RERPAPI.Attributes;
 using RERPAPI.Model.Common;
-using RERPAPI.Model.DTO;
-using RERPAPI.Model.DTO.HRM;
 using RERPAPI.Model.Entities;
-using RERPAPI.Model.Param.Handover;
 using RERPAPI.Repo.GenericEntity;
-using RERPAPI.Repo.GenericEntity.Asset;
+using RERPAPI.Model.DTO.HRM;
 using RERPAPI.Repo.GenericEntity.BBNV;
 
-namespace RERPAPI.Controllers
+namespace RERPAPI.Controllers.HRM
 {
     [Route("api/[controller]")]
     [ApiController]
     [Authorize]
     public class HandoverController : ControllerBase
     {
-        private readonly DepartmentRepo _tsDepartment;
-        private readonly EmployeeChucVuHDRepo _positionRepo;
         private readonly HandoverRepo _handoverRepo;
         private readonly HandoverReceiverRepo _handoverReceiverRepo;
         private readonly HandoverWorkRepo _handoverWorkRepo;
         private readonly HandoverWarehouseAssetRepo _handoverWarehouseAssetRepo;
         private readonly HandoverAssetManagementRepo _handoverAssetManagementRepo;
         private readonly HandoverFinanceRepo _handoverFinanceRepo;
-        private readonly HandoverSubordinateRepo _handoverSubordinateRepo;
         private readonly HandoverApproveRepo _approveRepo;
-        private readonly vUserGroupLinksRepo _vUserGroupLinksRepo;
-        private readonly TSAssetManagementRepo _tsAssetManagementRepo;
         private readonly HandoverPersonalAssetRepo _handoverPersonalAssetRepo;
-        private IConfiguration _configuration;
 
-        public HandoverController(DepartmentRepo tsDepartment, EmployeeChucVuHDRepo positionRepo, HandoverRepo handoverRepo, HandoverReceiverRepo handoverReceiverRepo, HandoverWorkRepo handoverWorkRepo, HandoverWarehouseAssetRepo handoverWarehouseAssetRepo, HandoverAssetManagementRepo handoverAssetManagementRepo, HandoverFinanceRepo handoverFinanceRepo, HandoverSubordinateRepo handoverSubordinateRepo, HandoverApproveRepo approveRepo, vUserGroupLinksRepo vUserGroupLinksRepo, TSAssetManagementRepo tsAssetManagementRepo, IConfiguration configuration, HandoverPersonalAssetRepo handoverPersonalAssetRepo)
+        public HandoverController(
+            HandoverRepo handoverRepo,
+            HandoverReceiverRepo handoverReceiverRepo,
+            HandoverWorkRepo handoverWorkRepo,
+            HandoverWarehouseAssetRepo handoverWarehouseAssetRepo,
+            HandoverAssetManagementRepo handoverAssetManagementRepo,
+            HandoverFinanceRepo handoverFinanceRepo,
+            HandoverApproveRepo approveRepo,
+            HandoverPersonalAssetRepo handoverPersonalAssetRepo)
         {
-            _tsDepartment = tsDepartment;
-            _positionRepo = positionRepo;
             _handoverRepo = handoverRepo;
             _handoverReceiverRepo = handoverReceiverRepo;
             _handoverWorkRepo = handoverWorkRepo;
             _handoverWarehouseAssetRepo = handoverWarehouseAssetRepo;
             _handoverAssetManagementRepo = handoverAssetManagementRepo;
             _handoverFinanceRepo = handoverFinanceRepo;
-            _handoverSubordinateRepo = handoverSubordinateRepo;
             _approveRepo = approveRepo;
-            _vUserGroupLinksRepo = vUserGroupLinksRepo;
-            _tsAssetManagementRepo = tsAssetManagementRepo;
-            _configuration = configuration;
             _handoverPersonalAssetRepo = handoverPersonalAssetRepo;
         }
 
-        [HttpPost("get-handover")]
-        public IActionResult GetHandover([FromBody] HandoverRequestParam handoverrequest)
+        public class HandoverSearchRequest
         {
-            var claims = User.Claims.ToDictionary(x => x.Type, x => x.Value);
-            CurrentUser currentUser = ObjectMapper.GetCurrentUser(claims);
-
-            handoverrequest.DateStart = new DateTime(handoverrequest.DateStart.Year, handoverrequest.DateStart.Month, handoverrequest.DateStart.Day, 0, 0, 0);
-            handoverrequest.DateEnd = new DateTime(handoverrequest.DateEnd.Year, handoverrequest.DateEnd.Month, handoverrequest.DateEnd.Day, 23, 59, 59);
-
-            var vUserHR = _vUserGroupLinksRepo
-                .GetAll()
-                .FirstOrDefault(x => (x.Code == "N23" || x.Code == "N1" || x.Code == "N34") &&
-          x.UserID == currentUser.ID);
-
-            int employeeID;
-            if (vUserHR != null)
-            {
-                employeeID = handoverrequest.EmployeeID;
-            }
-            else
-            {
-                employeeID = currentUser.EmployeeID;
-            }
-
-            //int employeeID = 0;
-            //int approverID = 0;
-            //if (vUserHR != null)
-            //{
-            //    handoverrequest.LeaderID = 0;
-            //    handoverrequest.EmployeeID = 0;
-            //}
-            //else
-            //{
-            //    handoverrequest.EmployeeID = currentUser.EmployeeID;
-
-            //}
-            //var vUserTBP = _vUserGroupLinksRepo
-            //   .GetAll()
-            //   .FirstOrDefault(x => x.Code == "N32" && x.UserID == currentUser.ID);
-            //if (vUserTBP != null)
-            //{
-            //    //approverID = handoverrequest.ApproverID;
-            //    //handoverrequest.ApproverID = currentUser.EmployeeID;
-            //}
-            var handover = SQLHelper<dynamic>.ProcedureToList("spGetHandover",
-                new string[] { "@DepartmentID", "@EmployeeID", "@Keyword", "@LeaderID", "@DateStart", "@DateEnd", "@ApproverID" },
-                new object[] { handoverrequest.DepartmentID, employeeID, handoverrequest.Keyword, handoverrequest.LeaderID, handoverrequest.DateStart, handoverrequest.DateEnd, handoverrequest.ApproverID }
-                );
-            try
-            {
-                return Ok(new
-                {
-                    status = 1,
-                    data = new
-                    {
-                        asset = SQLHelper<dynamic>.GetListData(handover, 0),
-                        total = SQLHelper<dynamic>.GetListData(handover, 1)
-                    }
-                });
-            }
-            catch (Exception ex)
-            {
-                return Ok(new
-                {
-                    status = 0,
-                    message = ex.Message,
-                    error = ex.ToString()
-                });
-            }
+            public int DepartmentID { get; set; } = 0;
+            public int EmployeeID { get; set; } = 0;
+            public string DateStart { get; set; } = "";
+            public string DateEnd { get; set; } = "";
+            public string Keyword { get; set; } = "";
+            public int ApproverID { get; set; } = 0;
         }
 
-        [HttpPost("get-handover-data")]
-        public IActionResult GetHandoverData([FromBody] HandoverDataRequestParam request)
+        // Lấy danh sách biên bản bàn giao
+        [RequiresPermission("N34")]
+        [HttpPost("getall")]
+        public IActionResult GetAll([FromBody] HandoverSearchRequest req)
         {
             try
             {
-                var handoverReceiver = SQLHelper<dynamic>.ProcedureToList("spGetHandoverReceiver ",
-                   new string[] { "@HandoverID" },
-                   new object[] { request.HandoverID }
-               );
+                object start = string.IsNullOrEmpty(req.DateStart) ? DBNull.Value : DateTime.Parse(req.DateStart);
+                object end = string.IsNullOrEmpty(req.DateEnd) ? DBNull.Value : DateTime.Parse(req.DateEnd);
 
-                var handoverWork = SQLHelper<dynamic>.ProcedureToList("spGetHandoverWork",
-                    new string[] { "@HandoverID" },
-                    new object[] { request.HandoverID }
-                );
+                var datas = SQLHelper<object>.ProcedureToList("spGetHandover",
+                    new string[] { "@DepartmentID", "@EmployeeID", "@DateStart", "@DateEnd", "@Keyword", "@ApproverID" },
+                    new object[] { req.DepartmentID, req.EmployeeID, start, end, req.Keyword ?? "", req.ApproverID });
 
-                var handoverWarehouseAsset = SQLHelper<dynamic>.ProcedureToList("spGetHandoverWarehouseAsset",
-              new string[] { "@PageNumber", "@PageSize", "@DateBegin", "@DateEnd", "@ProductGroupID", "@ReturnStatus", "@FilterText", "@WareHouseID", "@EmployeeID" },
-              new object[] { request.PageNumber, request.PageSize, request.DateBegin, request.DateEnd, request.ProductGroupID, request.ReturnStatus, request.FilterText, request.WareHouseID, request.EmployeeID }
-            );
-                var handoverAssetManagement = SQLHelper<dynamic>.ProcedureToList("spGetHandoverPersonalAsset",
-                    new string[] { "@EmployeeID", "@HandoverID" },
-                    new object[] { request.LeaderID, request.HandoverID }
-                );
-                var handoverFinances = SQLHelper<dynamic>.ProcedureToList("spGetHandoverFinances",
-                    new string[] { "@HandoverID" },
-                    new object[] { request.HandoverID }
-                );
-                //    var handoverPersonalAsset = _handoverPersonalAssetRepo.GetAll(x => x.HandoverID == request.HandoverID&& x.IsDeleted !=true);
-                var handoverPersonalAssset = SQLHelper<dynamic>.ProcedureToList("spGetHandoverAssetPerson",
-                  new string[] { "@HandoverID" },
-                  new object[] { request.HandoverID }
-              );
-                var handoverSubordinates = SQLHelper<dynamic>.ProcedureToList("spGetHandoverSubordinates",
-                  new string[] { "@LeaderID" },
-                  new object[] { request.LeaderID }
-              );
-                var handoverApprove = SQLHelper<dynamic>.ProcedureToList("spGetHandoverApprove",
-                   new string[] { "@HandoverID" },
-                   new object[] { request.HandoverID }
-               );
-                var HandoverWork = SQLHelper<dynamic>.GetListData(handoverWork, 0);
-                var HandoverWarehouseAsset = SQLHelper<dynamic>.GetListData(handoverWarehouseAsset, 0);
-                var HandoverAssetManagement = SQLHelper<dynamic>.GetListData(handoverAssetManagement, 0);
-                var HandoverFinance = SQLHelper<dynamic>.GetListData(handoverFinances, 0);
-                var HandoverSubordinate = SQLHelper<dynamic>.GetListData(handoverSubordinates, 0);
-                var HandoverReceiver = SQLHelper<dynamic>.GetListData(handoverReceiver, 0);
-                var HandoverApprove = SQLHelper<dynamic>.GetListData(handoverApprove, 0);
-                var handoverPersonalAsset = SQLHelper<dynamic>.GetListData(handoverPersonalAssset, 0);
-
-                // Trả về dữ liệu tổng hợp
-                return Ok(new
-                {
-                    status = 1,
-                    data = new
-                    {
-                        HandoverReceiver,
-                        HandoverWork,
-                        HandoverWarehouseAsset,
-                        HandoverAssetManagement,
-                        handoverPersonalAsset,
-                        HandoverFinance,
-                        HandoverSubordinate,
-                        HandoverApprove
-                    }
-                });
-            }
-            catch (Exception ex)
-            {
-                return Ok(new
-                {
-                    status = 0,
-                    message = ex.Message,
-                    error = ex.ToString()
-                });
-            }
-        }
-
-        [HttpGet("get-departments")]
-        public IActionResult GetDepartment()
-        {
-            try
-            {
-                var datadepartment = _tsDepartment.GetAll();
-                return Ok(new
-                {
-                    status = 1,
-                    data = datadepartment
-                });
-            }
-            catch (Exception ex)
-            {
-                return BadRequest(new
-                {
-                    status = 0,
-                    message = ex.Message,
-                    error = ex.ToString()
-                });
-            }
-        }
-
-        [HttpGet("get-position")]
-        public IActionResult GetPosition()
-        {
-            try
-            {
-                var dataposition = _positionRepo.GetAll();
-                return Ok(new
-                {
-                    status = 1,
-                    data = dataposition
-                });
-            }
-            catch (Exception ex)
-            {
-                return BadRequest(new
-                {
-                    status = 0,
-                    message = ex.Message,
-                    error = ex.ToString()
-                });
-            }
-        }
-
-        [HttpPost("get-employees")]
-        public IActionResult GetEmployee([FromBody] AllEmployeeRequestParam employeerequest)
-        {
-            try
-            {
-                var employees = SQLHelper<EmployeeCommonDTO>.ProcedureToListModel("spGetEmployee",
-                                                new string[] { "@Status" },
-                                                new object[] { 0 });
-                return Ok(new
-                {
-                    status = 1,
-                    data = new
-                    {
-                        asset = employees
-                    }
-                });
-            }
-            catch (Exception ex)
-            {
-                return BadRequest(new
-                {
-                    status = 0,
-                    message = ex.Message,
-                    error = ex.ToString()
-                });
-            }
-        }
-
-        [HttpGet("get-all-employees")]
-        public IActionResult GetListEmployee()
-        {
-            try
-            {
-                var employees = SQLHelper<EmployeeCommonDTO>.ProcedureToListModel("spGetEmployee",
-                                                new string[] { "@Status" },
-                                                new object[] { 0 });
-
-                return Ok(new
-                {
-                    status = 1,
-                    data = employees,
-                });
-            }
-            catch (Exception ex)
-            {
-                return Ok(new
-                {
-                    status = 0,
-                    message = ex.Message,
-                    error = ex.ToString()
-                });
-            }
-        }
-
-        [HttpGet("get-handover/{id}")]
-        public IActionResult getHandover(int id)
-        {
-            try
-            {
-                Handover result = _handoverRepo.GetByID(id);
-                return Ok(new
-                {
-                    status = 1,
-                    data = result
-                });
-            }
-            catch (Exception ex)
-            {
-                return BadRequest(new
-                {
-                    status = 0,
-                    message = ex.Message,
-                    error = ex.ToString()
-                });
-            }
-        }
-
-        private async Task UpdateEmployeeForAssets(List<HandoverAssetManagement> assets, int newEmployeeId)
-        {
-            if (assets == null || !assets.Any()) return;
-
-            foreach (var item in assets)
-            {
-                var asset = _tsAssetManagementRepo
-                    .GetAll()
-                    .FirstOrDefault(x => x.TSAssetCode == item.TSAssetCode);
-
-                if (asset != null)
-                {
-                    asset.EmployeeID = newEmployeeId; // nhân viên mượn
-                    asset.UpdatedDate = DateTime.Now;
-                    await _tsAssetManagementRepo.UpdateAsync(asset);
-                }
-            }
-        }
-
-        [HttpPost("save-data-handover")]
-        public async Task<IActionResult> SaveData([FromBody] HandoverDTO dto)
-        {
-            try
-            {
-                var claims = User.Claims.ToDictionary(x => x.Type, x => x.Value);
-                CurrentUser currentUser = ObjectMapper.GetCurrentUser(claims);
-
-                if (dto == null || dto.Handover == null)
-                {
-                    return BadRequest(new { status = 0, message = "Dữ liệu không hợp lệ" });
-                }
-
-                int handoverID = 0;
-
-                // Master
-                if (dto.Handover.ID <= 0)
-
-                {
-                    var maxStt = _handoverRepo.GetAll()
-                        .Select(x => x.STT ?? 0)
-                        .DefaultIfEmpty(0)
-                        .Max();
-                    dto.Handover.STT = maxStt + 1;
-
-                    string prefix = "MB_RTC";
-                    string today = DateTime.Now.ToString("yyyyMMdd");
-
-                    var last = _handoverRepo
-                        .GetAll(x => x.Code.StartsWith(prefix + "_" + today))
-                        .OrderByDescending(x => x.CreatedDate)
-                        .FirstOrDefault();
-
-                    int nextNumber = 1;
-                    if (last != null && !string.IsNullOrEmpty(last.Code))
-                    {
-                        var parts = last.Code.Split('.');
-                        if (parts.Length > 1 && int.TryParse(parts[1], out int lastNumber))
-                        {
-                            nextNumber = lastNumber + 1;
-                        }
-                    }
-
-                    dto.Handover.Code = $"{prefix}_{today}.{nextNumber:D3}";
-                    if (dto == null || dto.Handover == null)
-                    {
-                        return BadRequest(new { status = 0, message = "Dữ liệu không hợp lệ" });
-                    }
-
-                    dto.Handover.CreatedBy = currentUser.LoginName;
-                    dto.Handover.UpdatedBy = currentUser.LoginName;
-                    await _handoverRepo.CreateAsync(dto.Handover);
-                    handoverID = dto.Handover.ID; // repo sẽ gán ID sau khi insert
-                }
-                else
-                {
-                    dto.Handover.UpdatedBy = currentUser.LoginName;
-                    _handoverRepo.Update(dto.Handover);
-                    handoverID = dto.Handover.ID;
-                }
-
-                // Người nhận bàn giao
-                if (dto.HandoverReceiver != null && dto.HandoverReceiver.Any())
-                {
-                    var maxSttReceiver = _handoverReceiverRepo.GetAll()
-                        .Where(x => x.HandoverID == handoverID)
-                        .Select(x => x.STT ?? 0)
-                        .DefaultIfEmpty(0)
-                        .Max();
-                    int sttEmployeeCounter = maxSttReceiver;
-
-                    foreach (var employeeReceiver in dto.HandoverReceiver)
-                    {
-                        employeeReceiver.HandoverID = handoverID;
-
-                        var existing = _handoverReceiverRepo.GetAll()
-                   .FirstOrDefault(x => x.HandoverID == handoverID && x.ID == employeeReceiver.ID);
-
-                        if (existing == null || employeeReceiver.ID <= 0)
-                        {
-                            sttEmployeeCounter++;
-                            employeeReceiver.STT = sttEmployeeCounter;
-                            await _handoverReceiverRepo.CreateAsync(employeeReceiver);
-                        }
-                        else
-                            _handoverReceiverRepo.Update(employeeReceiver);
-                    }
-                }
-                if (dto.DeletedHandoverReceiver.Count > 0)
-                {
-                    foreach (var item in dto.DeletedHandoverReceiver)
-                    {
-                        HandoverReceiver receivermodel = _handoverReceiverRepo.GetByID(item);
-                        receivermodel.IsDeleted = true;
-                        await _handoverReceiverRepo.UpdateAsync(receivermodel);
-                    }
-                }
-
-                // Công việc bàn giao
-                if (dto.HandoverWork != null && dto.HandoverWork.Any())
-                {
-                    var maxSttWork = _handoverWorkRepo.GetAll()
-                        .Where(x => x.HandoverID == handoverID)
-                        .Select(x => x.STT ?? 0)
-                        .DefaultIfEmpty(0)
-                        .Max();
-                    int sttHandoverWork = maxSttWork;
-                    foreach (var itemWork in dto.HandoverWork)
-                    {
-                        itemWork.HandoverID = handoverID;
-                        var existing = _handoverWorkRepo.GetAll()
-                .FirstOrDefault(x => x.HandoverID == handoverID && x.ID == itemWork.ID);
-
-                        if (existing == null || itemWork.ID <= 0)
-                        {
-                            sttHandoverWork++;
-                            itemWork.STT = sttHandoverWork;
-                            itemWork.CreatedDate = DateTime.Now;
-                            await _handoverWorkRepo.CreateAsync(itemWork);
-                        }
-                        else
-                            _handoverWorkRepo.Update(itemWork);
-                    }
-                }
-                if (dto.DeletedWork.Count > 0)
-                {
-                    foreach (var item in dto.DeletedWork)
-                    {
-                        HandoverWork model = _handoverWorkRepo.GetByID(item);
-                        model.IsDeleted = true;
-                        await _handoverWorkRepo.UpdateAsync(model);
-                    }
-                }
-
-                // Tài sản bàn giao
-                if (dto.HandoverAssetManagement != null && dto.HandoverAssetManagement.Any())
-                {
-                    var maxSttAsset = _handoverAssetManagementRepo.GetAll()
-                        .Where(x => x.HandoverID == handoverID)
-                        .Select(x => x.STT ?? 0)
-                        .DefaultIfEmpty(0)
-                        .Max();
-                    int sttHandoverAsset = maxSttAsset;
-                    foreach (var itemAsset in dto.HandoverAssetManagement)
-                    {
-                        itemAsset.HandoverID = handoverID;
-                        var existing = _handoverAssetManagementRepo.GetAll()
-               .FirstOrDefault(x => x.HandoverID == handoverID && x.TSAssetCode == itemAsset.TSAssetCode);
-
-                        if (existing == null || itemAsset.ID <= 0)
-                        {
-                            sttHandoverAsset++;
-                            itemAsset.STT = sttHandoverAsset;
-                            itemAsset.CreatedDate = DateTime.Now;
-                            await _handoverAssetManagementRepo.CreateAsync(itemAsset);
-                        }
-                        else
-                        {
-                            itemAsset.EmployeeID = itemAsset.EmployeeID;
-
-                            _handoverAssetManagementRepo.Update(itemAsset);
-                        }
-                    }
-                }
-                // Tài sản cá nhân bàn giao
-                if (dto.handoverPersonalAsset != null && dto.handoverPersonalAsset.Any())
-                {
-                    foreach (var itemAsset in dto.handoverPersonalAsset)
-                    {
-                        itemAsset.HandoverID = handoverID;
-                        if (itemAsset.ID <= 0)
-                        {
-                            await _handoverPersonalAssetRepo.CreateAsync(itemAsset);
-                        }
-                        else
-                        {
-                            _handoverPersonalAssetRepo.Update(itemAsset);
-                        }
-                    }
-                }
-                if (dto.DeletedPersonalAsset != null && dto.DeletedPersonalAsset.Any())
-                {
-                    foreach (var item in dto.DeletedPersonalAsset)
-                    {
-                        HandoverPersonalAsset model = _handoverPersonalAssetRepo.GetByID(item);
-                        if (model != null)
-                        {
-                            model.IsDeleted = true;
-                            await _handoverPersonalAssetRepo.UpdateAsync(model);
-                        }
-                    }
-                }
-
-                // Tài sản kho bàn giao
-                if (dto.HandoverWarehouseAsset != null && dto.HandoverWarehouseAsset.Any())
-                {
-                    var maxSttWarehouseAsset = _handoverWarehouseAssetRepo.GetAll()
-                        .Where(x => x.HandoverID == handoverID)
-                        .Select(x => x.STT ?? 0)
-                        .DefaultIfEmpty(0)
-                        .Max();
-                    int sttHandoverWarehouseAsset = maxSttWarehouseAsset;
-                    foreach (var itemWarehouseAsset in dto.HandoverWarehouseAsset)
-                    {
-                        itemWarehouseAsset.HandoverID = handoverID;
-                        var existing = _handoverWarehouseAssetRepo.GetAll()
-                        .FirstOrDefault(x => x.HandoverID == handoverID && x.ID == itemWarehouseAsset.ID);
-
-                        if (existing == null || itemWarehouseAsset.ID <= 0)
-                        {
-                            sttHandoverWarehouseAsset++;
-                            itemWarehouseAsset.STT = sttHandoverWarehouseAsset;
-                            itemWarehouseAsset.CreatedDate = DateTime.Now;
-                            await _handoverWarehouseAssetRepo.CreateAsync(itemWarehouseAsset);
-                        }
-                        else
-                            _handoverWarehouseAssetRepo.Update(itemWarehouseAsset);
-                    }
-                }
-
-                // Tài chính bàn giao
-                if (dto.HandoverFinance != null && dto.HandoverFinance.Any())
-                {
-                    var maxSttFinance = _handoverFinanceRepo.GetAll()
-                        .Where(x => x.HandoverID == handoverID)
-                        .Select(x => x.STT ?? 0)
-                        .DefaultIfEmpty(0)
-                        .Max();
-                    int sttHandoverFinance = maxSttFinance;
-                    foreach (var itemFinance in dto.HandoverFinance)
-                    {
-                        itemFinance.HandoverID = handoverID;
-                        var existing = _handoverFinanceRepo.GetAll()
-                        .FirstOrDefault(x => x.HandoverID == handoverID && x.ID == itemFinance.ID);
-
-                        if (existing == null || itemFinance.ID <= 0)
-                        {
-                            sttHandoverFinance++;
-                            itemFinance.STT = sttHandoverFinance;
-                            itemFinance.CreatedDate = DateTime.Now;
-                            await _handoverFinanceRepo.CreateAsync(itemFinance);
-                        }
-                        else
-                            _handoverFinanceRepo.Update(itemFinance);
-                    }
-                }
-                if (dto.DeletedFinance.Count > 0)
-                {
-                    foreach (var item in dto.DeletedFinance)
-                    {
-                        HandoverFinance model = _handoverFinanceRepo.GetByID(item);
-                        model.IsDeleted = true;
-                        await _handoverFinanceRepo.UpdateAsync(model);
-                    }
-                }
-
-                // Nhân viên trực thuộc bàn giao
-                if (dto.HandoverSubordinate != null && dto.HandoverSubordinate.Any())
-                {
-                    var maxSttSub = _handoverSubordinateRepo.GetAll()
-                        .Where(x => x.HandoverID == handoverID)
-                        .Select(x => x.STT ?? 0)
-                        .DefaultIfEmpty(0)
-                        .Max();
-                    int sttHandoverSub = maxSttSub;
-                    foreach (var itemSub in dto.HandoverSubordinate)
-                    {
-                        itemSub.HandoverID = handoverID;
-                        var existing = _handoverSubordinateRepo.GetAll()
-                        .FirstOrDefault(x => x.HandoverID == handoverID && x.ID == itemSub.ID);
-
-                        if (itemSub.ID <= 0)
-                        {
-                            sttHandoverSub++;
-                            itemSub.STT = sttHandoverSub;
-                            itemSub.CreatedDate = DateTime.Now;
-                            await _handoverSubordinateRepo.CreateAsync(itemSub);
-                        }
-                        else
-                            _handoverSubordinateRepo.Update(itemSub);
-                    }
-                }
-
-                //Duyệt
-                if (dto.HandoverApprove != null && dto.HandoverApprove.Any())
-                {
-                    var maxSttSub = _approveRepo.GetAll()
-                        .Where(x => x.HandoverID == handoverID)
-                        .Select(x => x.STT ?? 0)
-                        .DefaultIfEmpty(0)
-                        .Max();
-                    int sttHandoverApprove = maxSttSub;
-                    foreach (var itemApprove in dto.HandoverApprove)
-                    {
-                        itemApprove.HandoverID = handoverID;
-                        var existing = _approveRepo.GetAll()
-                        .FirstOrDefault(x => x.HandoverID == handoverID && x.ID == itemApprove.ID);
-
-                        if (itemApprove.ID <= 0)
-                        {
-                            sttHandoverApprove++;
-                            itemApprove.STT = sttHandoverApprove;
-                            itemApprove.CreatedDate = DateTime.Now;
-                            await _approveRepo.CreateAsync(itemApprove);
-                        }
-                        else
-                            _approveRepo.Update(itemApprove);
-                    }
-                }
-
-                return Ok(new
-                {
-                    status = 1,
-                    message = "Lưu thành công",
-                    id = handoverID,
-                });
-            }
-            catch (Exception ex)
-            {
-                return BadRequest(new
-                {
-                    status = 0,
-                    message = ex.Message,
-                    error = ex.ToString()
-                });
-            }
-        }
-
-        [HttpPost("upload")]
-        public IActionResult Upload(IFormFile file)
-        {
-            try
-            {
-                if (file == null || file.Length == 0)
-                {
-                    return BadRequest(new { status = 0, Message = "Không có file được gửi lên." });
-                }
-
-                var allowedExtensions = new[] { ".pdf", ".doc", ".docx", ".xlsx", ".png", ".jpg" };
-                var fileExtension = Path.GetExtension(file.FileName).ToLower();
-
-                if (!allowedExtensions.Contains(fileExtension))
-                {
-                    return BadRequest(new { status = 0, Message = "Chỉ được upload file tài liệu (pdf, doc, docx, xlsx, png, jpg)" });
-                }
-
-                //string uploadsFolder = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "uploads");
-                string uploadsFolder = Path.Combine("\\\\192.168.1.190\\Software\\Test", "BBBG");
-                if (!Directory.Exists(uploadsFolder))
-                {
-                    Directory.CreateDirectory(uploadsFolder);
-                }
-
-                string uniqueFileName = Guid.NewGuid().ToString() + fileExtension;
-                string fullPath = Path.Combine(uploadsFolder, uniqueFileName);
-
-                using (var stream = new FileStream(fullPath, FileMode.Create))
-                {
-                    file.CopyTo(stream);
-                }
-
-                return Ok(new
-                {
-                    status = 1,
-                    FileName = file.FileName,             // tên gốc
-                    FilePath = $"/uploads/{uniqueFileName}", // đường dẫn public
-                    FileNameUnique = uniqueFileName       // giữ lại để sau này insert DB
-                });
-            }
-            catch (Exception ex)
-            {
-                return StatusCode(500, new { status = 0, Message = $"Upload file thất bại! ({ex.Message})" });
-            }
-        }
-
-        private void CopyRowStyle(IXLWorksheet sheet, int sourceRow, int targetRow)
-        {
-            var lastCol = sheet.LastColumnUsed().ColumnNumber();
-
-            for (int col = 1; col <= lastCol; col++)
-            {
-                sheet.Cell(targetRow, col).Style = sheet.Cell(sourceRow, col).Style;
-            }
-        }
-
-        [HttpGet("export-excel/{id}")]
-        public IActionResult ExportExcel(int id)
-        {
-            try
-            {
-                DateTime start = new DateTime(2000, 1, 1);
-                DateTime end = new DateTime(2099, 12, 31);
-                List<List<dynamic>> handoverList = SQLHelper<dynamic>.ProcedureToList(
-                    "spGetHandover",
-                    new string[] { "@DateStart", "@DateEnd", "@DepartmentID", "@EmployeeID", "@KeyWord" },
-                    new object[] { TextUtils.MinDate, TextUtils.MaxDate, 0, 0, "" }
-                );
-                var handoverData = SQLHelper<dynamic>.GetListData(handoverList, 0).FirstOrDefault(h => h.ID == id);
-                int leaderID = handoverData?.LeaderID ?? 0;
-                int employeeID = handoverData?.EmployeeID ?? 0;
-                // Lấy chi tiết biên bản (danh sách người nhận bàn giao)
-                List<List<dynamic>> detailReceiverList = SQLHelper<dynamic>.ProcedureToList(
-                    "spGetHandoverReceiver",
-                    new string[] { "@HandoverID" },
-                    new object[] { id }
-                );
-                //Lấy danh sách công việc bàn giao
-                List<List<dynamic>> detailWorkList = SQLHelper<dynamic>.ProcedureToList(
-                  "spGetHandoverWork",
-                  new string[] { "@HandoverID" },
-                  new object[] { id }
-                );
-                //Lấy danh sách tài sản cấp phát bàn giao
-                List<List<dynamic>> detailAssetList = SQLHelper<dynamic>.ProcedureToList(
-                  "spGetHandoverPersonalAsset",
-                  new string[] { "@EmployeeID", "@HandoverID" },
-                  new object[] { leaderID, id }
-                );
-                //  var handoverAssetManagement = SQLHelper<dynamic>.ProcedureToList("spGetHandoverPersonalAsset",
-                //    new string[] { "@EmployeeID", "@HandoverID" },
-                //    new object[] { request.EmployeeID, request.HandoverID }
-                //);
-                //Lấy danh sách tài sản kho bàn giao
-                List<List<dynamic>> detailAssetWarehouseList = SQLHelper<dynamic>.ProcedureToList(
-                  "spGetHandoverWarehouseAsset",
-                  new string[] { "@PageNumber", "@PageSize", "@DateBegin", "@DateEnd", "@ProductGroupID", "@ReturnStatus", "@FilterText", "@WareHouseID", "@EmployeeID" },
-                  new object[] { 1, 9999, new DateTime(2022, 9, 1), DateTime.Now, 0, 0, "", 1, employeeID }
-                );
-                //Lấy danh sách công nợ bàn giao
-                List<List<dynamic>> detailFinanceList = SQLHelper<dynamic>.ProcedureToList(
-                  "spGetHandoverFinances",
-                  new string[] { "@HandoverID" },
-                  new object[] { id }
-                );
-                //Lấy danh sách nhân viên trực thuộc bàn giao
-                List<List<dynamic>> detailSubList = SQLHelper<dynamic>.ProcedureToList(
-                  "spGetHandoverSubordinates",
-                  new string[] { "@LeaderID" },
-                  new object[] { leaderID }
-                );
-                //Lấy danh sách tài sản cá nhân bàn giao
-                List<List<dynamic>> detailPersonalAssetList = SQLHelper<dynamic>.ProcedureToList(
-                  "spGetHandoverAssetPerson",
-                  new string[] { "@HandoverID" },
-                  new object[] { id }
-                );
-                //Lấy danh Người duyệt bàn giao
-                List<List<dynamic>> detailApproveList = SQLHelper<dynamic>.ProcedureToList(
-                  "spGetHandoverApprove",
-                  new string[] { "@HandoverID" },
-                  new object[] { id }
-                );
-                var receiverData = SQLHelper<dynamic>.GetListData(detailReceiverList, 0);
-                var workData = SQLHelper<dynamic>.GetListData(detailWorkList, 0);
-                var assetData = SQLHelper<dynamic>.GetListData(detailAssetList, 0);
-                var warehouseAssetData = SQLHelper<dynamic>.GetListData(detailAssetWarehouseList, 0);
-                var financeData = SQLHelper<dynamic>.GetListData(detailFinanceList, 0);
-                var subData = SQLHelper<dynamic>.GetListData(detailSubList, 0);
-                var approveData = SQLHelper<dynamic>.GetListData(detailApproveList, 0);
-                var personalAssetData = SQLHelper<dynamic>.GetListData(detailPersonalAssetList, 0);
-
-                ExcelPackage.License.SetNonCommercialOrganization("RTC");
-
-                //string templatePath = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "templates", "BienBanBanGiao.xlsx");
-
-                var templateFolder = _configuration.GetValue<string>("PathTemplate");
-
-                if (string.IsNullOrWhiteSpace(templateFolder))
-                    return BadRequest(ApiResponseFactory.Fail(null, $"Không tìm thấy đường dẫn thư mục {templateFolder} trên sever!!"));
-                // Đường dẫn mẫu Excel
-                //    string templatePath = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "templates", "BanGiaoNghiViec.xlsx");
-                string templatePath = Path.Combine(templateFolder, "ExportExcel", "HandoverTemplate.xlsx");
-                if (!System.IO.File.Exists(templatePath))
-                    return BadRequest(ApiResponseFactory.Fail(null, "Không tìm thấy File mẫu!"));
-                if (!System.IO.File.Exists(templatePath))
-                {
-                    throw new Exception("Không tìm thấy file mẫu Excel");
-                }
-
-                // Mở file Excel mẫu
-                using (var workbook = new XLWorkbook(templatePath))
-                {
-                    // Sử dụng sheet đúng theo template: "Sheet3 (2)"
-                    var sheet = workbook.Worksheet("Sheet1");
-
-                    // Điền thông tin header
-                    DateTime dateMinutes = handoverData.HandoverDate != null ? Convert.ToDateTime(handoverData.HandoverDate) : DateTime.Now;
-                    DateTime startWorkingDate = handoverData.StartWorking != null ? Convert.ToDateTime(handoverData.StartWorking) : DateTime.MinValue;
-
-                    // Row 1: Điền mã biên bản vào L1 (hoặc K1/L1 dựa trên template, giả sử L1)
-                    if (!string.IsNullOrEmpty(handoverData.Code?.ToString()))
-                    {
-                        var code = handoverData.Code.ToString();
-                        // Thêm tiền tố nếu chưa có
-                        if (!code.StartsWith("MB/RTC"))
-                            code = $"MB/RTC-{code}";
-
-                        sheet.Cell("J1").Value = code;
-                    }
-
-                    // Row 2: Điền ngày tháng năm vào A2 (xây dựng chuỗi đầy đủ)
-                    string dateStr = $"Hôm nay ngày {dateMinutes.Day} / {dateMinutes.Month} / {dateMinutes.Year} , tại Văn phòng Công ty Cổ phần RTC Technology Việt Nam. Chúng tôi gồm:";
-                    sheet.Cell("A2").Value = dateStr;
-
-                    // I. Bên bàn giao
-                    // Row 4: Họ và tên ở A4 (thay thế phần dots)
-                    string fullName = handoverData.FullName?.ToString() ?? "";
-                    sheet.Cell("A4").Value = $"Họ và tên: {fullName}";
-
-                    // Chức vụ ở G4 (sau "Chức vụ: " ở F4)
-                    string tenChucVu = handoverData.TenChucVu?.ToString() ?? "";
-                    sheet.Cell("F4").Value = tenChucVu;
-
-                    // Row 5: Bộ phận ở A5 (thay thế phần dots)
-                    string departmentName = handoverData.DepartmentName?.ToString() ?? "";
-                    sheet.Cell("A5").Value = $"Bộ phận: {departmentName}";
-
-                    // Ngày vào làm việc ở F5 (thay thế placeholders)
-                    if (startWorkingDate != DateTime.MinValue)
-                    {
-                        string startDateStr = $"Ngày vào làm việc: {startWorkingDate.Day} / {startWorkingDate.Month} / {startWorkingDate.Year}";
-                        sheet.Cell("E5").Value = startDateStr;
-                    }
-                    int receiverStartRow = 8;
-                    int maxTemplateRows = 3; // template có sẵn 3 dòng Bộ phận
-
-                    for (int i = 0; i < maxTemplateRows; i++)
-                    {
-                        int rowIdx = receiverStartRow + i;
-
-                        if (i < receiverData.Count)
-                        {
-                            var rowData = (IDictionary<string, object>)receiverData[i];
-
-                            string receiverFullName =
-                                rowData.ContainsKey("FullName")
-                                    ? rowData["FullName"]?.ToString() ?? ""
-                                    : "";
-
-                            string receiverDepartment =
-                                rowData.ContainsKey("Name")
-                                    ? rowData["Name"]?.ToString() ?? ""
-                                    : "";
-
-                            // Họ và tên (chỉ dòng đầu có số thứ tự)
-                            sheet.Cell(rowIdx, 1).Value =
-                                i == 0
-                                    ? $"1. Họ và tên: {receiverFullName}"
-                                    : $"{i + 1}. Họ và tên: {receiverFullName}";
-
-                            // Bộ phận
-                            sheet.Cell(rowIdx, 6).Value =
-                                $"Bộ phận: {receiverDepartment}";
-
-                            // Style
-                            for (int j = 1; j <= 12; j++)
-                            {
-                                var cell = sheet.Cell(rowIdx, j);
-                                cell.Style.Alignment.WrapText = true;
-                                cell.Style.Alignment.Vertical = XLAlignmentVerticalValues.Center;
-                                cell.Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Left;
-                            }
-                        }
-                        else
-                        {
-                            // 🔥 CLEAR DÒNG THỪA (BỘ PHẬN RỖNG)
-                            sheet.Row(rowIdx).Clear();
-                        }
-                    }
-
-                    // =========================
-                    // III.1 CÔNG VIỆC BÀN GIAO (FULL WRAP + HEIGHT)
-                    // =========================
-                    int workStartRow = 16;
-                    int maxWorkRows = 5;
-
-                    if (workData.Count > maxWorkRows)
-                    {
-                        sheet.Row(workStartRow + maxWorkRows - 1)
-                             .InsertRowsBelow(workData.Count - maxWorkRows);
-                    }
-
-                    for (int i = 0; i < workData.Count; i++)
-                    {
-                        var rowData = (IDictionary<string, object>)workData[i];
-                        int rowIdx = workStartRow + i;
-
-                        sheet.Cell(rowIdx, 1).Value = i + 1;
-
-                        // =========================
-                        // NỘI DUNG CÔNG VIỆC (B)
-                        // =========================
-                        string contentWork =
-                            rowData.ContainsKey("ContentWork")
-                                ? rowData["ContentWork"]?.ToString() ?? ""
-                                : "";
-
-                        var contentCell = sheet.Cell(rowIdx, 2);
-                        contentCell.Value = contentWork;
-
-                        var contentRange = contentCell.MergedRange()
-                            ?? sheet.Range(rowIdx, 2, rowIdx, 2);
-
-                        contentRange.Style.Alignment.WrapText = true;
-                        contentRange.Style.Alignment.Vertical = XLAlignmentVerticalValues.Top;
-                        contentRange.Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Left;
-
-                        int contentLines =
-                            (int)Math.Ceiling((double)Math.Max(contentWork.Length, 1) / 40);
-
-                        // =========================
-                        // TÌNH TRẠNG
-                        // =========================
-                        sheet.Cell(rowIdx, 4).Value =
-                            rowData.ContainsKey("StatusText") ? rowData["StatusText"]?.ToString() ?? "" : "";
-
-                        // =========================
-                        // TẦN SUẤT
-                        // =========================
-                        sheet.Cell(rowIdx, 6).Value =
-                            rowData.ContainsKey("Frequency") ? rowData["Frequency"]?.ToString() ?? "" : "";
-
-                        // =========================
-                        // FILE CỨNG (G)
-                        // =========================
-                        string fileCung =
-                            rowData.ContainsKey("FileCung")
-                                ? rowData["FileCung"]?.ToString() ?? ""
-                                : "";
-
-                        var fileCungCell = sheet.Cell(rowIdx, 7);
-                        fileCungCell.Value = fileCung;
-
-                        var fileCungRange = fileCungCell.MergedRange()
-                            ?? sheet.Range(rowIdx, 7, rowIdx, 7);
-
-                        fileCungRange.Style.Alignment.WrapText = true;
-                        fileCungRange.Style.Alignment.Vertical = XLAlignmentVerticalValues.Top;
-                        fileCungRange.Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Left;
-
-                        int fileCungLines =
-                            (int)Math.Ceiling((double)Math.Max(fileCung.Length, 1) / 25);
-
-                        // =========================
-                        // FILE MỀM (H)
-                        // =========================
-                        string fileMem =
-                            rowData.ContainsKey("FileName")
-                                ? rowData["FileName"]?.ToString() ?? ""
-                                : "";
-
-                        var fileMemCell = sheet.Cell(rowIdx, 8);
-                        fileMemCell.Value = fileMem;
-
-                        var fileMemRange = fileMemCell.MergedRange()
-                            ?? sheet.Range(rowIdx, 8, rowIdx, 8);
-
-                        fileMemRange.Style.Alignment.WrapText = true;
-                        fileMemRange.Style.Alignment.Vertical = XLAlignmentVerticalValues.Top;
-                        fileMemRange.Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Left;
-
-                        int fileMemLines =
-                            (int)Math.Ceiling((double)Math.Max(fileMem.Length, 1) / 25);
-
-                        // =========================
-                        // NGƯỜI NHẬN (I)
-                        // =========================
-                        string receiverName =
-       rowData.ContainsKey("FullName")
-           ? rowData["FullName"]?.ToString() ?? ""
-           : "";
-
-                        // Ép xuống dòng nếu tên dài (>= 3 từ)
-                        if (!string.IsNullOrWhiteSpace(receiverName))
-                        {
-                            var parts = receiverName.Split(' ', StringSplitOptions.RemoveEmptyEntries);
-                            if (parts.Length >= 3)
-                            {
-                                receiverName =
-                                    string.Join(" ", parts.Take(2)) +
-                                    Environment.NewLine +
-                                    string.Join(" ", parts.Skip(2));
-                            }
-                        }
-
-                        var receiverCell = sheet.Cell(rowIdx, 9);
-                        receiverCell.Value = receiverName;
-
-                        var receiverRange = receiverCell.MergedRange()
-                            ?? sheet.Range(rowIdx, 9, rowIdx, 9);
-
-                        receiverRange.Style.Alignment.WrapText = true;
-                        receiverRange.Style.Alignment.Vertical = XLAlignmentVerticalValues.Top;
-                        receiverRange.Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Left;
-
-                        // Số dòng thực tế để tính height
-                        int receiverLineCount = receiverName.Split('\n').Length;
-
-                        int finalLines = Math.Max(
-        Math.Max(contentLines, receiverLineCount),
-        Math.Max(fileCungLines, fileMemLines)
-    );
-
-                        sheet.Row(rowIdx).Height = Math.Max(18, finalLines * 18);
-                    }
-
-                    // Clear thừa
-                    //for (int i = workData.Count; i < maxWorkRows; i++)
-                    //{
-                    //    int rowIdx = workStartRow + i;
-                    //    for (int j = 1; j <= 12; j++) sheet.Cell(rowIdx, j).Clear();
-                    //}
-
-                    // =========================
-                    // III.2 TÀI SẢN HCNS (FIX AUTO WRAP + HEIGHT)
-                    // =========================
-                    int assetStartRow = 23;
-                    int maxAssetRows = 5;
-                    int totalAssetCount = assetData.Count + (personalAssetData?.Count ?? 0);
-                    int assetRowCount = totalAssetCount > 0 ? totalAssetCount : maxAssetRows;
-                    int templateRow = assetStartRow + maxAssetRows - 1;
-
-                    // Lưu template row (dòng cuối của vùng mẫu tài sản)
-                    var templateRange = sheet.Range(
-                        templateRow,
-                        1,
-                        templateRow,
-                        sheet.LastColumnUsed().ColumnNumber()
-                    );
-
-                    if (totalAssetCount > maxAssetRows)
-                    {
-                        int rowsToInsert = totalAssetCount - maxAssetRows;
-                        sheet.Row(templateRow).InsertRowsBelow(rowsToInsert);
-
-                        for (int i = 1; i <= rowsToInsert; i++)
-                        {
-                            templateRange.CopyTo(
-                                sheet.Range(
-                                    templateRow + i,
-                                    1,
-                                    templateRow + i,
-                                    sheet.LastColumnUsed().ColumnNumber()
-                                )
-                            );
-                        }
-                    }
-
-                    // --- Xuất tài sản HCNS ---
-                    for (int i = 0; i < assetData.Count; i++)
-                    {
-                        var rowData = (IDictionary<string, object>)assetData[i];
-                        int rowIdx = assetStartRow + i;
-
-                        string assetName = rowData.ContainsKey("TSAssetName") ? rowData["TSAssetName"]?.ToString() ?? "" : "";
-                        sheet.Cell(rowIdx, 1).Value = i + 1;
-                        sheet.Cell(rowIdx, 2).Value = assetName;
-                        sheet.Cell(rowIdx, 4).Value = rowData.ContainsKey("TSCodeNCC") ? rowData["TSCodeNCC"]?.ToString() ?? "" : "";
-                        sheet.Cell(rowIdx, 5).Value = rowData.ContainsKey("Quantity") ? rowData["Quantity"]?.ToString() ?? "1" : "1";
-                        sheet.Cell(rowIdx, 6).Value = rowData.ContainsKey("UnitName") ? rowData["UnitName"]?.ToString() ?? "" : "";
-                        sheet.Cell(rowIdx, 7).Value = rowData.ContainsKey("Status") ? rowData["Status"]?.ToString() ?? "" : "";
-                        string receiverName =
-     rowData.ContainsKey("ReceiverName")
-         ? rowData["ReceiverName"]?.ToString() ?? ""
-         : "";
-
-                        // Ép xuống dòng nếu tên dài (>= 3 từ)
-                        if (!string.IsNullOrWhiteSpace(receiverName))
-                        {
-                            var parts = receiverName.Split(' ', StringSplitOptions.RemoveEmptyEntries);
-                            if (parts.Length >= 3)
-                            {
-                                receiverName =
-                                    string.Join(" ", parts.Take(2)) +
-                                    "\n" +
-                                    string.Join(" ", parts.Skip(2));
-                            }
-                        }
-
-                        var receiverCell = sheet.Cell(rowIdx, 10);
-                        receiverCell.Value = receiverName;
-                        receiverCell.Style.Alignment.WrapText = true;
-                        receiverCell.Style.Alignment.Vertical = XLAlignmentVerticalValues.Top;
-                        receiverCell.Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Left;
-
-                        // 🔥 nếu row này đã có height từ cột khác → chỉ lấy MAX
-                        int receiverLines = Math.Max(1, receiverName.Split('\n').Length);
-                        sheet.Row(rowIdx).Height = Math.Max(sheet.Row(rowIdx).Height, receiverLines * 18);
-
-                        sheet.Cell(rowIdx, 11).Value = rowData.ContainsKey("IsSigned") && rowData["IsSigned"] is bool signed ? (signed ? "✓" : "") : "";
-
-                        // Format merge cell height
-                        int charPerLine = 35;
-                        sheet.Row(rowIdx).Height = 0;
-
-                        // Bắt buộc phải bật WrapText cho các cell có thể xuống dòng
-                        sheet.Cell(rowIdx, 2).Style.Alignment.WrapText = true;   // Tên tài sản
-                        sheet.Cell(rowIdx, 10).Style.Alignment.WrapText = true;  // Người nhận
-
-                        // Excel tự tính chiều cao chính xác
-                        sheet.Row(rowIdx).AdjustToContents();
-                    }
-
-                    // --- Xuất tài sản cá nhân ---
-                    int currentPersonalRowIdx = assetStartRow + assetData.Count;
-                    for (int i = 0; i < (personalAssetData?.Count ?? 0); i++)
-                    {
-                        var rowData = (IDictionary<string, object>)personalAssetData[i];
-                        int rowIdx = currentPersonalRowIdx + i;
-
-                        string name = rowData.ContainsKey("Name") ? rowData["Name"]?.ToString() ?? "" : "";
-                        sheet.Cell(rowIdx, 1).Value = assetData.Count + i + 1;
-                        sheet.Cell(rowIdx, 2).Value = name;
-                        sheet.Cell(rowIdx, 4).Value = rowData.ContainsKey("Code") ? rowData["Code"]?.ToString() ?? "" : "";
-                        sheet.Cell(rowIdx, 5).Value = rowData.ContainsKey("Quantity") ? rowData["Quantity"]?.ToString() ?? "1" : "1";
-                        sheet.Cell(rowIdx, 6).Value = rowData.ContainsKey("Unit") ? rowData["Unit"]?.ToString() ?? "" : "";
-
-                        var statusVal = rowData.ContainsKey("Status") ? rowData["Status"] : null;
-                        string statusText = "";
-                        if (statusVal != null)
-                        {
-                            if (statusVal.ToString() == "1") statusText = "Đang sử dụng";
-                            else if (statusVal.ToString() == "2") statusText = "Chưa sử dụng";
-                            else statusText = statusVal.ToString();
-                        }
-                        sheet.Cell(rowIdx, 7).Value = statusText;
-                        //   sheet.Cell(rowIdx, 10).Value = rowData.ContainsKey("ReceiverName") ? rowData["ReceiverName"]?.ToString() ?? "" : "";
-                        string receiverName = rowData.ContainsKey("ReceiverName") ? rowData["ReceiverName"]?.ToString() ?? "" : "";
-                        var receiverCell = sheet.Cell(rowIdx, 10);
-                        receiverCell.Value = receiverName;
-                        receiverCell.Style.Alignment.WrapText = true;
-                        receiverCell.Style.Alignment.Vertical = XLAlignmentVerticalValues.Top;
-                        receiverCell.Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Left;
-
-                        sheet.Cell(rowIdx, 11).Value = rowData.ContainsKey("IsSigned") && rowData["IsSigned"] is bool signed ? (signed ? "✓" : "") : "";
-
-                        // 🔥 nếu row này đã có height từ cột khác → chỉ lấy MAX
-                        int nameCharPerLine = 35;
-                        int nameLines =
-                            (int)Math.Ceiling((double)Math.Max(name.Length, 1) / nameCharPerLine);
-
-                        // Người nhận (cột hẹp + tiếng Việt)
-                        int receiverCharPerLine = 6;
-                        int receiverLines =
-                            (int)Math.Ceiling((double)Math.Max(receiverName.Length, 1) / receiverCharPerLine);
-
-                        // ===== HEIGHT CUỐI CÙNG =====
-                        int finalLines = Math.Max(nameLines, receiverLines);
-                        sheet.Row(rowIdx).Height = Math.Max(18, finalLines * 18);
-                    }
-
-                    int assetEndRow = assetStartRow + totalAssetCount + 4;
-
-                    // Clear thừa (nếu ít hơn, clear data cells but keep fixed labels)
-                    //for (int i = assetData.Count; i < maxAssetRows; i++)
-                    //{
-                    //    int rowIdx = assetStartRow + i;
-                    //    // Clear data columns: D,E,F,G,J,K but keep A,B if fixed
-                    //    sheet.Cell(rowIdx, 4).Clear();
-                    //    sheet.Cell(rowIdx, 5).Clear();
-                    //    sheet.Cell(rowIdx, 6).Clear();
-                    //    sheet.Cell(rowIdx, 7).Clear();
-                    //    sheet.Cell(rowIdx, 10).Clear();
-                    //    sheet.Cell(rowIdx, 11).Clear();
-                    //}
-
-                    // III.3 Tài sản kho (rows 38-42+)
-                    int warehouseStartRow = assetEndRow - 2; // chừa 1 dòng trống
-
-                    int maxWarehouseRows = 5;
-
-                    if (warehouseAssetData.Count > maxWarehouseRows)
-                    {
-                        sheet.Row(warehouseStartRow + maxWarehouseRows - 1).InsertRowsBelow(warehouseAssetData.Count - maxWarehouseRows);
-                    }
-
-                    for (int i = 0; i < warehouseAssetData.Count; i++)
-                    {
-                        var rowData = (IDictionary<string, object>)warehouseAssetData[i];
-                        int rowIdx = warehouseStartRow + i;
-
-                        // A: STT, B: Tên tài sản, D: SL, E: Đơn vị tính, F: Tình trạng, I: Người nhận, J: Ký nhận
-                        sheet.Cell(rowIdx, 1).Value = i + 1;
-                        sheet.Cell(rowIdx, 2).Value = rowData.ContainsKey("ProductName") ? rowData["ProductName"]?.ToString() ?? "" : "";
-                        sheet.Cell(rowIdx, 4).Value = rowData.ContainsKey("BorrowQty") ? rowData["BorrowQty"]?.ToString() ?? "" : "";
-                        sheet.Cell(rowIdx, 5).Value = rowData.ContainsKey("Unit") ? rowData["Unit"]?.ToString() ?? "" : "";
-                        // F–H: TÌNH TRẠNG (MERGED)
-                        var statusCell = sheet.Cell(rowIdx, 6); // TOP-LEFT của merge
-                        statusCell.Value =
-                            rowData.ContainsKey("ReturnedStatusText")
-                                ? rowData["ReturnedStatusText"]?.ToString() ?? ""
-                                : "";
-
-                        statusCell.Style.Alignment.WrapText = true;
-                        statusCell.Style.Alignment.Vertical = XLAlignmentVerticalValues.Top;
-                        statusCell.Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Left;
-                        //  sheet.Cell(rowIdx, 9).Value = rowData.ContainsKey("ReceiverName") ? rowData["ReceiverName"]?.ToString() ?? "" : "";
-                        // I: NGƯỜI NHẬN (cột 9)
-                        string receiverName =
-                            rowData.ContainsKey("ReceiverName")
-                                ? rowData["ReceiverName"]?.ToString() ?? ""
-                                : "";
-
-                        var receiverCell = sheet.Cell(rowIdx, 9);
-                        receiverCell.Value = receiverName;
-                        receiverCell.Style.Alignment.WrapText = true;
-                        receiverCell.Style.Alignment.Vertical = XLAlignmentVerticalValues.Top;
-                        receiverCell.Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Left;
-
-                        // J: KÝ NHẬN (cột 10)
-                        sheet.Cell(rowIdx, 10).Value =
-                            rowData.ContainsKey("IsSigned") && rowData["IsSigned"] is bool signed
-                                ? (signed ? "✓" : "✗")
-                                : "";
-                        int receiverCharPerLine = 6; // cột hẹp + tiếng Việt
-                        int receiverLines =
-                            (int)Math.Ceiling((double)Math.Max(receiverName.Length, 1) / receiverCharPerLine);
-
-                        sheet.Row(rowIdx).Height =
-                            Math.Max(sheet.Row(rowIdx).Height, receiverLines * 18);
-
-                        // Căn chỉnh
-                        for (int j = 1; j <= 12; j++)
-                        {
-                            var cell = sheet.Cell(rowIdx, j);
-                            if (cell.Value.IsText)
-                            {
-                                cell.Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Left;
-                                cell.Style.Alignment.WrapText = true;
-                            }
-                        }
-                    }
-
-                    // Clear thừa
-                    //for (int i = warehouseAssetData.Count; i < maxWarehouseRows; i++)
-                    //{
-                    //    int rowIdx = warehouseStartRow + i;
-                    //    for (int j = 1; j <= 12; j++) sheet.Cell(rowIdx, j).Clear();
-                    //}
-
-                    // III.4 Tài chính (rows 45-49+)
-                    int warehouseRowCount = warehouseAssetData.Count > 0 ? warehouseAssetData.Count : maxWarehouseRows;
-                    int warehouseEndRow = warehouseStartRow + warehouseRowCount;
-
-                    int financeStartRow = warehouseEndRow + 2;
-                    int maxFinanceRows = 5;
-
-                    int currentRow = sheet.LastRowUsed().RowNumber();
-                    if (financeData.Count > maxFinanceRows)
-                    {
-                        sheet.Row(financeStartRow + maxFinanceRows - 1).InsertRowsBelow(financeData.Count - maxFinanceRows);
-                    }
-
-                    for (int i = 0; i < financeData.Count; i++)
-                    {
-                        var rowData = (IDictionary<string, object>)financeData[i];
-                        int rowIdx = financeStartRow + i;
-
-                        // A: STT, B: Tồn tại về tài chính, F: Kế toán theo dõi, I: Kế toán trưởng
-                        sheet.Cell(rowIdx, 1).Value = i + 1;
-                        sheet.Cell(rowIdx, 2).Value = rowData.ContainsKey("DebtType") ? rowData["DebtType"]?.ToString() ?? "" : "";
-                        sheet.Cell(rowIdx, 6).Value = rowData.ContainsKey("FullName") ? rowData["FullName"]?.ToString() ?? "" : "";
-                        sheet.Cell(rowIdx, 9).Value = rowData.ContainsKey("Accountant") ? rowData["Accountant"]?.ToString() ?? "" : "";
-                        // Căn chỉnh
-                        for (int j = 1; j <= 12; j++)
-                        {
-                            var cell = sheet.Cell(rowIdx, j);
-                            if (cell.Value.IsText)
-                            {
-                                cell.Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Left;
-                                cell.Style.Alignment.WrapText = true;
-                            }
-                        }
-                    }
-
-                    // Clear thừa
-                    //for (int i = financeData.Count; i < maxFinanceRows; i++)
-                    //{
-                    //    int rowIdx = financeStartRow + i;
-                    //    for (int j = 1; j <= 12; j++) sheet.Cell(rowIdx, j).Clear();
-                    //}
-
-                    // III.5 Nhân sự trực thuộc (rows 51-54+)
-                    int subStartRow = currentRow + 3;
-                    int maxSubRows = 4;
-
-                    if (subData.Count > maxSubRows)
-                    {
-                        sheet.Row(subStartRow + maxSubRows - 1).InsertRowsBelow(subData.Count - maxSubRows);
-                    }
-
-                    for (int i = 0; i < subData.Count; i++)
-                    {
-                        var rowData = (IDictionary<string, object>)subData[i];
-                        int rowIdx = subStartRow + i;
-
-                        // A: STT, B: Vị trí, D: SL, E: Người đảm nhận, G: Người nhận bàn giao, I: Ký nhận
-                        sheet.Cell(rowIdx, 1).Value = i + 1;
-                        sheet.Cell(rowIdx, 2).Value = rowData.ContainsKey("SubordinateFullName") ? rowData["SubordinateFullName"]?.ToString() ?? "" : "";
-                        sheet.Cell(rowIdx, 4).Value = rowData.ContainsKey("Name") ? rowData["Name"]?.ToString() ?? "" : "";
-                        sheet.Cell(rowIdx, 5).Value = rowData.ContainsKey("AssigneeFullName") ? rowData["AssigneeFullName"]?.ToString() ?? "" : "";
-                        sheet.Cell(rowIdx, 7).Value = rowData.ContainsKey("ReceiverFullName") ? rowData["ReceiverFullName"]?.ToString() ?? "" : "";
-                        sheet.Cell(rowIdx, 9).Value = rowData.ContainsKey("KyNhan") ? rowData["KyNhan"]?.ToString() ?? "" : "";
-
-                        // Căn chỉnh
-                        for (int j = 1; j <= 12; j++)
-                        {
-                            var cell = sheet.Cell(rowIdx, j);
-                            if (cell.Value.IsText)
-                            {
-                                cell.Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Left;
-                                cell.Style.Alignment.WrapText = true;
-                            }
-                        }
-                    }
-
-                    // Clear thừa
-                    //for (int i = subData.Count; i < maxSubRows; i++)
-                    //{
-                    //    int rowIdx = subStartRow + i;
-                    //    for (int j = 1; j <= 12; j++) sheet.Cell(rowIdx, j).Clear();
-                    //}
-
-                    // Phần chữ ký (row 57 dưới labels row 56)
-                    // B57: Tên người bàn giao (ghi rõ họ tên)
-                    // Người bàn giao ở B50
-                    //sheet.Cell("B52").Value = handoverData.FullName?.ToString() ?? "";
-                    // =========================
-                    // MERGE + ĐIỀN CHỮ KÝ
-                    // =========================
-                    int signRow = currentRow + 4;
-
-                    //if (approveData != null && approveData.Any())
-                    //{
-                    //    // Mặc định slot 1 là người bàn giao từ master
-                    //    var giverSlot = sheet.Range(signRow, 2, signRow, 3);
-                    //    giverSlot.Value = handoverData.FullName?.ToString() ?? "";
-                    //    giverSlot.Style.Font.Bold = true;
-                    //    giverSlot.Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Center;
-
-                    //    foreach (var item in approveData)
-                    //    {
-                    //        var dict = (IDictionary<string, object>)item;
-
-                    //        int approveLevel = -1;
-                    //        if (dict.ContainsKey("ApproveLevel") && dict["ApproveLevel"] != null && Convert.ToInt32(dict["ApproveLevel"]) > 0)
-                    //            approveLevel = Convert.ToInt32(dict["ApproveLevel"]);
-                    //        else if (dict.ContainsKey("RoleName") && dict["RoleName"] != null)
-                    //        {
-                    //            string role = dict["RoleName"].ToString().ToLower();
-                    //            if (role.Contains("bàn giao")) approveLevel = 1;
-                    //            else if (role.Contains("bộ phận") || role.Contains("tbp")) approveLevel = 2;
-                    //            else if (role.Contains("hcns") || role.Contains("nhân sự") || role.Contains("giám đốc")) approveLevel = 3;
-                    //        }
-
-                    //        if (approveLevel == -1) continue;
-
-                    //        string employeeName =
-                    //            dict.ContainsKey("EmployeeName")
-                    //                ? dict["EmployeeName"]?.ToString() ?? ""
-                    //                : (dict.ContainsKey("FullName") ? dict["FullName"]?.ToString() ?? "" : "");
-
-                    //        if (string.IsNullOrWhiteSpace(employeeName) && approveLevel != 1) continue;
-
-                    //        var approveMap = new Dictionary<int, IXLRange>
-                    //        {
-                    //            { 1, sheet.Range(signRow, 2, signRow, 3) },
-                    //            { 2, sheet.Range(signRow, 5, signRow, 7) },
-                    //            { 3, sheet.Range(signRow, 9, signRow, 10) }
-                    //        };
-
-                    //        if (!approveMap.ContainsKey(approveLevel)) continue;
-                    //        var range = approveMap[approveLevel];
-
-                    //        // Chỉ ghi đè nếu có tên hợp lệ
-                    //        if (!string.IsNullOrWhiteSpace(employeeName)) range.Value = employeeName;
-
-                    //        range.Style.Font.Bold = true;
-                    //        range.Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Center;
-                    //        range.Style.Alignment.Vertical = XLAlignmentVerticalValues.Center;
-                    //        range.Style.Alignment.WrapText = true;
-
-                    //        int nameLineCount = employeeName.Split(' ').Length >= 3 ? 2 : 1;
-                    //        sheet.Row(signRow).Height = Math.Max(sheet.Row(signRow).Height, nameLineCount * 22);
-                    //    }
-                    //}
-
-                    // Lưu file vào stream
-                    using (var stream = new MemoryStream())
-                    {
-                        workbook.SaveAs(stream);
-                        stream.Position = 0;
-                        var fileName = $"{handoverData.Code?.ToString() ?? "BanGiaoNghiViec"}_{DateTime.Now:yyyy-MM-dd}.xlsx";
-                        return File(stream.ToArray(), "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", fileName);
-                    }
-                }
+                return Ok(ApiResponseFactory.Success(SQLHelper<object>.GetListData(datas, 0), ""));
             }
             catch (Exception ex)
             {
@@ -1444,164 +75,253 @@ namespace RERPAPI.Controllers
             }
         }
 
-        [HttpPost("approved")]
-        public async Task<IActionResult> HandoverApproved([FromBody] List<HandoverApprove> actionApproveds)
+
+        // Lấy chi tiết toàn bộ dữ liệu của một biên bản bàn giao (Unified Detail API)
+        [RequiresPermission("N34")]
+        [HttpGet("get-detail")]
+        public async Task<IActionResult> GetDetail(int handoverId)
         {
             try
             {
-                var claims = User.Claims.ToDictionary(x => x.Type, x => x.Value);
-                CurrentUser currentUser = ObjectMapper.GetCurrentUser(claims);
+                var master = _handoverRepo.GetByID(handoverId);
+                var datas = SQLHelper<object>.ProcedureToList(" ",
+                    new string[] { "@HandoverID" }, new object[] { handoverId });
 
-                if (actionApproveds == null || !actionApproveds.Any())
-                    return BadRequest(ApiResponseFactory.Fail(null, "Không có dữ liệu duyệt."));
-
-                var handoverId = actionApproveds.First().HandoverID;
-                if (handoverId == null || handoverId == 0)
-                    return BadRequest(ApiResponseFactory.Fail(null, "Thiếu HandoverID."));
-
-                var approves = _approveRepo.GetAll(x => x.HandoverID == handoverId)
-                                           .OrderBy(x => x.STT)
-                                           .ToList();
-
-                if (!approves.Any())
+                var result = new
                 {
-                    for (int i = 1; i <= 3; i++)
-                    {
-                        var newApprove = new HandoverApprove
-                        {
-                            HandoverID = handoverId.Value,
-                            STT = i,
-                            ApproveLevel = i, // ApproveLevel 1,2,3
-                            ApproveStatus = 0,
-                            Note = "",
-                            CreatedBy = currentUser.LoginName,
-                            UpdatedBy = currentUser.LoginName
-                        };
-                        await _approveRepo.CreateAsync(newApprove);
-                        approves.Add(newApprove);
-                    }
-                }
-
-                // mapping STT → chức danh
-                string GetRoleTitle(int stt) => stt switch
-                {
-                    1 => "Người bàn giao",
-                    2 => "Trưởng bộ phận",
-                    3 => "Trưởng phòng HCNS",
-                    _ => $"Cấp STT {stt}"
+                    handover = master,
+                    receivers = SQLHelper<object>.GetListData(datas, 0),
+                    works = SQLHelper<object>.GetListData(datas, 1),
+                    warehouseAssets = SQLHelper<object>.GetListData(datas, 2),
+                    assetManagements = SQLHelper<object>.GetListData(datas, 3),
+                    finances = SQLHelper<object>.GetListData(datas, 4),
+                    personalAssets = SQLHelper<object>.GetListData(datas, 5),
+                    approves = SQLHelper<object>.GetListData(datas, 6)
                 };
 
-                var sortedActions = actionApproveds.OrderBy(x => x.STT).ToList();
-
-                foreach (var action in sortedActions)
-                {
-                    if (action.STT == null)
-                        return BadRequest(ApiResponseFactory.Fail(null, "Thiếu STT."));
-
-                    int currentSTT = action.STT.Value;
-                    int approveStatus = action.ApproveStatus ?? 0;
-
-                    if (approveStatus != 1 && approveStatus != 2)
-                        return BadRequest(ApiResponseFactory.Fail(null, "ApproveStatus không hợp lệ. (1: Duyệt, 2: Hủy duyệt)"));
-
-                    var currentApprove = approves.FirstOrDefault(x => x.STT == currentSTT);
-                    if (currentApprove == null)
-                        return NotFound(ApiResponseFactory.Fail(null, $"Không tìm thấy cấp duyệt STT={currentSTT}."));
-
-                    if (approveStatus == 1)
-                    {
-                        if (currentSTT > 1)
-                        {
-                            var prev = approves.FirstOrDefault(x => x.STT == currentSTT - 1);
-                            if (prev == null || prev.ApproveStatus != 1)
-                            {
-                                string prevRole = GetRoleTitle(currentSTT - 1);
-                                return BadRequest(ApiResponseFactory.Fail(null, $"{prevRole} chưa duyệt."));
-                            }
-                        }
-
-                        currentApprove.ApproveStatus = 1;
-                        currentApprove.Note = action.Note ?? "";
-                        currentApprove.UpdatedDate = DateTime.Now;
-
-                        currentApprove.ApproveDate = DateTime.Now;
-                        currentApprove.ApproverID = currentUser.EmployeeID;
-                        //currentApprove.RejectReason = action.RejectReason ?? "";
-
-                        await _approveRepo.UpdateAsync(currentApprove);
-                    }
-                    else if (approveStatus == 2)
-                    {
-                        var next = approves.FirstOrDefault(x => x.STT == currentSTT + 1);
-                        if (next != null && next.ApproveStatus == 1)
-                        {
-                            string nextRole = GetRoleTitle(currentSTT + 1);
-                            return BadRequest(ApiResponseFactory.Fail(null, $"Không thể hủy duyệt vì {nextRole} đã duyệt."));
-                        }
-
-                        currentApprove.ApproveStatus = 2;
-                        currentApprove.Note = action.Note ?? "";
-                        currentApprove.UpdatedDate = DateTime.Now;
-
-                        currentApprove.ApproveDate = DateTime.Now;
-                        currentApprove.ApproverID = currentUser.EmployeeID;
-                        currentApprove.RejectReason = action.RejectReason ?? "";
-                        await _approveRepo.UpdateAsync(currentApprove);
-                    }
-
-                    //var handover = _handoverRepo.GetByID(handoverId.Value);
-                    //if (handover != null)
-                    //{
-                    //    handover.IsApprove = approves.All(x => x.ApproveStatus == 1);
-                    //    handover.UpdatedDate = DateTime.Now;
-                    //    await _handoverRepo.UpdateAsync(handover);
-                    //}
-
-                    var handover = _handoverRepo.GetByID(handoverId.Value);
-                    if (handover != null)
-                    {
-                        bool isAllApproved = approves.All(x => x.ApproveStatus == 1);
-
-                        // nếu vừa chuyển sang trạng thái duyệt hết
-                        if (isAllApproved && handover.IsApprove != true)
-                        {
-                            await UpdateEmployeeForAssets(handoverId.Value);
-                        }
-
-                        handover.IsApprove = isAllApproved;
-                        handover.UpdatedDate = DateTime.Now;
-                        await _handoverRepo.UpdateAsync(handover);
-                    }
-                }
-
-                return Ok(ApiResponseFactory.Success(null, "Duyệt theo trình tự thành công!"));
+                return Ok(ApiResponseFactory.Success(result, ""));
             }
             catch (Exception ex)
             {
-                return StatusCode(500, ApiResponseFactory.Fail(null, ex.Message));
+                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
 
-        private async Task UpdateEmployeeForAssets(int handoverId)
+        // Lấy dữ liệu liên quan của nhân viên để lập biên bản mới
+        [RequiresPermission("N34")]
+        [HttpGet("get-related-assets")]
+        public IActionResult GetRelatedAssets(int employeeId)
         {
-            var assets = _handoverAssetManagementRepo.GetAll()
-                .Where(x => x.HandoverID == handoverId && x.IsDeleted == false)
-                .ToList();
-
-            foreach (var item in assets)
+            try
             {
-                if (item.EmployeeID == null) continue;
+                var datas = SQLHelper<object>.ProcedureToList("spGetHandoverRelatedDataByEmployee",
+                    new string[] { "@EmployeeID" }, new object[] { employeeId });
 
-                var asset = _tsAssetManagementRepo.GetAll()
-                    .FirstOrDefault(x => x.TSCodeNCC == item.TSAssetCode && x.IsDeleted == false);
-
-                if (asset != null)
+                var result = new
                 {
-                    asset.EmployeeID = item.EmployeeID;
-                    asset.UpdatedDate = DateTime.Now;
-                    await _tsAssetManagementRepo.UpdateAsync(asset);
-                }
+                    profile = SQLHelper<object>.GetListData(datas, 0),
+                    works = SQLHelper<object>.GetListData(datas, 1),
+                    warehouseAssets = SQLHelper<object>.GetListData(datas, 2),
+                    assetManagements = SQLHelper<object>.GetListData(datas, 3),
+                    finances = SQLHelper<object>.GetListData(datas, 4),
+
+                    approves = SQLHelper<object>.GetListData(datas, 5)
+                };
+
+                return Ok(ApiResponseFactory.Success(result, ""));
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
+
+        [RequiresPermission("N34")]
+        [HttpPost("save")]
+        public async Task<IActionResult> Save([FromBody] HandoverDTO dto)
+        {
+            try
+            {
+                if (dto == null || dto.Handover == null) return BadRequest(ApiResponseFactory.Fail(null, "Dữ liệu không hợp lệ"));
+
+                var handover = dto.Handover;
+                if (handover.ID > 0)
+                {
+                    await _handoverRepo.UpdateAsync(handover);
+                }
+                else
+                {
+                    handover.Code = await _handoverRepo.GenerateCodeAsync();
+                    await _handoverRepo.CreateAsync(handover);
+                }
+
+                int handoverID = handover.ID;
+
+                // Handle Deletions
+                if (dto.DeletedReceivers?.Count > 0) foreach (var id in dto.DeletedReceivers) await _handoverReceiverRepo.DeleteAsync(id);
+                if (dto.DeletedWorks?.Count > 0) foreach (var id in dto.DeletedWorks) await _handoverWorkRepo.DeleteAsync(id);
+                if (dto.DeletedWarehouseAssets?.Count > 0) foreach (var id in dto.DeletedWarehouseAssets) await _handoverWarehouseAssetRepo.DeleteAsync(id);
+                if (dto.DeletedAssets?.Count > 0) foreach (var id in dto.DeletedAssets) await _handoverAssetManagementRepo.DeleteAsync(id);
+                if (dto.DeletedFinances?.Count > 0) foreach (var id in dto.DeletedFinances) await _handoverFinanceRepo.DeleteAsync(id);
+                if (dto.DeletedPersonalAssets?.Count > 0) foreach (var id in dto.DeletedPersonalAssets) await _handoverPersonalAssetRepo.DeleteAsync(id);
+
+                // Handle Details
+                if (dto.Receivers != null)
+                {
+                    foreach (var d in dto.Receivers)
+                    {
+                        d.HandoverID = handoverID;
+                        if (d.ID > 0) await _handoverReceiverRepo.UpdateAsync(d);
+                        else await _handoverReceiverRepo.CreateAsync(d);
+                    }
+                }
+
+                if (dto.Works != null)
+                {
+                    foreach (var d in dto.Works)
+                    {
+                        d.HandoverID = handoverID;
+                        if (d.ID > 0) await _handoverWorkRepo.UpdateAsync(d);
+                        else await _handoverWorkRepo.CreateAsync(d);
+                    }
+                }
+
+                if (dto.WarehouseAssets != null)
+                {
+                    foreach (var d in dto.WarehouseAssets)
+                    {
+                        d.HandoverID = handoverID;
+                        if (d.ID > 0) await _handoverWarehouseAssetRepo.UpdateAsync(d);
+                        else await _handoverWarehouseAssetRepo.CreateAsync(d);
+                    }
+                }
+
+                if (dto.AssetManagements != null)
+                {
+                    foreach (var d in dto.AssetManagements)
+                    {
+                        d.HandoverID = handoverID;
+                        if (d.ID > 0) await _handoverAssetManagementRepo.UpdateAsync(d);
+                        else await _handoverAssetManagementRepo.CreateAsync(d);
+                    }
+                }
+
+                if (dto.Finances != null)
+                {
+                    foreach (var d in dto.Finances)
+                    {
+                        d.HandoverID = handoverID;
+                        if (d.ID > 0) await _handoverFinanceRepo.UpdateAsync(d);
+                        else await _handoverFinanceRepo.CreateAsync(d);
+                    }
+                }
+
+                if (dto.PersonalAssets != null)
+                {
+                    foreach (var d in dto.PersonalAssets)
+                    {
+                        d.HandoverID = handoverID;
+                        if (d.ID > 0) await _handoverPersonalAssetRepo.UpdateAsync(d);
+                        else await _handoverPersonalAssetRepo.CreateAsync(d);
+                    }
+                }
+
+                if (dto.Approves != null)
+                {
+                    foreach (var d in dto.Approves)
+                    {
+                        d.HandoverID = handoverID;
+                        if (d.ID > 0) await _approveRepo.UpdateAsync(d);
+                        else await _approveRepo.CreateAsync(d);
+                    }
+                }
+
+                return Ok(ApiResponseFactory.Success(handover, "Lưu thành công"));
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
+            }
+        }
+
+        public class DeleteRequest { public int Id { get; set; } }
+
+    
+        [RequiresPermission("N34")]
+        [HttpPost("delete")]
+        public async Task<IActionResult> Delete([FromBody] DeleteRequest req)
+        {
+            try
+            {
+                if (req == null || req.Id <= 0) return BadRequest(ApiResponseFactory.Fail(null, "ID không hợp lệ"));
+
+                var item = await _handoverRepo.GetByIDAsync(req.Id);
+                if (item == null) return BadRequest(ApiResponseFactory.Fail(null, "Không tìm thấy dữ liệu"));
+
+                item.IsDeleted = true;
+                await _handoverRepo.UpdateAsync(item);
+                return Ok(ApiResponseFactory.Success(null, "Xóa thành công"));
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
+            }
+        }
+
+
+
+    
+        [RequiresPermission("N34")]
+        [HttpPost("save-approves")]
+        public async Task<IActionResult> SaveApproves([FromBody] List<HandoverApprove> items)
+        {
+            try
+            {
+                foreach (var item in items)
+                {
+                    if (item.ID > 0) await _approveRepo.UpdateAsync(item);
+                    else await _approveRepo.CreateAsync(item);
+                }
+                return Ok(ApiResponseFactory.Success(null, "Lưu lộ trình duyệt thành công"));
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
+            }
+        }
+
+      
+        [RequiresPermission("N34")]
+        [HttpPost("approve")]
+        public async Task<IActionResult> Approve([FromBody] HandoverApprove item)
+        {
+            try
+            {
+                if (item.ID > 0) await _approveRepo.UpdateAsync(item);
+                else await _approveRepo.CreateAsync(item);
+                return Ok(ApiResponseFactory.Success(null, "Phê duyệt thành công"));
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
+            }
+        }
+
+      
+        [RequiresPermission("N34")]
+        [HttpGet("export-excel")]
+        public IActionResult ExportExcel(int id)
+        {
+            try
+            {
+             
+                return Ok(ApiResponseFactory.Success(null, "Chức năng xuất Excel đang được xử lý"));
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
+            }
+        }
+
     }
 }

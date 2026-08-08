@@ -582,6 +582,64 @@ namespace RERPAPI.Controllers.Project
             }
         }
 
+        // Danh sách dự án kiểm soát (Báo cáo tiến độ dự án)
+        [HttpGet("get-projects-control-grid")]
+        public async Task<IActionResult> GetProjectsControlGrid(int size, int page,
+            DateTime dateTimeS, DateTime dateTimeE, string? projectType,
+            int pmID, int leaderID, int bussinessFieldID, string? projectStatus,
+            int customerID, int saleID, int userTechID, int globalUserID, string? keyword,
+            int gateType = 0
+            )
+        {
+            try
+            {
+                var claims = User.Claims.ToDictionary(x => x.Type, x => x.Value);
+                var currentUser = ObjectMapper.GetCurrentUser(claims);
+                int[] typeCheck = { 0, 0, 0, 0, 0, 0, 0, 0, 0 };
+                List<int> projectTypeIDs = projectTypeRepo.GetAll().Select(x => x.ID).ToList();
+
+                if (string.IsNullOrWhiteSpace(projectType))
+                    projectType = string.Join(",", projectTypeIDs);
+
+                foreach (string item in projectType.Split(','))
+                {
+                    if (string.IsNullOrWhiteSpace(item)) continue;
+                    int index = projectTypeIDs.IndexOf(Convert.ToInt32(item));
+                    if (index >= 0 && index < typeCheck.Length)
+                    {
+                        typeCheck[index] = 1;
+                    }
+                }
+
+                if (string.IsNullOrWhiteSpace(projectStatus))
+                {
+                    List<int> listStatus = projectStatusRepo.GetAll().Select(x => x.ID).ToList();
+                    projectStatus = string.Join(",", listStatus);
+                }
+
+                var projects = SQLHelper<object>.ProcedureToList("spGetProjectControlGrid",
+                    new string[] {
+                        "@PageSize", "@PageNumber", "@DateStart", "@DateEnd", "@FilterText", "@CustomerID", "@UserID",
+                        "@ListProjectType", "@LeaderID", "@UserIDTech", "@EmployeeIDPM", "@1", "@2", "@3", "@4", "@5",
+                        "@6", "@7", "@8", "@9", "@UserIDPriotity", "@BusinessFieldID", "@ProjectStatus", "@GateType"
+                    },
+                    new object[] {
+                        size, page, dateTimeS, dateTimeE, keyword ?? "", customerID, saleID, projectType, leaderID,
+                        userTechID, pmID, typeCheck[0] ,typeCheck[1] ,typeCheck[2] ,typeCheck[3] ,typeCheck[4] ,typeCheck[5]
+                        ,typeCheck[6] ,typeCheck[7] ,typeCheck[8], currentUser.ID, bussinessFieldID, projectStatus, gateType
+                    });
+
+                var project = SQLHelper<object>.GetListData(projects, 0);
+                var totalPage = SQLHelper<object>.GetListData(projects, 1).FirstOrDefault()?.TotalPage ?? 0;
+                var totalRecords = SQLHelper<object>.GetListData(projects, 2).FirstOrDefault()?.TotalEntries ?? 0;
+                return Ok(ApiResponseFactory.Success(new { project, totalPage, totalRecords }, ""));
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
+            }
+        }
+
         // Danh sách dự án phục vụ cho Lĩnh vực & Công nghệ
         [HttpGet("get-projects-apptech")]
         public async Task<IActionResult> GetProjectsAppTech(int size, int page,
@@ -1790,6 +1848,273 @@ namespace RERPAPI.Controllers.Project
             }
         }
 
+        [HttpGet("get-demo-project")]
+        public async Task<IActionResult> GetDemoProject([FromQuery] int sourceProjectId)
+        {
+            try
+            {
+                var sourceProject = projectRepo.GetByID(sourceProjectId);
+                if (sourceProject == null)
+                {
+                    return BadRequest(ApiResponseFactory.Fail(null, "Không tìm thấy dự án gốc"));
+                }
+
+                string targetProjectCode = sourceProject.ProjectCode + "_DEMO";
+                var demoProject = projectRepo.GetAll()
+                    .FirstOrDefault(x => x.ProjectCode == targetProjectCode && x.IsDeleted != true);
+
+                return Ok(ApiResponseFactory.Success(demoProject, ""));
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
+            }
+        }
+
+        [HttpPost("create-demo-project")]
+        public async Task<IActionResult> CreateDemoProject([FromQuery] int sourceProjectId)
+        {
+            try
+            {
+                // 1. Lấy thông tin dự án gốc
+                var sourceProject = projectRepo.GetByID(sourceProjectId);
+                if (sourceProject == null)
+                {
+                    return BadRequest(ApiResponseFactory.Fail(null, "Không tìm thấy dự án gốc"));
+                }
+
+                // 2. Kiểm tra mã dự án demo mới có bị trùng không
+                string targetProjectCode = sourceProject.ProjectCode + "_DEMO";
+                var existingProject = projectRepo.GetAll()
+                    .FirstOrDefault(x => x.ProjectCode == targetProjectCode && x.IsDeleted != true);
+                if (existingProject != null)
+                {
+                    return BadRequest(ApiResponseFactory.Fail(null, $"Mã dự án demo '{targetProjectCode}' đã tồn tại trong hệ thống."));
+                }
+
+                // Lấy thông tin tài khoản đang đăng nhập
+                var claims = User.Claims.ToDictionary(x => x.Type, x => x.Value);
+                var currentUser = ObjectMapper.GetCurrentUser(claims);
+
+                // 3. Nhân bản dữ liệu bảng Project
+                var newProject = new Model.Entities.Project
+                {
+                    ProjectCode = targetProjectCode,
+                    ProjectName = sourceProject.ProjectName,
+                    ProjectStatus = sourceProject.ProjectStatus,
+                    Note = sourceProject.Note,
+                    CustomerID = sourceProject.CustomerID,
+                    UserID = sourceProject.UserID,
+                    UserTechnicalID = sourceProject.UserTechnicalID,
+                    CreatedDate = DateTime.Now,
+                    CreatedBy = currentUser.LoginName,
+                    ProjectManager = sourceProject.ProjectManager,
+                    EndUser = sourceProject.EndUser,
+                    Priotity = sourceProject.Priotity,
+                    TypeProject = sourceProject.TypeProject,
+                    BusinessFieldID = sourceProject.BusinessFieldID,
+                    ProjectShortName = sourceProject.ProjectShortName,
+                    UpdatedDate = DateTime.Now,
+                    UpdatedBy = currentUser.LoginName,
+                    CurrentState = sourceProject.CurrentState,
+                    IsDeleted = false
+                };
+                projectRepo.Create(newProject);
+                int newProjectId = newProject.ID;
+
+                // 4. Log trạng thái ban đầu của dự án demo
+                var statusLog = new ProjectStatusLog
+                {
+                    ProjectID = newProjectId,
+                    ProjectStatusID = newProject.ProjectStatus,
+                    EmployeeID = currentUser.EmployeeID,
+                    DateLog = DateTime.Now,
+                    CreatedBy = currentUser.LoginName,
+                    CreatedDate = DateTime.Now
+                };
+                await projectStatusLogRepo.CreateAsync(statusLog);
+
+                // 5. Cập nhật trạng thái qua stored procedure (spUpdateProjectStatus)
+                SQLHelper<object>.ProcedureToList(
+                    "spUpdateProjectStatus",
+                    new string[] { "@ProjectID", "@ProjectStatusID" },
+                    new object[] { newProjectId, newProject.ProjectStatus });
+
+                // 6. Sao chép ProjectEmployee (leaders và thành viên)
+                var oldEmployees = projectEmployeeRepo.GetAll()
+                    .Where(x => x.ProjectID == sourceProjectId && x.IsDeleted != true)
+                    .ToList();
+                foreach (var emp in oldEmployees)
+                {
+                    var newEmp = new ProjectEmployee
+                    {
+                        ProjectID = newProjectId,
+                        EmployeeID = emp.EmployeeID,
+                        ProjectTypeID = emp.ProjectTypeID,
+                        IsLeader = emp.IsLeader,
+                        STT = emp.STT,
+                        CreatedDate = DateTime.Now,
+                        CreatedBy = currentUser.LoginName,
+                        IsDeleted = false
+                    };
+                    projectEmployeeRepo.Create(newEmp);
+                }
+
+                // 7. Sao chép ProjectTypeLink & các Link phụ (Lĩnh vực, Công nghệ)
+                var oldTypeLinks = projectTypeLinkRepo.GetAll()
+                    .Where(x => x.ProjectID == sourceProjectId)
+                    .ToList();
+                List<int> selectedProjectTypeIds = new List<int>();
+
+                foreach (var oldLink in oldTypeLinks)
+                {
+                    var newLink = new ProjectTypeLink
+                    {
+                        ProjectID = newProjectId,
+                        LeaderID = oldLink.LeaderID,
+                        ProjectTypeID = oldLink.ProjectTypeID,
+                        Selected = oldLink.Selected,
+                        CreatedDate = DateTime.Now,
+                        CreatedBy = currentUser.LoginName,
+                        UpdatedDate = DateTime.Now,
+                        UpdatedBy = currentUser.LoginName
+                    };
+                    await projectTypeLinkRepo.CreateAsync(newLink);
+
+                    if (newLink.Selected == true && newLink.ProjectTypeID.HasValue)
+                    {
+                        selectedProjectTypeIds.Add(newLink.ProjectTypeID.Value);
+                    }
+
+                    if (newLink.ID > 0)
+                    {
+                        // Sao chép Lĩnh vực ứng dụng
+                        var oldApps = projectTypeApplicationLinkRepo.GetAll()
+                            .Where(x => x.ProjectTypeLinkID == oldLink.ID && x.IsDeleted != true)
+                            .ToList();
+                        foreach (var app in oldApps)
+                        {
+                            var newApp = new ProjectTypeApplicationLink
+                            {
+                                ProjectTypeLinkID = newLink.ID,
+                                ApplicationTypeID = app.ApplicationTypeID,
+                                CreatedDate = DateTime.Now,
+                                CreatedBy = currentUser.LoginName,
+                                IsDeleted = false
+                            };
+                            await projectTypeApplicationLinkRepo.CreateAsync(newApp);
+                        }
+
+                        // Sao chép Công nghệ sử dụng
+                        var oldTechs = projectTypeTechnologyLinkRepo.GetAll()
+                            .Where(x => x.ProjectTypeLinkID == oldLink.ID && x.IsDeleted != true)
+                            .ToList();
+                        foreach (var tech in oldTechs)
+                        {
+                            var newTech = new ProjectTypeTechnologyLink
+                            {
+                                ProjectTypeLinkID = newLink.ID,
+                                TechnologyID = tech.TechnologyID,
+                                CreatedDate = DateTime.Now,
+                                CreatedBy = currentUser.LoginName,
+                                IsDeleted = false
+                            };
+                            await projectTypeTechnologyLinkRepo.CreateAsync(newTech);
+                        }
+                    }
+                }
+
+                // 8. Cập nhật chi phí dự án (spSaveProjectCost)
+                SQLHelper<object>.ProcedureToList("spSaveProjectCost", new string[] { "@ID" }, new object[] { newProjectId });
+
+                // 9. Sao chép FollowProjectBase
+                var oldFollows = followProjectBaseRepo.GetAll()
+                    .Where(x => x.ProjectID == sourceProjectId)
+                    .ToList();
+                foreach (var oldFollow in oldFollows)
+                {
+                    var newFollow = new FollowProjectBase
+                    {
+                        ProjectID = newProjectId,
+                        ExpectedPlanDate = oldFollow.ExpectedPlanDate,
+                        ExpectedQuotationDate = oldFollow.ExpectedQuotationDate,
+                        ExpectedPODate = oldFollow.ExpectedPODate,
+                        ExpectedProjectEndDate = oldFollow.ExpectedProjectEndDate,
+                        RealityPlanDate = oldFollow.RealityPlanDate,
+                        RealityQuotationDate = oldFollow.RealityQuotationDate,
+                        RealityPODate = oldFollow.RealityPODate,
+                        RealityProjectEndDate = oldFollow.RealityProjectEndDate,
+                        FirmBaseID = oldFollow.FirmBaseID,
+                        ProjectTypeBaseID = oldFollow.ProjectTypeBaseID,
+                        ProjectContactName = oldFollow.ProjectContactName,
+                        ProjectStartDate = DateTime.Now,
+                        WarehouseID = oldFollow.WarehouseID,
+                        CreatedDate = DateTime.Now,
+                        CreatedBy = currentUser.LoginName
+                    };
+                    await followProjectBaseRepo.CreateAsync(newFollow);
+                }
+
+                // 10. Sao chép ProjectPriorityLink
+                var oldPriorities = projectPriorityLinkRepo.GetAll()
+                    .Where(x => x.ProjectID == sourceProjectId)
+                    .ToList();
+                foreach (var oldPriority in oldPriorities)
+                {
+                    var newPriority = new ProjectPriorityLink
+                    {
+                        ProjectPriorityID = oldPriority.ProjectPriorityID,
+                        ProjectID = newProjectId
+                    };
+                    projectPriorityLinkRepo.Create(newPriority);
+                }
+
+                // 11. Tạo cây thư mục vật lý của dự án demo mới
+                if (selectedProjectTypeIds.Count > 0)
+                {
+                    try
+                    {
+                        int year = newProject.CreatedDate.Value.Year;
+                        string basePath = System.IO.Path.Combine(
+                            @"\\192.168.1.190\duan",
+                            "projects",
+                            year.ToString(),
+                            newProject.ProjectCode
+                        );
+
+                        System.IO.Directory.CreateDirectory(basePath);
+
+                        foreach (var typeId in selectedProjectTypeIds)
+                        {
+                            List<ProjectTreeFolder> rows = SQLHelper<ProjectTreeFolder>.ProcedureToListModel(
+                                "sp_GetProjectTypeTreeFolder",
+                                new[] { "@ProjectTypeID" },
+                                new object[] { typeId }
+                            );
+
+                            if (rows != null && rows.Count > 0)
+                            {
+                                CreateFolderFromModel(rows, basePath);
+                            }
+                        }
+
+                        CreateCommonFolders(basePath);
+                    }
+                    catch (Exception ex)
+                    {
+                        Console.WriteLine($"Error creating folders for demo project: {ex.Message}");
+                    }
+                }
+
+                return Ok(ApiResponseFactory.Success(newProject, "Tạo dự án demo thành công"));
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
+            }
+        }
+
+
         [Authorize]
         [RequiresPermission("N1,N13,N27,N97")]
         [HttpPost("save-project-application-technology")]
@@ -2841,6 +3166,56 @@ namespace RERPAPI.Controllers.Project
                 var rs = SQLHelper<object>.GetListData(data, 0);
                 var rs2 = SQLHelper<object>.GetListData(data2, 0);
                 return Ok(ApiResponseFactory.Success(new { rs, rs2 }, "Lấy dữ liệu thành công!"));
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
+            }
+        }
+
+        [HttpPost("get-control-dashboard")]
+        public async Task<IActionResult> GetControlDashboard([FromBody] ProjectDashboardRequestParam param)
+        {
+            try
+            {
+                var (projects, gates, projectTypes, departments) = await SqlDapper<ProjectDashboardItemResultDto>
+                    .QueryMultipleAsync<ProjectDashboardItemResultDto, GateDistributionResultDto, ProjectTypeDistributionResultDto, DepartmentDistributionResultDto>(
+                        "spGetProjectControlDashboard",
+                        new
+                        {
+                            DateStart = param.DateStart,
+                            DateEnd = param.DateEnd,
+                            DepartmentID = param.DepartmentID,
+                            EmployeeID = param.EmployeeID,
+                            FilterText = param.FilterText ?? "",
+                            GateType = param.GateType
+                        }
+                    );
+
+                var totalProjects = projects.Count;
+                var inProgressProjects = projects.Count(p => p.ProjectStatus != 6 && p.ProjectStatus != 7 && p.ProjectStatus != 9);
+                var completedProjects = projects.Count(p => p.ProjectStatus == 6 || p.ProjectStatus == 9);
+                var overdueProjects = projects.Count(p => p.IsOverdue);
+                var onTrackCount = projects.Count(p => !p.IsOverdue);
+                var delayedCount = overdueProjects;
+                var overdueList = projects.Where(p => p.IsOverdue).ToList();
+
+                var result = new
+                {
+                    totalProjects,
+                    inProgressProjects,
+                    completedProjects,
+                    overdueProjects,
+                    gateDistributions = gates,
+                    projectTypeDistributions = projectTypes,
+                    departmentDistributions = departments,
+                    onTrackCount,
+                    delayedCount,
+                    projectList = projects,
+                    overdueList
+                };
+
+                return Ok(ApiResponseFactory.Success(result, "Lấy dữ liệu dashboard thành công"));
             }
             catch (Exception ex)
             {
