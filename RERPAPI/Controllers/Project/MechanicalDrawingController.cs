@@ -193,8 +193,8 @@ namespace RERPAPI.Controllers.Project
                 if (project == null || project.IsDeleted == true)
                     return BadRequest(ApiResponseFactory.Fail(null, "Không tìm thấy dự án tương ứng"));
 
-                //var uploadPath = _configSystemRepo.GetUploadPathByKey("DRAWING_PATH");
-                var uploadPath = _configSystemRepo.GetUploadPathByKey("MechanicalDrawing");
+                var uploadPath = _configSystemRepo.GetUploadPathByKey("DRAWING_PATH");
+                //var uploadPath = _configSystemRepo.GetUploadPathByKey("MechanicalDrawing");
                 if (string.IsNullOrWhiteSpace(uploadPath))
                     return BadRequest(ApiResponseFactory.Fail(null, "Không tìm thấy cấu hình đường dẫn cho key: DRAWING_PATH"));
 
@@ -437,7 +437,7 @@ namespace RERPAPI.Controllers.Project
                 }
 
                 // Tạo đường dẫn thumbnail theo cùng cấu trúc thư mục mã dự án như upload-file
-                var uploadPath = _configSystemRepo.GetUploadPathByKey("MechanicalDrawing");
+                var uploadPath = _configSystemRepo.GetUploadPathByKey("DRAWING_PATH");
                 if (string.IsNullOrWhiteSpace(uploadPath))
                     return BadRequest(ApiResponseFactory.Fail(null, "Không tìm thấy cấu hình đường dẫn"));
 

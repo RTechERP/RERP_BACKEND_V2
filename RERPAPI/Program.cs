@@ -743,6 +743,7 @@ builder.Services.AddScoped<BillExportDetailFilesRepo>();
 builder.Services.AddScoped<ExpectedPayableRepo>();
 builder.Services.AddScoped<EmployeeSignatureFileRepo>();
 builder.Services.AddScoped<BusinessConfigRepo>();
+builder.Services.AddScoped<MechanicalDrawingRepo>();
 #region DI LOG
 
 builder.Services.AddScoped<POKHLogRepo>();

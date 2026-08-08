@@ -450,6 +450,8 @@ public partial class RTCContext : DbContext
 
     public virtual DbSet<FcmToken> FcmTokens { get; set; }
 
+    public virtual DbSet<FileFormat> FileFormats { get; set; }
+
     public virtual DbSet<FilmManagement> FilmManagements { get; set; }
 
     public virtual DbSet<FilmManagementDetail> FilmManagementDetails { get; set; }
@@ -977,6 +979,18 @@ public partial class RTCContext : DbContext
     public virtual DbSet<ProjectGateDepartment> ProjectGateDepartments { get; set; }
 
     public virtual DbSet<ProjectGateStep> ProjectGateSteps { get; set; }
+
+    public virtual DbSet<ProjectGateStepCheckList> ProjectGateStepCheckLists { get; set; }
+
+    public virtual DbSet<ProjectGateStepCheckListDetail> ProjectGateStepCheckListDetails { get; set; }
+
+    public virtual DbSet<ProjectGateStepCheckListDetailLink> ProjectGateStepCheckListDetailLinks { get; set; }
+
+    public virtual DbSet<ProjectGateStepCheckListLink> ProjectGateStepCheckListLinks { get; set; }
+
+    public virtual DbSet<ProjectGateStepFile> ProjectGateStepFiles { get; set; }
+
+    public virtual DbSet<ProjectGateStepForm> ProjectGateStepForms { get; set; }
 
     public virtual DbSet<ProjectGateStepLabor> ProjectGateStepLabors { get; set; }
 
@@ -5708,6 +5722,37 @@ public partial class RTCContext : DbContext
         modelBuilder.Entity<FcmToken>(entity =>
         {
             entity.Property(e => e.Token).IsUnicode(false);
+        });
+
+        modelBuilder.Entity<FileFormat>(entity =>
+        {
+            entity.HasKey(e => e.ID).HasName("PK__FileForm__3214EC2766D5B847");
+
+            entity.ToTable("FileFormat", tb => tb.HasComment("Danh mục định dạng file được phép sử dụng trong hệ thống"));
+
+            entity.Property(e => e.ID).HasComment("Khóa chính");
+            entity.Property(e => e.CreatedBy)
+                .HasMaxLength(150)
+                .HasComment("Người tạo");
+            entity.Property(e => e.CreatedDate)
+                .HasComment("Ngày tạo")
+                .HasColumnType("datetime");
+            entity.Property(e => e.Extension)
+                .HasMaxLength(20)
+                .HasComment("Phần mở rộng của file (.pdf, .xlsx, .docx...)");
+            entity.Property(e => e.FormatName)
+                .HasMaxLength(100)
+                .HasComment("Tên định dạng file (PDF, Excel, Word...)");
+            entity.Property(e => e.IsDeleted)
+                .HasDefaultValue(false)
+                .HasComment("Cờ đánh dấu bản ghi đã xóa mềm");
+            entity.Property(e => e.STT).HasComment("Số thứ tự hiển thị");
+            entity.Property(e => e.UpdatedBy)
+                .HasMaxLength(150)
+                .HasComment("Người cập nhật");
+            entity.Property(e => e.UpdatedDate)
+                .HasComment("Ngày cập nhật")
+                .HasColumnType("datetime");
         });
 
         modelBuilder.Entity<FilmManagement>(entity =>
@@ -11479,23 +11524,18 @@ public partial class RTCContext : DbContext
 
         modelBuilder.Entity<ProjectGateDepartment>(entity =>
         {
-            entity
-                .HasNoKey()
-                .ToTable("ProjectGateDepartment", tb => tb.HasComment("Bảng khai báo phòng ban liên kết với từng bước/công đoạn trong Gate của dự án"));
+            entity.ToTable("ProjectGateDepartment", tb => tb.HasComment("Bảng khai báo phòng ban liên kết với từng bước/công đoạn trong Gate của dự án"));
 
+            entity.Property(e => e.ID).HasComment("Khóa chính tự tăng của bảng ProjectGateDepartment");
             entity.Property(e => e.DepartmentID).HasComment("ID bảng Department, dùng để xác định phòng ban phụ trách hoặc tham gia bước/công đoạn");
-            entity.Property(e => e.ID)
-                .ValueGeneratedOnAdd()
-                .HasComment("Khóa chính tự tăng của bảng ProjectGateDepartment");
             entity.Property(e => e.ProjectGateStepID).HasComment("ID bảng ProjectGateStep, dùng để liên kết phòng ban với từng bước/công đoạn trong Gate");
         });
 
         modelBuilder.Entity<ProjectGateStep>(entity =>
         {
-            entity
-                .HasNoKey()
-                .ToTable("ProjectGateStep", tb => tb.HasComment("Bảng khai báo các bước/công đoạn thực hiện theo Gate của dự án"));
+            entity.ToTable("ProjectGateStep", tb => tb.HasComment("Bảng khai báo các bước/công đoạn thực hiện theo Gate của dự án"));
 
+            entity.Property(e => e.ID).HasComment("Khóa chính tự tăng của bảng ProjectGateStep");
             entity.Property(e => e.ChucVuID).HasComment("ID chức vụ thực hiện hoặc phụ trách bước/công đoạn này");
             entity.Property(e => e.Content)
                 .HasMaxLength(550)
@@ -11506,9 +11546,6 @@ public partial class RTCContext : DbContext
             entity.Property(e => e.CreatedDate)
                 .HasComment("Ngày tạo bản ghi")
                 .HasColumnType("datetime");
-            entity.Property(e => e.ID)
-                .ValueGeneratedOnAdd()
-                .HasComment("Khóa chính tự tăng của bảng ProjectGateStep");
             entity.Property(e => e.IsRepeat).HasComment("Đánh dấu bước/công đoạn có được lặp lại hay không: 0 - Không, 1 - Có");
             entity.Property(e => e.ProjectGateDepartmentID).HasComment("ID bảng ProjectGateDepartment");
             entity.Property(e => e.ProjectGateID).HasComment("ID bảng ProjectGate");
@@ -11522,6 +11559,151 @@ public partial class RTCContext : DbContext
             entity.Property(e => e.UpdatedDate)
                 .HasComment("Ngày cập nhật gần nhất của bản ghi")
                 .HasColumnType("datetime");
+        });
+
+        modelBuilder.Entity<ProjectGateStepCheckList>(entity =>
+        {
+            entity.ToTable("ProjectGateStepCheckList", tb => tb.HasComment("Bảng khai báo danh sách checklist của từng bước (Gate Step) trong quy trình dự án. Mỗi bước có thể yêu cầu nhiều checklist khác nhau như File, PartList, Biểu mẫu, Tài liệu hoặc thư mục cần hoàn thành trước khi chuyển sang bước tiếp theo."));
+
+            entity.Property(e => e.ID).HasComment("Khóa chính tự tăng");
+            entity.Property(e => e.CreatedBy)
+                .HasMaxLength(50)
+                .HasComment("Người tạo");
+            entity.Property(e => e.CreatedDate)
+                .HasDefaultValueSql("(getdate())")
+                .HasComment("Ngày tạo")
+                .HasColumnType("datetime");
+            entity.Property(e => e.Description).HasMaxLength(550);
+            entity.Property(e => e.PathFolder)
+                .HasMaxLength(1000)
+                .HasComment("Đường dẫn thư mục hoặc file cần sử dụng cho checklist");
+            entity.Property(e => e.ProjectGateStepID).HasComment("ID bước công việc thuộc quy trình Gate");
+            entity.Property(e => e.Type)
+                .HasMaxLength(100)
+                .HasComment("Loại checklist: File, PartList, Document, Folder, Form...");
+            entity.Property(e => e.UpdatedBy)
+                .HasMaxLength(50)
+                .HasComment("Người cập nhật");
+            entity.Property(e => e.UpdatedDate)
+                .HasComment("Ngày cập nhật")
+                .HasColumnType("datetime");
+        });
+
+        modelBuilder.Entity<ProjectGateStepCheckListDetail>(entity =>
+        {
+            entity.HasKey(e => e.ID).HasName("PK__ProjectG__3214EC27A4F5E866");
+
+            entity.ToTable("ProjectGateStepCheckListDetail", tb => tb.HasComment("Chi tiết danh sách checklist của từng bước Gate trong dự án"));
+
+            entity.Property(e => e.ID).HasComment("Khóa chính");
+            entity.Property(e => e.CreatedBy)
+                .HasMaxLength(100)
+                .HasComment("Người tạo");
+            entity.Property(e => e.CreatedDate)
+                .HasDefaultValueSql("(getdate())")
+                .HasComment("Ngày tạo")
+                .HasColumnType("datetime");
+            entity.Property(e => e.FileFormat)
+                .HasMaxLength(100)
+                .HasComment("Định dạng tệp được phép (PDF, DOCX, XLSX, JPG...)");
+            entity.Property(e => e.FileName).HasMaxLength(255);
+            entity.Property(e => e.FileQuantity)
+                .HasDefaultValue(1)
+                .HasComment("Số lượng tệp yêu cầu");
+            entity.Property(e => e.FileRule)
+                .HasMaxLength(500)
+                .HasComment("Quy định hoặc yêu cầu đối với tệp đính kèm");
+            entity.Property(e => e.IsCheck).HasComment("Trạng thái checklist có check validate hay không (0: Chưa hoàn thành, 1: Đã hoàn thành)");
+            entity.Property(e => e.IsFile).HasDefaultValue(true);
+            entity.Property(e => e.UpdatedBy)
+                .HasMaxLength(100)
+                .HasComment("Người cập nhật gần nhất");
+            entity.Property(e => e.UpdatedDate)
+                .HasComment("Ngày cập nhật gần nhất")
+                .HasColumnType("datetime");
+        });
+
+        modelBuilder.Entity<ProjectGateStepCheckListDetailLink>(entity =>
+        {
+            entity.HasKey(e => e.ID).HasName("PK__ProjectG__3214EC27A5993FA9");
+
+            entity.ToTable("ProjectGateStepCheckListDetailLink");
+
+            entity.Property(e => e.ApprovedTBPDate).HasColumnType("datetime");
+            entity.Property(e => e.CreatedBy)
+                .HasMaxLength(100)
+                .IsUnicode(false);
+            entity.Property(e => e.CreatedDate)
+                .HasDefaultValueSql("(getdate())")
+                .HasColumnType("datetime");
+            entity.Property(e => e.UpdatedBy)
+                .HasMaxLength(100)
+                .IsUnicode(false);
+            entity.Property(e => e.UpdatedDate).HasColumnType("datetime");
+        });
+
+        modelBuilder.Entity<ProjectGateStepCheckListLink>(entity =>
+        {
+            entity.ToTable("ProjectGateStepCheckListLink", tb => tb.HasComment("Bảng lưu checklist/hồ sơ kiểm tra của từng bước trong dự án"));
+
+            entity.Property(e => e.ID).HasComment("Khóa chính tự tăng");
+            entity.Property(e => e.IsPass)
+                .HasDefaultValue(false)
+                .HasComment("Trạng thái kiểm tra: 0 = Chưa đạt, 1 = Đạt");
+            entity.Property(e => e.PathFolder)
+                .HasMaxLength(550)
+                .HasComment("Đường dẫn thư mục lưu hồ sơ, tài liệu hoặc checklist");
+            entity.Property(e => e.ProjectGateStepLinkID).HasComment("ID liên kết tới bản ghi ProjectGateStepLink");
+        });
+
+        modelBuilder.Entity<ProjectGateStepFile>(entity =>
+        {
+            entity.ToTable("ProjectGateStepFile", tb => tb.HasComment("Lưu danh sách file đính kèm của từng checklist trong Project Gate Step."));
+
+            entity.Property(e => e.ID).HasComment("Khóa chính");
+            entity.Property(e => e.ContentType)
+                .HasMaxLength(200)
+                .HasComment("Kiểu MIME của file (image/png, application/pdf...)");
+            entity.Property(e => e.CreatedBy)
+                .HasMaxLength(200)
+                .HasComment("Người tạo");
+            entity.Property(e => e.CreatedDate)
+                .HasDefaultValueSql("(getdate())")
+                .HasComment("Ngày tạo")
+                .HasColumnType("datetime");
+            entity.Property(e => e.FileName)
+                .HasMaxLength(500)
+                .HasComment("Tên file gốc");
+            entity.Property(e => e.FilePath)
+                .HasMaxLength(1000)
+                .HasComment("Đường dẫn lưu file");
+            entity.Property(e => e.FileSize).HasComment("Kích thước file (Byte)");
+            entity.Property(e => e.IsDeleted)
+                .HasDefaultValue(false)
+                .HasComment("Đánh dấu xóa mềm (0: Chưa xóa, 1: Đã xóa)");
+            entity.Property(e => e.Status).HasDefaultValue(1);
+            entity.Property(e => e.UpdatedBy)
+                .HasMaxLength(200)
+                .HasComment("Người cập nhật");
+            entity.Property(e => e.UpdatedDate)
+                .HasComment("Ngày cập nhật")
+                .HasColumnType("datetime");
+        });
+
+        modelBuilder.Entity<ProjectGateStepForm>(entity =>
+        {
+            entity.ToTable("ProjectGateStepForm");
+
+            entity.Property(e => e.CreatedBy).HasMaxLength(150);
+            entity.Property(e => e.CreatedDate)
+                .HasDefaultValueSql("(getdate())")
+                .HasColumnType("datetime");
+            entity.Property(e => e.Description).HasMaxLength(1000);
+            entity.Property(e => e.FileName).HasMaxLength(500);
+            entity.Property(e => e.FilePath).HasMaxLength(1000);
+            entity.Property(e => e.FormName).HasMaxLength(250);
+            entity.Property(e => e.UpdatedBy).HasMaxLength(150);
+            entity.Property(e => e.UpdatedDate).HasColumnType("datetime");
         });
 
         modelBuilder.Entity<ProjectGateStepLabor>(entity =>
@@ -13076,13 +13258,12 @@ public partial class RTCContext : DbContext
 
         modelBuilder.Entity<ProjectTypeDepartment>(entity =>
         {
-            entity
-                .HasNoKey()
-                .ToTable("ProjectTypeDepartment");
+            entity.HasKey(e => e.ID).HasName("PK_ProjectTypeDepartment_ID");
+
+            entity.ToTable("ProjectTypeDepartment");
 
             entity.Property(e => e.CreatedBy).HasMaxLength(50);
             entity.Property(e => e.CreatedDate).HasColumnType("datetime");
-            entity.Property(e => e.ID).ValueGeneratedOnAdd();
             entity.Property(e => e.IsDeleted).HasDefaultValue(false);
             entity.Property(e => e.UpdatedBy).HasMaxLength(50);
             entity.Property(e => e.UpdatedDate).HasColumnType("datetime");
@@ -15506,6 +15687,8 @@ public partial class RTCContext : DbContext
             entity.Property(e => e.CreatedDate)
                 .HasDefaultValueSql("(getdate())")
                 .HasColumnType("datetime");
+            entity.Property(e => e.DangKyHLKGChieuDi).HasMaxLength(200);
+            entity.Property(e => e.DangKyHLKGChieuVe).HasMaxLength(200);
             entity.Property(e => e.Department).HasMaxLength(200);
             entity.Property(e => e.DepartureLocation).HasMaxLength(100);
             entity.Property(e => e.EmployeeCode).HasMaxLength(50);
