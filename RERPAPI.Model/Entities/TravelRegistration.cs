@@ -58,4 +58,10 @@ public partial class TravelRegistration
     public int? ConfirmStatus { get; set; }
 
     public bool? IsPublish { get; set; }
+
+    public string? DangKyHLKGChieuDi { get; set; }
+
+    public string? DangKyHLKGChieuVe { get; set; }
+
+    public bool? DangKyVinwonders { get; set; }
 }

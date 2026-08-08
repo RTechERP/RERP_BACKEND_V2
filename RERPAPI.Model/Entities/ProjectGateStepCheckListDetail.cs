@@ -1,25 +1,65 @@
 using System;
+using System.Collections.Generic;
 
-namespace RERPAPI.Model.Entities
+namespace RERPAPI.Model.Entities;
+
+/// <summary>
+/// Chi tiết danh sách checklist của từng bước Gate trong dự án
+/// </summary>
+public partial class ProjectGateStepCheckListDetail
 {
     /// <summary>
-    /// Bảng lưu cấu hình quy tắc file đính kèm cho từng checklist công đoạn
+    /// Khóa chính
     /// </summary>
-    public partial class ProjectGateStepCheckListDetail
-    {
-        public int ID { get; set; }
-        public int ProjectGateStepID { get; set; }
-        public string? FileRule { get; set; }
-        public string? FileFormat { get; set; }
-        public int FileQuantity { get; set; }
-        public bool IsCheck { get; set; }
-        public bool IsFile { get; set; }
-        public int? STT { get; set; }
-        public string? FileName { get; set; }
-        public bool? IsDeleted { get; set; }
-        public DateTime CreatedDate { get; set; }
-        public string? CreatedBy { get; set; }
-        public DateTime? UpdatedDate { get; set; }
-        public string? UpdatedBy { get; set; }
-    }
+    public int ID { get; set; }
+
+    /// <summary>
+    /// Quy định hoặc yêu cầu đối với tệp đính kèm
+    /// </summary>
+    public string? FileRule { get; set; }
+
+    /// <summary>
+    /// Định dạng tệp được phép (PDF, DOCX, XLSX, JPG...)
+    /// </summary>
+    public string? FileFormat { get; set; }
+
+    /// <summary>
+    /// Số lượng tệp yêu cầu
+    /// </summary>
+    public int FileQuantity { get; set; }
+
+    /// <summary>
+    /// Trạng thái checklist có check validate hay không (0: Chưa hoàn thành, 1: Đã hoàn thành)
+    /// </summary>
+    public bool IsCheck { get; set; }
+
+    /// <summary>
+    /// Ngày tạo
+    /// </summary>
+    public DateTime CreatedDate { get; set; }
+
+    /// <summary>
+    /// Người tạo
+    /// </summary>
+    public string? CreatedBy { get; set; }
+
+    /// <summary>
+    /// Ngày cập nhật gần nhất
+    /// </summary>
+    public DateTime? UpdatedDate { get; set; }
+
+    /// <summary>
+    /// Người cập nhật gần nhất
+    /// </summary>
+    public string? UpdatedBy { get; set; }
+
+    public bool? IsDeleted { get; set; }
+
+    public int? ProjectGateStepID { get; set; }
+
+    public bool IsFile { get; set; }
+
+    public int? STT { get; set; }
+
+    public string? FileName { get; set; }
 }
