@@ -11783,7 +11783,9 @@ public partial class RTCContext : DbContext
             entity.Property(e => e.ProjectID).HasComment("ID dự án đang cấu hình");
             entity.Property(e => e.ProjectTypeID).HasComment("ID loại dự án, lưu để truy vấn nhanh");
             entity.Property(e => e.SortOrder).HasDefaultValue(0);
-            entity.Property(e => e.StartDate).HasComment("Ngày bắt đầu thực hiện công việc");
+            entity.Property(e => e.StartDate)
+                .HasComment("Ngày bắt đầu thực hiện công việc")
+                .HasColumnType("datetime");
             entity.Property(e => e.UpdatedBy).HasMaxLength(50);
             entity.Property(e => e.UpdatedDate).HasColumnType("datetime");
         });

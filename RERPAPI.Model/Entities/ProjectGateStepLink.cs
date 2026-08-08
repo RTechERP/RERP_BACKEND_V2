@@ -31,7 +31,7 @@ public partial class ProjectGateStepLink
     /// <summary>
     /// Ngày bắt đầu thực hiện công việc
     /// </summary>
-    public DateOnly? StartDate { get; set; }
+    public DateTime? StartDate { get; set; }
 
     /// <summary>
     /// Trạng thái lặp lại của công việc (0: Không, 1: Có)

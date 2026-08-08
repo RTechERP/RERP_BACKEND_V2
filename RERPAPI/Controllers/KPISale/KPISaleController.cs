@@ -2053,6 +2053,7 @@ namespace RERPAPI.Controllers.KPISale
                 target.UpdatedDate = DateTime.Now;
 
                 await _kpiSaleRepo.SaveChangesAsync();
+
                 return Ok(ApiResponseFactory.Success(target, "Ban Giám Đốc duyệt thành công"));
             }
             catch (Exception ex)
@@ -3590,12 +3591,10 @@ namespace RERPAPI.Controllers.KPISale
 
                 await _kpiSaleRepo.SaveChangesAsync();
 
-                return Ok(ApiResponseFactory.Success(new
-                {
-                    approvedCount = targetsToApprove.Count,
-                    teamName = team.TeamName,
-                    periodCode = period.PeriodCode
-                }, $"Đã duyệt {targetsToApprove.Count} mục tiêu của team {team.TeamName}"));
+                // Gửi email thông báo đến các thành viên trong team
+                var emailResponse = await SendBoardApprovedNotificationAsync(team, period.PeriodCode, targetsToApprove.Count, userName);
+
+                return Ok(ApiResponseFactory.Success(emailResponse, $"Đã duyệt {targetsToApprove.Count} mục tiêu của team {team.TeamName}"));
             }
             catch (Exception ex)
             {
@@ -8046,6 +8045,90 @@ FROM (
         }
 
         /// <summary>
+        /// Gửi email thông báo khi BGD duyệt thành công.
+        /// </summary>
+        private async Task<SendBoardApprovedEmailResponse?> SendBoardApprovedNotificationAsync(
+            KPISaleTeam team,
+            string periodCode,
+            int approvedCount,
+            string boardApprover)
+        {
+            try
+            {
+                // Lấy danh sách UserID của thành viên trong team
+                var userIds = _teamMemberRepo
+                    .GetAll(m => m.TeamID == team.ID)
+                    .Select(m => m.EmployeeID)
+                    .ToList();
+
+                if (userIds == null || userIds.Count == 0)
+                {
+                    Console.WriteLine($"[KPISale] Team {team.TeamName} không có thành viên.");
+                    return null;
+                }
+
+                // Lấy email từ employee repo qua UserID
+                var emailList = _employeeRepo
+                    .GetAll(e => userIds.Contains(e.UserID ?? 0) && e.Status != 1 && !string.IsNullOrWhiteSpace(e.EmailCongTy))
+                    .Select(e => e.EmailCongTy)
+                    .ToList();
+
+                emailList = emailList.Where(e => !string.IsNullOrWhiteSpace(e)).Distinct().ToList();
+                if (emailList.Count == 0)
+                {
+                    Console.WriteLine($"[KPISale] Team {team.TeamName} không có email thành viên.");
+                    return null;
+                }
+
+                // TODO: đang test, gửi tạm về email test thay vì emailList thật của employee.
+                // Khi test xong, đổi lại: var emailTo = emailList.First(); var emailCc = string.Join(";", emailList.Skip(1));
+                //var emailTo = "tuananh.ng011004@gmail.com";
+                //var emailCc = string.Empty;
+                var emailTo = emailList.First();
+                var emailCc = string.Join(";", emailList.Skip(1));
+                var subject = $"[KPI SALE] Ban Giám Đốc đã duyệt KPI Team {team.TeamName} - Kỳ {periodCode}";
+                var body = $@"
+                    <p>Kính gửi các thành viên trong team <strong>{team.TeamName}</strong>,</p>
+
+                    <p>Hệ thống KPI Sale thông báo: <strong>Ban Giám Đốc đã duyệt thành công mục tiêu KPI</strong> của team trong kỳ <strong>{periodCode}</strong>.</p>
+
+                    <ul>
+                        <li><strong>Team:</strong> {team.TeamName}</li>
+                        <li><strong>Kỳ KPI:</strong> {periodCode}</li>
+                        <li><strong>Số mục tiêu đã duyệt:</strong> {approvedCount}</li>
+                        <li><strong>Người duyệt (BGD):</strong> {boardApprover}</li>
+                        <li><strong>Thời gian duyệt:</strong> {DateTime.Now:dd/MM/yyyy HH:mm}</li>
+                    </ul>
+
+                    <p>Vui lòng đăng nhập hệ thống để xem chi tiết các mục tiêu đã được duyệt.</p>
+
+                    <p>Trân trọng,<br/>
+                    Hệ thống KPI Sale</p>
+                    ";
+
+                await _emailHelper.SendAsync(emailTo, subject, body, true, emailCc);
+                Console.WriteLine($"[KPISale] Đã gửi email BGD duyệt đến {emailList.Count} thành viên team {team.TeamName}");
+
+                return new SendBoardApprovedEmailResponse
+                {
+                    SentTo = emailTo,
+                    SentCc = emailCc,
+                    Subject = subject,
+                    TotalRecipients = emailList.Count,
+                    RecipientEmails = emailList,
+                    ApprovedCount = approvedCount,
+                    TeamName = team.TeamName,
+                    PeriodCode = periodCode
+                };
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"[KPISale] Lỗi gửi email BGD duyệt: {ex.Message}");
+                return null;
+            }
+        }
+
+        /// <summary>
         /// Lấy trạng thái duyệt theo (scope, refId, periodId).
         /// Trả về null nếu chưa có bản ghi.
         /// </summary>
@@ -8437,6 +8520,18 @@ FROM (
         #endregion Approval (Workflow khớp frontend kpi-summary)
 
         #region SendMail (Sales Manager gửi mail yêu cầu BGĐ duyệt)
+
+        public class SendBoardApprovedEmailResponse
+        {
+            public string SentTo { get; set; } = "";
+            public string SentCc { get; set; } = "";
+            public string Subject { get; set; } = "";
+            public int TotalRecipients { get; set; }
+            public List<string> RecipientEmails { get; set; } = new();
+            public int ApprovedCount { get; set; }
+            public string TeamName { get; set; } = "";
+            public string PeriodCode { get; set; } = "";
+        }
 
         public class SendApprovalRequestEmailRequest
         {

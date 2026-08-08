@@ -250,7 +250,7 @@ namespace RERPAPI.Controllers.Old.Technical
                     // Gọi SP AGV để lấy dữ liệu với rule riêng
                     string agvTeamIds = string.Join(";", userTeams.Where(x => x.DepartmentID == 9).Select(x => x.ID));
                     var agvStore = SQLHelper<object>.ProcedureToList(
-                        "spExportToExcelDRT_AGV",
+                        "spExportToExcelDRT",
                         new string[] { "DateStart", "DateEnd", "TeamID" },
                         new object[] { dateStart, dateEnd, agvTeamIds }
                     );
