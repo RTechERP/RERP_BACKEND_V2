@@ -3,7 +3,7 @@ using RERPAPI.Model.Entities;
 
 namespace RERPAPI.Repo.GenericEntity
 {
-    public class ProductGroupRTCLinkRepo : GenericRepo<ProductGroupLink>
+    public class ProductGroupRTCLinkRepo : GenericRepo<ProductGroupRTCLink>
     {
         public ProductGroupRTCLinkRepo(CurrentUser currentUser) : base(currentUser)
         {

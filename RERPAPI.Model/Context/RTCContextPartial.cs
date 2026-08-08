@@ -10,7 +10,7 @@ namespace RERPAPI.Model.Context
     public partial class RTCContext
     {
         public CurrentUser CurrentUser { get; set; } = new CurrentUser();
-        public virtual DbSet<ProjectGateStepForm> ProjectGateStepForm { get; set; }
+
 
         public RTCContext()
         {
@@ -223,14 +223,16 @@ namespace RERPAPI.Model.Context
                     {
                         createdBy?.SetValue(entity, loginName);
                         createdDate?.SetValue(entity, now);
+
                         updatedBy?.SetValue(entity, loginName);
                         updatedDate?.SetValue(entity, now);
+
                         SetDefaultDeleteFlag(entity, type);
                     }
                     else if (entry.State == EntityState.Modified)
                     {
                         updatedBy?.SetValue(entity, loginName);
-                        createdDate?.SetValue(entity, new DateTime(2026, 6, 24, 8, 53, 11));
+
                         if (updatedDate != null)
                         {
                             var val = updatedDate.GetValue(entity);
@@ -239,6 +241,7 @@ namespace RERPAPI.Model.Context
                         }
                     }
                 }
+
                 // 3. Tạo audit log NHƯNG KHÔNG add vào DbContext ngay
                 var logs = BuildAuditLogs();
 
@@ -246,7 +249,10 @@ namespace RERPAPI.Model.Context
                 var result = await base.SaveChangesAsync(cancellationToken);
 
                 // 5. Save log riêng (tránh lock + timeout)
-              
+                if (logs.Count > 0)
+                {
+                    await SaveAuditLogsAsync(logs);
+                }
 
                 return result;
             }
@@ -366,41 +372,6 @@ namespace RERPAPI.Model.Context
 
             return System.Text.Json.JsonSerializer.Serialize(wrapper,
                 new JsonSerializerOptions { WriteIndented = true });
-        }
-
-        partial void OnModelCreatingPartial(ModelBuilder modelBuilder)
-        {
-            modelBuilder.Entity<HotelBookingManagement>(entity =>
-            {
-                entity.ToTable("HotelBookingManagement");
-                entity.HasKey(e => e.ID);
-                entity.Property(e => e.CreatedDate).HasColumnType("datetime");
-                entity.Property(e => e.CheckinDate).HasColumnType("datetime");
-                entity.Property(e => e.CheckOutDate).HasColumnType("datetime");
-                entity.Property(e => e.DateRequest).HasColumnType("datetime");
-                entity.Property(e => e.UpdatedDate).HasColumnType("datetime");
-                entity.Property(e => e.IsDeleted).HasDefaultValue(false);
-            });
-
-            modelBuilder.Entity<HotelBookingProposal>(entity =>
-            {
-                entity.ToTable("HotelBookingProposal");
-                entity.HasKey(e => e.ID);
-                entity.Property(e => e.CreatedDate).HasColumnType("datetime");
-                entity.Property(e => e.UpdatedDate).HasColumnType("datetime");
-                entity.Property(e => e.IsDeleted).HasDefaultValue(false);
-                entity.Property(e => e.UnitPrice).HasPrecision(18, 2);
-                entity.Property(e => e.TotalAmount).HasPrecision(18, 2);
-            });
-
-            modelBuilder.Entity<HotelBookingEmployee>(entity =>
-            {
-                entity.ToTable("HotelBookingEmployee");
-                entity.HasKey(e => e.ID);
-                entity.Property(e => e.CreatedDate).HasColumnType("datetime");
-                entity.Property(e => e.UpdatedDate).HasColumnType("datetime");
-                entity.Property(e => e.IsDeleted).HasDefaultValue(false);
-            });
         }
     }
 }
