@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using Microsoft.EntityFrameworkCore;
 using RERPAPI.Model.Entities;
@@ -771,6 +771,12 @@ public partial class RTCContext : DbContext
     public virtual DbSet<ListCost> ListCosts { get; set; }
 
     public virtual DbSet<Location> Locations { get; set; }
+
+    public virtual DbSet<LuckyDrawParticipant> LuckyDrawParticipants { get; set; }
+
+    public virtual DbSet<LuckyDrawSession> LuckyDrawSessions { get; set; }
+
+    public virtual DbSet<LuckyDrawWinner> LuckyDrawWinners { get; set; }
 
     public virtual DbSet<MainIndex> MainIndices { get; set; }
 
@@ -3104,28 +3110,6 @@ public partial class RTCContext : DbContext
             entity.Property(e => e.TransportFee).HasColumnType("decimal(18, 2)");
             entity.Property(e => e.UpdatedBy).HasMaxLength(50);
             entity.Property(e => e.UpdatedDate).HasColumnType("datetime");
-        });
-
-        modelBuilder.Entity<ConfigNotificationKey>(entity =>
-        {
-            entity.ToTable("ConfigNotificationKey");
-
-            entity.Property(e => e.CreatedBy).HasMaxLength(50);
-            entity.Property(e => e.CreatedDate)
-                .HasDefaultValueSql("(getdate())")
-                .HasColumnType("datetime");
-            entity.Property(e => e.IsDeleted).HasDefaultValue(false);
-            entity.Property(e => e.KeyContent).HasMaxLength(550);
-            entity.Property(e => e.KeyName).HasMaxLength(500);
-            entity.Property(e => e.UpdatedBy).HasMaxLength(50);
-            entity.Property(e => e.UpdatedDate).HasColumnType("datetime");
-        });
-
-        modelBuilder.Entity<ConfigNotificationKeyLink>(entity =>
-        {
-            entity.ToTable("ConfigNotificationKeyLink");
-
-            entity.Property(e => e.IsActive).HasDefaultValue(true);
         });
 
         modelBuilder.Entity<ConfigSystem>(entity =>
@@ -6120,9 +6104,6 @@ public partial class RTCContext : DbContext
             entity.Property(e => e.UpdatedDate)
                 .HasComment("Ngày cập nhật")
                 .HasColumnType("datetime");
-            entity.Property(e => e.IsRoundTrip)
-                .HasDefaultValue(false)
-                .HasComment("Vé khứ hồi");
         });
 
         modelBuilder.Entity<FlightBookingPassenger>(entity =>
@@ -6184,22 +6165,6 @@ public partial class RTCContext : DbContext
             entity.Property(e => e.UpdatedDate)
                 .HasComment("Ngày cập nhật")
                 .HasColumnType("datetime");
-            entity.Property(e => e.ReturnDate)
-                .HasComment("thời gian về")
-                .HasColumnType("datetime");
-            entity.Property(e => e.ReturnTime)
-                .HasComment("giờ về")
-                .HasColumnType("datetime");
-        });
-
-        modelBuilder.Entity<FlightBookingPassenger>(entity =>
-        {
-            entity.HasKey(e => e.ID);
-            entity.ToTable("FlightBookingPassenger", tb => tb.HasComment("Bảng lưu hành khách đặt vé máy bay"));
-            entity.Property(e => e.FullName).HasMaxLength(250).HasComment("Họ tên");
-            entity.Property(e => e.Type).HasComment("Loại hành khách (1: CBNV, 2: Khách ngoài)");
-            entity.Property(e => e.EmployeeID).HasComment("ID nhân viên");
-            entity.Property(e => e.FlightBookingManagementID).HasComment("ID master");
         });
 
         modelBuilder.Entity<FollowProject>(entity =>
@@ -9365,6 +9330,74 @@ public partial class RTCContext : DbContext
             entity.Property(e => e.LocationName)
                 .HasMaxLength(250)
                 .HasComment("tên vị trí");
+        });
+
+        modelBuilder.Entity<LuckyDrawParticipant>(entity =>
+        {
+            entity.HasKey(e => e.ID).HasName("PK__LuckyDra__3214EC27AFF1798B");
+
+            entity.ToTable("LuckyDrawParticipant");
+
+            entity.HasIndex(e => e.SessionID, "IX_LuckyDrawParticipant_Session");
+
+            entity.HasIndex(e => new { e.SessionID, e.EmployeeID }, "UX_LuckyDrawParticipant_Session_Employee").IsUnique();
+
+            entity.Property(e => e.CreatedAt)
+                .HasDefaultValueSql("(getdate())")
+                .HasColumnType("datetime");
+            entity.Property(e => e.JoinedAt)
+                .HasDefaultValueSql("(getdate())")
+                .HasColumnType("datetime");
+        });
+
+        modelBuilder.Entity<LuckyDrawSession>(entity =>
+        {
+            entity.HasKey(e => e.ID).HasName("PK__LuckyDra__3214EC27FED043B2");
+
+            entity.ToTable("LuckyDrawSession");
+
+            entity.HasIndex(e => e.SessionCode, "UX_LuckyDrawSession_Code").IsUnique();
+
+            entity.Property(e => e.ClosedAt).HasColumnType("datetime");
+            entity.Property(e => e.CreatedAt)
+                .HasDefaultValueSql("(getdate())")
+                .HasColumnType("datetime");
+            entity.Property(e => e.CreatedBy)
+                .HasMaxLength(150)
+                .IsUnicode(false);
+            entity.Property(e => e.DrawAt).HasColumnType("datetime");
+            entity.Property(e => e.EndTime).HasColumnType("datetime");
+            entity.Property(e => e.SessionCode)
+                .HasMaxLength(50)
+                .IsUnicode(false);
+            entity.Property(e => e.SessionName).HasMaxLength(200);
+            entity.Property(e => e.StartTime).HasColumnType("datetime");
+            entity.Property(e => e.UpdatedAt).HasColumnType("datetime");
+            entity.Property(e => e.UpdatedBy)
+                .HasMaxLength(150)
+                .IsUnicode(false);
+        });
+
+        modelBuilder.Entity<LuckyDrawWinner>(entity =>
+        {
+            entity.HasKey(e => e.ID).HasName("PK__LuckyDra__3214EC27E589D604");
+
+            entity.ToTable("LuckyDrawWinner");
+
+            entity.HasIndex(e => new { e.SessionID, e.EmployeeID }, "UX_LuckyDrawWinner_Session_Employee").IsUnique();
+
+            entity.HasIndex(e => new { e.SessionID, e.WinnerOrder }, "UX_LuckyDrawWinner_Session_Order")
+                .IsUnique()
+                .HasFilter("([Status] IN ((0), (1)))");
+
+            entity.Property(e => e.DrawnAt)
+                .HasDefaultValueSql("(getdate())")
+                .HasColumnType("datetime");
+            entity.Property(e => e.Note).HasMaxLength(500);
+            entity.Property(e => e.VoidedAt).HasColumnType("datetime");
+            entity.Property(e => e.VoidedBy)
+                .HasMaxLength(150)
+                .IsUnicode(false);
         });
 
         modelBuilder.Entity<MainIndex>(entity =>
@@ -13361,15 +13394,6 @@ public partial class RTCContext : DbContext
             entity.Property(e => e.UpdatedDate)
                 .HasComment("Ngày cập nhật")
                 .HasColumnType("datetime");
-        });
-
-        modelBuilder.Entity<ProjectTypeDepartment>(entity =>
-        {
-            entity.ToTable("ProjectTypeDepartment");
-            entity.Property(e => e.CreatedBy).HasMaxLength(50);
-            entity.Property(e => e.CreatedDate).HasColumnType("datetime");
-            entity.Property(e => e.UpdatedBy).HasMaxLength(50);
-            entity.Property(e => e.UpdatedDate).HasColumnType("datetime");
         });
 
         modelBuilder.Entity<ProjectUser>(entity =>
