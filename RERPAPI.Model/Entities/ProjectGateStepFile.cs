@@ -58,7 +58,7 @@ public partial class ProjectGateStepFile
     /// </summary>
     public DateTime? UpdatedDate { get; set; }
 
-    public int? ProjectGateStepCheckListDetailLinkID { get; set; }
+    public int ProjectGateStepCheckListDetailLinkID { get; set; }
 
     public int? EmployeeID { get; set; }
 
