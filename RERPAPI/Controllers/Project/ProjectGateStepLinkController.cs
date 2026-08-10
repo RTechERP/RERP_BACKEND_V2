@@ -51,7 +51,7 @@ namespace RERPAPI.Controllers.Project
             ProjectGateStepCheckListLinkRepo stepCheckListLinkRepo,
             ProjectGateStepRepo stepRepo,
             ProjectGateRepo gateRepo,
-          
+
             ProjectTypeLinkRepo projectTypeLinkRepo)
         {
             _stepLinkRepo = stepLinkRepo;
@@ -95,8 +95,8 @@ namespace RERPAPI.Controllers.Project
                 // Lấy thông tin dự án để gen path thư mục
                 var project = _projectRepo.GetByID(request.ProjectID);
 
-                // Lấy toàn bộ các link hiện có của dự án này trong DB
-                var existingLinks = _stepLinkRepo.GetAll(l => l.ProjectID == request.ProjectID).ToList();
+                // Lấy các link hiện có (chưa bị xóa) của dự án này trong DB
+                var existingLinks = _stepLinkRepo.GetAll(l => l.ProjectID == request.ProjectID && (l.IsDeleted == null || l.IsDeleted == false)).ToList();
                 var processedLinkIDs = new List<int>();
                 var idMapping = new Dictionary<int, int>();
 
@@ -162,21 +162,11 @@ namespace RERPAPI.Controllers.Project
                             }
                         }
 
-                        // Tìm link tương ứng hiện có trong DB
+                        // Tìm link tương ứng hiện có trong DB (chỉ match khi step.ID > 0)
                         ProjectGateStepLink matchingLink = null;
                         if (step.ID > 0)
                         {
                             matchingLink = existingLinks.FirstOrDefault(l => l.ID == step.ID);
-                        }
-                        else
-                        {
-                            matchingLink = existingLinks.FirstOrDefault(l =>
-                                !processedLinkIDs.Contains(l.ID) &&
-                                l.ProjectTypeID == step.ProjectTypeID &&
-                                l.ProjectGateStepID == step.ProjectGateStepID &&
-                                l.IsRepeat == step.IsRepeat &&
-                                l.DepartmentID == step.DepartmentID &&
-                                ((l.ParentID == null && realParentID == null) || (l.ParentID == realParentID)));
                         }
 
                         // Xác định parentProjectTaskId: Lấy ProjectTaskID của công đoạn cha (ProjectGateStepLink cha)
@@ -314,8 +304,11 @@ namespace RERPAPI.Controllers.Project
                                 }
                             }
 
-                            // Đồng bộ checklist detail links
-                            await SyncCheckListDetailLinksAsync(matchingLink.ID, step.ProjectGateStepID, step.ProjectTypeID, project);
+                            // Đồng bộ checklist detail links (Chỉ đồng bộ cho công đoạn cha)
+                            if (!realParentID.HasValue || realParentID.Value == 0)
+                            {
+                                await SyncCheckListDetailLinksAsync(matchingLink.ID, step.ProjectGateStepID, step.ProjectTypeID, project);
+                            }
                         }
                         else
                         {
@@ -405,63 +398,66 @@ namespace RERPAPI.Controllers.Project
                                     }
                                 }
 
-                                // Tạo Checklist detail links
-                                var detailDefs = _stepCheckListDetailRepo.GetAll(d => d.ProjectGateStepID == step.ProjectGateStepID && d.IsDeleted != true).ToList();
-
-                                // Tính PathFolder gốc cho step này (dùng chung cho tất cả rules)
-                                string rootPathFolder = "";
-                                if (project != null && project.CreatedDate.HasValue)
+                                // Tạo Checklist detail links (Chỉ tạo cho công đoạn cha)
+                                if (!realParentID.HasValue || realParentID.Value == 0)
                                 {
-                                    int year = project.CreatedDate.Value.Year;
-                                    var rootFolder = _treeFolderRepo.GetAll(f => f.ProjectTypeID == step.ProjectTypeID
-                                                                              && (f.ParentID == 0 || f.ParentID == null)
-                                                                              && (f.IsDeleted == null || f.IsDeleted == false)).FirstOrDefault();
-                                    string typeFolderName = rootFolder?.FolderName ?? "TaiLieuChung";
-                                    rootPathFolder = Path.Combine(@"D:\ProjectGate", "projects", year.ToString(), project.ProjectCode, typeFolderName);
+                                    var detailDefs = _stepCheckListDetailRepo.GetAll(d => d.ProjectGateStepID == step.ProjectGateStepID && d.IsDeleted != true).ToList();
 
-                                    try
+                                    // Tính PathFolder gốc cho step này (dùng chung cho tất cả rules)
+                                    string rootPathFolder = "";
+                                    if (project != null && project.CreatedDate.HasValue)
                                     {
-                                        if (!Directory.Exists(rootPathFolder))
-                                            Directory.CreateDirectory(rootPathFolder);
+                                        int year = project.CreatedDate.Value.Year;
+                                        var rootFolder = _treeFolderRepo.GetAll(f => f.ProjectTypeID == step.ProjectTypeID
+                                                                                  && (f.ParentID == 0 || f.ParentID == null)
+                                                                                  && (f.IsDeleted == null || f.IsDeleted == false)).FirstOrDefault();
+                                        string typeFolderName = rootFolder?.FolderName ?? "TaiLieuChung";
+                                        rootPathFolder = Path.Combine(@"D:\ProjectGate", "projects", year.ToString(), project.ProjectCode, typeFolderName);
+
+                                        try
+                                        {
+                                            if (!Directory.Exists(rootPathFolder))
+                                                Directory.CreateDirectory(rootPathFolder);
+                                        }
+                                        catch { }
                                     }
-                                    catch { }
-                                }
 
-                                // Lưu PathFolder vào ProjectGateStepCheckListLink để GetCheckLists có thể lấy ra
-                                var existingCheckListLink = _stepCheckListLinkRepo.GetAll(cl => cl.ProjectGateStepLinkID == newLink.ID).FirstOrDefault();
-                                if (existingCheckListLink == null)
-                                {
-                                    await _stepCheckListLinkRepo.CreateAsync(new ProjectGateStepCheckListLink
+                                    // Lưu PathFolder vào ProjectGateStepCheckListLink để GetCheckLists có thể lấy ra
+                                    var existingCheckListLink = _stepCheckListLinkRepo.GetAll(cl => cl.ProjectGateStepLinkID == newLink.ID).FirstOrDefault();
+                                    if (existingCheckListLink == null)
                                     {
-                                        ProjectGateStepLinkID = newLink.ID,
-                                        PathFolder = rootPathFolder
-                                    });
-                                }
-                                else if (string.IsNullOrEmpty(existingCheckListLink.PathFolder) && !string.IsNullOrEmpty(rootPathFolder))
-                                {
-                                    existingCheckListLink.PathFolder = rootPathFolder;
-                                    await _stepCheckListLinkRepo.UpdateAsync(existingCheckListLink);
-                                }
-
-                                if (detailDefs.Any())
-                                {
-                                    var newCheckListDetails = new List<ProjectGateStepCheckListDetailLink>();
-                                    foreach (var def in detailDefs)
-                                    {
-                                        newCheckListDetails.Add(new ProjectGateStepCheckListDetailLink
+                                        await _stepCheckListLinkRepo.CreateAsync(new ProjectGateStepCheckListLink
                                         {
                                             ProjectGateStepLinkID = newLink.ID,
-                                            ProjectGateStepCheckListDetailID = def.ID,
-                                            IsCompleted = false,
-                                            IsApprovedTBP = 0,
-                                            CreatedDate = DateTime.Now,
-                                            CreatedBy = _currentUser.LoginName ?? "system"
+                                            PathFolder = rootPathFolder
                                         });
                                     }
-
-                                    if (newCheckListDetails.Any())
+                                    else if (string.IsNullOrEmpty(existingCheckListLink.PathFolder) && !string.IsNullOrEmpty(rootPathFolder))
                                     {
-                                        await _stepCheckListDetailLinkRepo.CreateRangeAsync(newCheckListDetails);
+                                        existingCheckListLink.PathFolder = rootPathFolder;
+                                        await _stepCheckListLinkRepo.UpdateAsync(existingCheckListLink);
+                                    }
+
+                                    if (detailDefs.Any())
+                                    {
+                                        var newCheckListDetails = new List<ProjectGateStepCheckListDetailLink>();
+                                        foreach (var def in detailDefs)
+                                        {
+                                            newCheckListDetails.Add(new ProjectGateStepCheckListDetailLink
+                                            {
+                                                ProjectGateStepLinkID = newLink.ID,
+                                                ProjectGateStepCheckListDetailID = def.ID,
+                                                IsCompleted = false,
+                                                IsApprovedTBP = 0,
+                                                CreatedDate = DateTime.Now,
+                                                CreatedBy = _currentUser.LoginName ?? "system"
+                                            });
+                                        }
+
+                                        if (newCheckListDetails.Any())
+                                        {
+                                            await _stepCheckListDetailLinkRepo.CreateRangeAsync(newCheckListDetails);
+                                        }
                                     }
                                 }
                             }
@@ -676,10 +672,10 @@ namespace RERPAPI.Controllers.Project
                             TotalAmount = w.TotalAmount
                         }).ToList()
                         : new List<ProjectGateStepWorkerDto>(),
-                    CheckLists = checklistByLink.TryGetValue(l.ID, out var clDtos)
+                    CheckLists = (l.ParentID == null || l.ParentID == 0) && checklistByLink.TryGetValue(l.ID, out var clDtos)
                         ? clDtos
                         : new List<ProjectGateStepCheckListLinkDto>(),
-                    Forms = formGroups.TryGetValue(l.ID, out var fList)
+                    Forms = (l.ParentID == null || l.ParentID == 0) && formGroups.TryGetValue(l.ID, out var fList)
                         ? fList.Select(f => new ProjectGateStepFormDto
                         {
                             ID = f.ID,
@@ -769,7 +765,7 @@ namespace RERPAPI.Controllers.Project
                             TotalAmount = w.TotalAmount
                         }).ToList()
                         : new List<ProjectGateStepWorkerDto>(),
-                    CheckLists = ruleLinkGroups.TryGetValue(l.ID, out var rList)
+                    CheckLists = (l.ParentID == null || l.ParentID == 0) && ruleLinkGroups.TryGetValue(l.ID, out var rList)
                         ? rList.Select(c =>
                         {
                             var master = allMasterRules.TryGetValue(c.ProjectGateStepCheckListDetailID, out var m) ? m : null;
@@ -896,6 +892,9 @@ namespace RERPAPI.Controllers.Project
 
         private async Task SyncCheckListDetailLinksAsync(int stepLinkId, int gateStepId, int projectTypeId, RERPAPI.Model.Entities.Project project)
         {
+            var stepLink = _stepLinkRepo.GetByID(stepLinkId);
+            if (stepLink != null && stepLink.ParentID.HasValue && stepLink.ParentID.Value > 0) return;
+
             var detailDefs = _stepCheckListDetailRepo.GetAll(d => d.ProjectGateStepID == gateStepId && d.IsDeleted != true).ToList();
             if (!detailDefs.Any()) return;
 
