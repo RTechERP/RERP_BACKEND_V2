@@ -782,6 +782,7 @@ builder.Services.AddScoped<ProjectGateStepCheckListDetailRepo>();
 builder.Services.AddScoped<ProjectGateStepFileRepo>();
 builder.Services.AddScoped<ProjectGateCheckListTypeRepo>();
 builder.Services.AddScoped<FileFormatRepo>();
+builder.Services.AddScoped<MechanicalDrawingRepo>();
 #region DI LOG
 
 builder.Services.AddScoped<POKHLogRepo>();
