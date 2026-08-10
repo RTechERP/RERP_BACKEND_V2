@@ -1,5 +1,4 @@
 ﻿using ClosedXML.Excel;
-using DocumentFormat.OpenXml.Wordprocessing;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Options;
@@ -1616,7 +1615,7 @@ namespace RERPAPI.Controllers.Old.SaleWareHouseManagement
                 if (string.IsNullOrWhiteSpace(pathStaticFile))
                     return BadRequest(ApiResponseFactory.Fail(null, $"Không tìm thấy cấu hình đường dẫn cho key: EmployeeSignature"));
 
-                Employee emReciver = _employeeRepo.GetAll(x=> x.UserID == billExp.UserID).FirstOrDefault(); // Người giao
+                Employee emReciver = _employeeRepo.GetAll(x => x.UserID == billExp.UserID).FirstOrDefault(); // Người giao
                 Employee emDeliver = _employeeRepo.GetAll(x => x.UserID == billExp.SenderID).FirstOrDefault(); // Người nhận
 
                 var checkPicDeliver = _employeeSignatureFileRepo.GetAll(x => x.EmployeeID == emDeliver.ID && x.IsDeleted != true).FirstOrDefault();
@@ -1841,5 +1840,32 @@ namespace RERPAPI.Controllers.Old.SaleWareHouseManagement
         //}
 
         #endregion
+
+
+
+        [HttpPost("get-returned-inventory-product")]
+        public IActionResult getReturnedInventoryProduct(GetListProductByProjectPram filter)
+        {
+            try
+            {
+                List<List<dynamic>> result = SQLHelper<dynamic>.ProcedureToList(
+                    "spGetReturnedInventoryProduct",
+                    new string[] { "@projectId", "@projectCode", "@WarehouseCode", "@ProductGroupID" },
+                    new object[] { filter.projectID, filter.projectCode, filter.WarehouseCode, filter.ProductGroupID }
+                    );
+                var dt = SQLHelper<object>.GetListData(result, 0);
+                return Ok(new
+                {
+                    status = 1,
+                    data = SQLHelper<object>.GetListData(result, 0)
+                });
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
+            }
+        }
+
+
     }
 }
