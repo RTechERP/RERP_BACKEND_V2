@@ -230,7 +230,7 @@ namespace RERPAPI.Controllers.Project
         }
 
         [HttpGet("list-project-task")]
-        public async Task<IActionResult> GetProjectTaskForList(int projectID = 0, bool isPersionalProject = false)
+        public async Task<IActionResult> GetProjectTaskForList(int projectID = 0, bool isPersionalProject = false, bool isHasGateStep = false)
         {
             try
             {
@@ -242,7 +242,8 @@ namespace RERPAPI.Controllers.Project
                     p_IsPersonalProject = isPersionalProject,
                     p_EmployeeID = currentUser.EmployeeID
                 };
-                var result = await SqlDapper<object>.ProcedureToListAsync("spGetListProjectTask", param);
+                string storedName = isHasGateStep ? "spGetListProjectTask_New" : "spGetListProjectTask";
+                var result = await SqlDapper<object>.ProcedureToListAsync(storedName, param);
                 return Ok(ApiResponseFactory.Success(result, null));
             }
             catch (Exception ex)
