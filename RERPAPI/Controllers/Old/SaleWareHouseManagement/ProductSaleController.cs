@@ -303,25 +303,27 @@ namespace RERPAPI.Controllers.Old.SaleWareHouseManagement
                     {
                         return BadRequest(ApiResponseFactory.Fail(null, $"Mã sản phẩm [{dto.ProductSale.ProductCode}] đã tồn tại trong nhóm !"));
                     }
+
+                    ProductSale prd = dto.ProductSale;
+                    var checkExistProduct = _productsaleRepo.GetAll(x =>
+                        x.ProductCode == prd.ProductCode &&
+                        x.ProductName == prd.ProductName &&
+                        x.Maker == prd.Maker &&
+                        x.Unit == prd.Unit &&
+                        x.IsApproved == true &&
+                        x.IsDeleted != true &&
+                        x.ProductGroupID != prd.ProductGroupID
+                     ).FirstOrDefault();
+
+                    if (checkExistProduct != null)
+                    {
+                        dto.ProductSale.IsApproved = true;
+                        dto.ProductSale.ApprovedID = checkExistProduct.ApprovedID;
+                    }
+
                     //end update
                     if (dto.ProductSale.ID <= 0)
                     {
-                        ProductSale prd = dto.ProductSale;
-                        var checkExistProduct = _productsaleRepo.GetAll(x =>
-                            x.ProductCode == prd.ProductCode &&
-                            x.ProductName == prd.ProductName &&
-                            x.Maker == prd.Maker &&
-                            x.Unit == prd.Unit &&
-                            x.IsApproved == true &&
-                            x.IsDeleted != true &&
-                            x.ProductGroupID != prd.ProductGroupID
-                         ).FirstOrDefault();
-
-                        if (checkExistProduct != null)
-                        {
-                            dto.ProductSale.IsApproved = true;
-                            dto.ProductSale.ApprovedID = checkExistProduct.ApprovedID;
-                        }
 
                         // Tạo mới
                         if (string.IsNullOrWhiteSpace(dto.ProductSale.ProductNewCode))
@@ -376,6 +378,657 @@ namespace RERPAPI.Controllers.Old.SaleWareHouseManagement
         }
 
         #endregion hàm thêm, sửa, xóa productSale
+        //[HttpPost("validate-data-excel")]
+        //public async Task<IActionResult> ValidateDataProductSaleExcel([FromBody] List<ProductSaleImportExcelDTO> dtos)
+        //{
+        //    try
+        //    {
+        //        if (dtos == null || dtos.Count == 0)
+        //            return BadRequest(
+        //                ApiResponseFactory.Fail(null, "Không có dữ liệu!")
+        //            );
+
+        //        static string Normalize(string? value)
+        //            => value?.Trim().ToLowerInvariant() ?? string.Empty;
+
+        //        var items = dtos
+        //            .Where(x => x != null)
+        //            .Select(x => new
+        //            {
+        //                Item = x,
+
+        //                ProductCode = Normalize(x.ProductCode),
+        //                ProductName = Normalize(x.ProductName),
+
+        //                GroupNo = Normalize(x.ProductGroupNo),
+        //                GroupName = Normalize(x.ProductGroupName),
+
+        //                TypeNo = Normalize(x.ProductGroupTypeNo),
+        //                TypeName = Normalize(x.ProductGroupTypeName),
+
+        //                Maker = Normalize(x.Maker),
+        //                Unit = Normalize(x.Unit)
+        //            })
+        //            .Where(x => !string.IsNullOrEmpty(x.ProductCode))
+        //            .ToList();
+
+        //        if (items.Count == 0)
+        //        {
+        //            return BadRequest(
+        //                ApiResponseFactory.Fail(
+        //                    null,
+        //                    "Không có ProductCode hợp lệ!"
+        //                )
+        //            );
+        //        }
+
+        //        var productGroups = _productgroupRepo
+        //            .GetAll(x => x.IsVisible == true)
+        //            .ToList();
+
+        //        var groupDictionary = productGroups
+        //            .Where(x =>
+        //                !string.IsNullOrWhiteSpace(x.ProductGroupID) &&
+        //                !string.IsNullOrWhiteSpace(x.ProductGroupName))
+        //            .GroupBy(x =>
+        //                $"{Normalize(x.ProductGroupID)}|{Normalize(x.ProductGroupName)}"
+        //            )
+        //            .ToDictionary(
+        //                g => g.Key,
+        //                g => g.ToList()
+        //            );
+
+        //        foreach (var item in items)
+        //        {
+        //            if (string.IsNullOrEmpty(item.GroupNo) &&
+        //                string.IsNullOrEmpty(item.GroupName))
+        //            {
+        //                continue;
+        //            }
+
+        //            var groupKey = $"{item.GroupNo}|{item.GroupName}";
+
+        //            ProductGroup? productGroup = null;
+
+        //            if (groupDictionary.TryGetValue(groupKey, out var groups))
+        //            {
+        //                // Group chính
+        //                productGroup = groups
+        //                    .FirstOrDefault(x => x.ParentID == null || x.ParentID == 0);
+        //            }
+
+        //            if (productGroup == null)
+        //            {
+        //                productGroup = new ProductGroup
+        //                {
+        //                    ID = 0,
+        //                    ProductGroupName = item.Item.ProductGroupName?.Trim(),
+        //                    ProductGroupID = item.Item.ProductGroupNo?.Trim(),
+        //                    ParentID = null
+        //                };
+
+        //                await _productgroupRepo.CreateAsync(productGroup);
+
+        //                if (!groupDictionary.ContainsKey(groupKey))
+        //                    groupDictionary[groupKey] = new List<ProductGroup>();
+
+        //                groupDictionary[groupKey].Add(productGroup);
+        //            }
+
+        //            // Gán ID group thật vào DTO
+        //            item.Item.ProductGroupID = productGroup.ID;
+
+        //            if (!string.IsNullOrEmpty(item.TypeNo) &&
+        //                !string.IsNullOrEmpty(item.TypeName))
+        //            {
+        //                var typeKey = $"{item.TypeNo}|{item.TypeName}";
+
+        //                ProductGroup? productGroupType = null;
+
+        //                if (groupDictionary.TryGetValue(typeKey, out var typeGroups))
+        //                {
+        //                    productGroupType = typeGroups.FirstOrDefault();
+        //                }
+
+        //                if (productGroupType != null)
+        //                {
+        //                    if (productGroupType.ParentID != null &&
+        //                        productGroupType.ParentID != productGroup.ID)
+        //                    {
+        //                        var checkGroup = _productgroupRepo.GetByID(
+        //                            Convert.ToInt32(productGroupType.ParentID)
+        //                        );
+
+        //                        return BadRequest(
+        //                            ApiResponseFactory.Fail(
+        //                                null,
+        //                                $"Mã loại vật tư [{item.Item.ProductGroupTypeNo}] " +
+        //                                $"đã tồn tại trong nhóm " +
+        //                                $"[{checkGroup.ProductGroupID}-{checkGroup.ProductGroupName}]! " +
+        //                                $"Vui lòng kiểm tra lại."
+        //                            )
+        //                        );
+        //                    }
+        //                }
+
+        //                if (productGroupType == null)
+        //                {
+        //                    productGroupType = new ProductGroup
+        //                    {
+        //                        ID = 0,
+        //                        ProductGroupName =
+        //                            item.Item.ProductGroupTypeName?.Trim(),
+
+        //                        ProductGroupID =
+        //                            item.Item.ProductGroupTypeNo?.Trim(),
+
+        //                        ParentID = productGroup.ID
+        //                    };
+
+        //                    await _productgroupRepo.CreateAsync(productGroupType);
+
+        //                    if (!groupDictionary.ContainsKey(typeKey))
+        //                        groupDictionary[typeKey] =
+        //                            new List<ProductGroup>();
+
+        //                    groupDictionary[typeKey].Add(productGroupType);
+        //                }
+        //                item.Item.ProductGroupID = productGroupType.ID;
+        //            }
+        //        }
+
+        //        var duplicateCodeConflicts = items
+        //            .GroupBy(x => x.ProductCode)
+        //            .Where(g => g.Count() > 1)
+        //            .Where(g =>
+        //                g.Select(x => x.ProductName).Distinct().Count() > 1 ||
+        //                g.Select(x => x.Maker).Distinct().Count() > 1 ||
+        //                g.Select(x => x.Unit).Distinct().Count() > 1 ||
+        //                g.Select(x => x.Item.ProductGroupID).Distinct().Count() > 1
+        //            )
+        //            .Select(g => new
+        //            {
+        //                ProductCode = g.Key,
+        //                Rows = g.Select(x => new
+        //                {
+        //                    x.Item.ProductName,
+        //                    x.Item.Maker,
+        //                    x.Item.Unit,
+        //                    x.Item.ProductGroupID
+        //                }).ToList()
+        //            })
+        //            .ToList();
+
+        //        if (duplicateCodeConflicts.Any())
+        //        {
+        //            var codes = string.Join(", ", duplicateCodeConflicts.Select(x => x.ProductCode));
+        //            return BadRequest(
+        //                ApiResponseFactory.Fail(
+        //                    null,
+        //                    $"Phát hiện mã sản phẩm bị trùng nhưng thông tin khác nhau trong file: [{codes}]. " +
+        //                    $"Vui lòng kiểm tra lại."
+        //                )
+        //            );
+        //        }
+
+        //        var productCodes = items
+        //            .Select(x => x.ProductCode)
+        //            .Distinct()
+        //            .ToList();
+
+        //        var products = _productsaleRepo.GetAll(x =>
+        //            x.IsDeleted != true &&
+        //            x.ProductCode != null &&
+        //            productCodes.Contains(x.ProductCode)
+        //        ).ToList();
+
+        //        var productsByCode = products
+        //            .Where(x => !string.IsNullOrWhiteSpace(x.ProductCode))
+        //            .GroupBy(x => x.ProductCode)
+        //            .ToDictionary(
+        //                g => g.Key,
+        //                g => g.ToList()
+        //            );
+
+        //        var existingList =
+        //            new List<ProductSale>();
+
+        //        var existingApprovedList =
+        //            new List<ProductSale>();
+
+        //        var existingNotApprovedList =
+        //            new List<ProductSale>();
+
+        //        foreach (var item in items)
+        //        {
+        //            if (!productsByCode.TryGetValue(
+        //                    item.ProductCode,
+        //                    out var productList))
+        //            {
+        //                continue;
+        //            }
+
+        //            var existing = productList.Where(x =>
+        //                x.ProductCode == item.Item.ProductCode &&
+        //                x.ProductGroupID == item.Item.ProductGroupID &&
+        //                x.IsDeleted != true
+        //            );
+
+        //            existingList.AddRange(existing);
+
+
+        //            var existingApproved = productList.Where(x =>
+        //                x.ProductGroupID != item.Item.ProductGroupID &&
+        //                (x.IsApproved == true || x.IsFix == true) &&
+        //                x.ProductCode == item.Item.ProductCode &&
+        //                x.IsDeleted != true &&
+        //                (
+        //                    x.ProductName != item.Item.ProductName ||
+        //                    x.Maker != item.Item.FirmName ||
+        //                    x.Unit != item.Item.UnitName
+        //                )
+        //            );
+
+        //            existingApprovedList.AddRange(existingApproved);
+
+
+        //            var existingNotApproved = productList.Where(x =>
+        //                x.ProductGroupID != item.Item.ProductGroupID &&
+        //                x.IsApproved == false &&
+        //                x.IsFix == false &&
+        //                x.IsDeleted != true
+        //            );
+
+        //            existingNotApprovedList.AddRange(existingNotApproved);
+        //        }
+
+        //        var data = new
+        //        {
+        //            ExistingList = existingList,
+        //            ExistingApprovedList = existingApprovedList,
+        //            ExistingNotApprovedList = existingNotApprovedList
+        //        };
+
+        //        return Ok(
+        //            ApiResponseFactory.Success(
+        //                data,
+        //                "Xử lý dữ liệu thành công!"
+        //            )
+        //        );
+        //    }
+        //    catch (Exception ex)
+        //    {
+        //        return BadRequest(
+        //            ApiResponseFactory.Fail(
+        //                ex,
+        //                ex.Message
+        //            )
+        //        );
+        //    }
+        //}
+
+        [HttpPost("validate-data-excel")]
+        public async Task<IActionResult> ValidateDataProductSaleExcel([FromBody] List<ProductSaleImportExcelDTO> dtos)
+        {
+            try
+            {
+                if (dtos == null || dtos.Count == 0)
+                    return BadRequest(
+                        ApiResponseFactory.Fail(null, "Không có dữ liệu!")
+                    );
+
+                // Dùng cho: ProductCode, GroupNo/GroupName, TypeNo/TypeName -> làm KEY tra cứu/dictionary/group-by
+                static string NormalizeKey(string? value)
+                    => value?.Trim().ToLowerInvariant() ?? string.Empty;
+
+                // Dùng cho: ProductName, Maker, Unit -> SO SÁNH nội dung, cần phân biệt hoa/thường
+                static string NormalizeCompare(string? value)
+                    => value?.Trim() ?? string.Empty;
+
+                var items = dtos
+                    .Where(x => x != null)
+                    .Select(x => new
+                    {
+                        Item = x,
+
+                        ProductCode = NormalizeKey(x.ProductCode),
+                        ProductName = NormalizeCompare(x.ProductName),
+
+                        GroupNo = NormalizeKey(x.ProductGroupNo),
+                        GroupName = NormalizeKey(x.ProductGroupName),
+
+                        TypeNo = NormalizeKey(x.ProductGroupTypeNo),
+                        TypeName = NormalizeKey(x.ProductGroupTypeName),
+
+                        Maker = NormalizeCompare(x.Maker),
+                        Unit = NormalizeCompare(x.Unit)
+                    })
+                    .Where(x => !string.IsNullOrEmpty(x.ProductCode))
+                    .ToList();
+
+                if (items.Count == 0)
+                {
+                    return BadRequest(
+                        ApiResponseFactory.Fail(
+                            null,
+                            "Không có ProductCode hợp lệ!"
+                        )
+                    );
+                }
+
+                // ================== XỬ LÝ NHÓM SẢN PHẨM ==================
+
+                var productGroups = _productgroupRepo
+                    .GetAll(x => x.IsVisible == true)
+                    .ToList();
+
+                var groupDictionary = productGroups
+                    .Where(x =>
+                        !string.IsNullOrWhiteSpace(x.ProductGroupID) &&
+                        !string.IsNullOrWhiteSpace(x.ProductGroupName))
+                    .GroupBy(x =>
+                        $"{NormalizeKey(x.ProductGroupID)}|{NormalizeKey(x.ProductGroupName)}"
+                    )
+                    .ToDictionary(
+                        g => g.Key,
+                        g => g.ToList()
+                    );
+
+                foreach (var item in items)
+                {
+                    if (string.IsNullOrEmpty(item.GroupNo) &&
+                        string.IsNullOrEmpty(item.GroupName))
+                    {
+                        continue;
+                    }
+
+                    var groupKey = $"{item.GroupNo}|{item.GroupName}";
+
+                    ProductGroup? productGroup = null;
+
+                    if (groupDictionary.TryGetValue(groupKey, out var groups))
+                    {
+                        // Group chính
+                        productGroup = groups
+                            .FirstOrDefault(x => x.ParentID == null || x.ParentID == 0);
+                    }
+
+                    if (productGroup == null)
+                    {
+                        productGroup = new ProductGroup
+                        {
+                            ID = 0,
+                            ProductGroupName = item.Item.ProductGroupName?.Trim(),
+                            ProductGroupID = item.Item.ProductGroupNo?.Trim(),
+                            ParentID = null
+                        };
+
+                        await _productgroupRepo.CreateAsync(productGroup);
+
+                        if (!groupDictionary.ContainsKey(groupKey))
+                            groupDictionary[groupKey] = new List<ProductGroup>();
+
+                        groupDictionary[groupKey].Add(productGroup);
+                    }
+
+                    // Gán ID group thật vào DTO
+                    item.Item.ProductGroupID = productGroup.ID;
+
+                    if (!string.IsNullOrEmpty(item.TypeNo) &&
+                        !string.IsNullOrEmpty(item.TypeName))
+                    {
+                        var typeKey = $"{item.TypeNo}|{item.TypeName}";
+
+                        ProductGroup? productGroupType = null;
+
+                        if (groupDictionary.TryGetValue(typeKey, out var typeGroups))
+                        {
+                            productGroupType = typeGroups.FirstOrDefault();
+                        }
+
+                        if (productGroupType != null)
+                        {
+                            if (productGroupType.ParentID != null &&
+                                productGroupType.ParentID != productGroup.ID)
+                            {
+                                var checkGroup = _productgroupRepo.GetByID(
+                                    Convert.ToInt32(productGroupType.ParentID)
+                                );
+
+                                return BadRequest(
+                                    ApiResponseFactory.Fail(
+                                        null,
+                                        $"Mã loại vật tư [{item.Item.ProductGroupTypeNo}] " +
+                                        $"đã tồn tại trong nhóm " +
+                                        $"[{checkGroup.ProductGroupID}-{checkGroup.ProductGroupName}]! " +
+                                        $"Vui lòng kiểm tra lại."
+                                    )
+                                );
+                            }
+                        }
+
+                        if (productGroupType == null)
+                        {
+                            productGroupType = new ProductGroup
+                            {
+                                ID = 0,
+                                ProductGroupName =
+                                    item.Item.ProductGroupTypeName?.Trim(),
+
+                                ProductGroupID =
+                                    item.Item.ProductGroupTypeNo?.Trim(),
+
+                                ParentID = productGroup.ID
+                            };
+
+                            await _productgroupRepo.CreateAsync(productGroupType);
+
+                            if (!groupDictionary.ContainsKey(typeKey))
+                                groupDictionary[typeKey] =
+                                    new List<ProductGroup>();
+
+                            groupDictionary[typeKey].Add(productGroupType);
+                        }
+                        item.Item.ProductGroupID = productGroupType.ID;
+                    }
+                }
+
+                // ================== [RULE 1] MỖI NHÓM CHỈ TỒN TẠI MÃ SẢN PHẨM 1 LẦN (TRONG FILE) ==================
+                // Cùng ProductCode + cùng ProductGroupID xuất hiện > 1 lần trong file => luôn vi phạm,
+                // bất kể thông tin (tên/hãng/đơn vị) giống hay khác nhau.
+
+                var duplicateInSameGroup = items
+                    .GroupBy(x => new { x.ProductCode, GroupID = x.Item.ProductGroupID })
+                    .Where(g => g.Count() > 1)
+                    .Select(g => new
+                    {
+                        ProductCode = g.Key.ProductCode,
+                        ProductGroupID = g.Key.GroupID,
+                        Rows = g.Select(x => new
+                        {
+                            x.Item.ProductName,
+                            x.Item.FirmName,
+                            x.Item.UnitName
+                        }).ToList()
+                    })
+                    .ToList();
+
+                if (duplicateInSameGroup.Any())
+                {
+                    var codes = string.Join(", ", duplicateInSameGroup.Select(x => x.ProductCode).Distinct());
+                    return BadRequest(
+                        ApiResponseFactory.Fail(
+                            null,
+                            $"Mã sản phẩm bị trùng trong cùng 1 nhóm: [{codes}]. " +
+                            $"Mỗi nhóm chỉ được tồn tại 1 mã sản phẩm. Vui lòng kiểm tra lại."
+                        )
+                    );
+                }
+
+                // Cùng ProductCode nhưng khác nhóm mà thông tin (tên/hãng/đơn vị) lại khác nhau
+                // => file tự mâu thuẫn, không xác định được nên tạo mới sản phẩm với thông tin nào.
+                var duplicateCodeConflicts = items
+                    .GroupBy(x => x.ProductCode)
+                    .Where(g => g.Count() > 1)
+                    .Where(g =>
+                        g.Select(x => x.ProductName).Distinct().Count() > 1 ||
+                        g.Select(x => x.Maker).Distinct().Count() > 1 ||
+                        g.Select(x => x.Unit).Distinct().Count() > 1
+                    )
+                    .Select(g => new
+                    {
+                        ProductCode = g.Key,
+                        Rows = g.Select(x => new
+                        {
+                            x.Item.ProductName,
+                            x.Item.FirmName,
+                            x.Item.UnitName,
+                            x.Item.ProductGroupID
+                        }).ToList()
+                    })
+                    .ToList();
+
+                if (duplicateCodeConflicts.Any())
+                {
+                    var codes = string.Join(", ", duplicateCodeConflicts.Select(x => x.ProductCode));
+                    return BadRequest(
+                        ApiResponseFactory.Fail(
+                            null,
+                            $"Phát hiện mã sản phẩm bị trùng nhưng thông tin (tên/hãng/đơn vị) khác nhau " +
+                            $"trong file: [{codes}]. Vui lòng kiểm tra lại."
+                        )
+                    );
+                }
+
+                // ================== [RULE 2] SO SÁNH VỚI DỮ LIỆU ĐÃ CÓ TRONG DB ==================
+
+                var productCodes = items
+                    .Select(x => x.ProductCode)
+                    .Distinct()
+                    .ToList();
+
+                var products = _productsaleRepo.GetAll(x =>
+                    x.IsDeleted != true &&
+                    x.ProductCode != null &&
+                    productCodes.Contains(x.ProductCode)
+                ).ToList();
+
+                var productsByCode = products
+                    .Where(x => !string.IsNullOrWhiteSpace(x.ProductCode))
+                    .GroupBy(x => NormalizeKey(x.ProductCode))
+                    .ToDictionary(
+                        g => g.Key,
+                        g => g.ToList()
+                    );
+
+                // Đã tồn tại (cùng mã + cùng nhóm) và thông tin khớp hoàn toàn => hợp lệ
+                var existingList =
+                    new List<ProductSale>();
+
+                // Đã tồn tại (cùng mã + cùng nhóm) nhưng thông tin lệch (tên/hãng/đơn vị)
+                // => vi phạm Rule 2, cần cảnh báo cho người dùng biết đang có sai lệch với dữ liệu gốc
+                var existingMismatchList =
+                    new List<ProductSale>();
+
+                // Cùng mã, khác nhóm, đã Approved hoặc Fix, nhưng thông tin lại khác => cảnh báo
+                var existingApprovedList =
+                    new List<ProductSale>();
+
+                // Cùng mã, khác nhóm, chưa Approved & chưa Fix => cảnh báo trùng chờ duyệt
+                var existingNotApprovedList =
+                    new List<ProductSale>();
+
+                foreach (var item in items)
+                {
+                    if (!productsByCode.TryGetValue(
+                            item.ProductCode,
+                            out var productList))
+                    {
+                        continue;
+                    }
+
+                    var sameCodeSameGroup = productList.Where(x =>
+                        NormalizeKey(x.ProductCode) == item.ProductCode &&
+                        x.ProductGroupID == item.Item.ProductGroupID &&
+                        x.IsDeleted != true
+                    );
+
+                    foreach (var x in sameCodeSameGroup)
+                    {
+                        bool isMatched =
+                            NormalizeCompare(x.ProductName) == item.ProductName &&
+                            NormalizeCompare(x.Maker) == item.Maker &&
+                            NormalizeCompare(x.Unit) == item.Unit;
+
+                        if (isMatched)
+                            existingList.Add(x);
+                        else
+                            existingMismatchList.Add(x);
+                    }
+
+                    var existingApproved = productList.Where(x =>
+                        x.ProductGroupID != item.Item.ProductGroupID &&
+                        (x.IsApproved == true || x.IsFix == true) &&
+                        NormalizeKey(x.ProductCode) == item.ProductCode &&
+                        x.IsDeleted != true &&
+                        (
+                            NormalizeCompare(x.ProductName) != item.ProductName ||
+                            NormalizeCompare(x.Maker) != item.Item.FirmName ||
+                            NormalizeCompare(x.Unit) != item.Item.UnitName
+                        )
+                    );
+
+                    existingApprovedList.AddRange(existingApproved);
+
+                    var existingNotApproved = productList.Where(x =>
+                        x.ProductGroupID != item.Item.ProductGroupID &&
+                        x.IsApproved == false &&
+                        x.IsFix == false &&
+                        x.IsDeleted != true
+                    );
+
+                    existingNotApprovedList.AddRange(existingNotApproved);
+                }
+
+                if (existingMismatchList.Any())
+                {
+                    var codes = string.Join(", ", existingMismatchList
+                        .Select(x => x.ProductCode)
+                        .Distinct());
+
+                    return BadRequest(
+                        ApiResponseFactory.Fail(
+                            null,
+                            $"Mã sản phẩm [{codes}] đã tồn tại trong hệ thống (cùng nhóm) nhưng thông tin " +
+                            $"(tên/hãng/đơn vị) không khớp với dữ liệu đang nhập. Vui lòng kiểm tra lại."
+                        )
+                    );
+                }
+
+                var data = new
+                {
+                    ExistingList = existingList,
+                    ExistingApprovedList = existingApprovedList,
+                    ExistingNotApprovedList = existingNotApprovedList
+                };
+
+                return Ok(
+                    ApiResponseFactory.Success(
+                        data,
+                        "Xử lý dữ liệu thành công!"
+                    )
+                );
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(
+                    ApiResponseFactory.Fail(
+                        ex,
+                        ex.Message
+                    )
+                );
+            }
+        }
 
         [HttpPost("save-data-excel")]
         public async Task<IActionResult> SaveDataProductSaleExcel([FromBody] List<ProductSaleImportExcelDTO> dtos)
@@ -453,11 +1106,42 @@ namespace RERPAPI.Controllers.Old.SaleWareHouseManagement
                             }
                         }
 
-                        if (_productsaleRepo.CheckCode(dto))
+                        //if (_productsaleRepo.CheckCode(dto))
+                        //{
+                        //    duplicateCodes.Add(dto.ProductCode ?? "N/A");
+                        //    failCount++;
+                        //    continue; // Bỏ qua bản ghi trùng mã
+                        //}
+
+                        var checkExistProduct = _productsaleRepo.GetAll(x =>
+                            x.ProductCode == dto.ProductCode &&
+                            x.ProductName == dto.ProductName &&
+                            x.Maker == dto.FirmName &&
+                            x.Unit == dto.UnitName &&
+                            x.IsApproved == true &&
+                            x.IsDeleted != true &&
+                            x.ProductGroupID != dto.ProductGroupID
+                         ).FirstOrDefault();
+
+                        if (checkExistProduct != null)
                         {
-                            duplicateCodes.Add(dto.ProductCode ?? "N/A");
-                            failCount++;
-                            continue; // Bỏ qua bản ghi trùng mã
+                            dto.IsApproved = true;
+                            dto.ApprovedID = checkExistProduct.ApprovedID;
+                        }
+
+                        var checkExistIsFix = _productsaleRepo.GetAll(x =>
+                           x.ProductCode == dto.ProductCode &&
+                           x.ProductName == dto.ProductName &&
+                           x.Maker == dto.FirmName &&
+                           x.Unit == dto.UnitName &&
+                           x.IsFix == true &&
+                           x.IsDeleted != true &&
+                           x.ProductGroupID != dto.ProductGroupID
+                        ).FirstOrDefault();
+
+                        if (checkExistIsFix != null)
+                        {
+                            dto.IsFix = true;
                         }
 
                         if (!string.IsNullOrWhiteSpace(dto.FirmName))
@@ -489,6 +1173,7 @@ namespace RERPAPI.Controllers.Old.SaleWareHouseManagement
 
                             dto.Unit = unitCount.UnitName;
                         }
+
                         if (dto.ID <= 0)
                         {
                             if (string.IsNullOrWhiteSpace(dto.ProductNewCode))
@@ -1032,7 +1717,7 @@ namespace RERPAPI.Controllers.Old.SaleWareHouseManagement
                         </p>
                     </div>";
 
-                await _emailHelper.SendAsync(emailTo,subject,body,true,emailCc);
+                await _emailHelper.SendAsync(emailTo, subject, body, true, emailCc);
 
                 return Ok(ApiResponseFactory.Success(null, ""));
             }
@@ -1062,10 +1747,19 @@ namespace RERPAPI.Controllers.Old.SaleWareHouseManagement
             try
             {
                 string code = productCode.Trim();
-                var product = _productsaleRepo.GetAll(x => x.ProductCode.Equals(code)).FirstOrDefault();
 
-                if (product == null) 
-                    return BadRequest(ApiResponseFactory.Fail(null, "Không tìm thấy thông tin sản phẩm/ sản phẩm không tồn tại!"));
+                var candidates = _productsaleRepo
+                    .GetAll(x => x.ProductCode == code)
+                    .ToList();
+
+                var product =
+                    candidates.FirstOrDefault(x => x.ProductCode == code && x.IsApproved == true && x.IsFix == true)
+                    ?? candidates.FirstOrDefault(x => x.ProductCode == code && x.IsApproved == true && x.IsFix == false)
+                    ?? candidates.FirstOrDefault(x => x.ProductCode == code && x.IsApproved == false && x.IsFix == true)
+                    ?? candidates.FirstOrDefault(x => x.ProductCode == code);
+
+                if (product == null)
+                    return BadRequest(ApiResponseFactory.Fail(null, "Không tìm thấy thông tin sản phẩm chuẩn được duyệt. Vui lòng kiểm tra lại!"));
 
                 return Ok(ApiResponseFactory.Success(product, "Lấy dữ liệu thành công!"));
             }

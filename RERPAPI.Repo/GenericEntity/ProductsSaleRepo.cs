@@ -27,7 +27,19 @@ namespace RERPAPI.Repo.GenericEntity
                 && x.IsDeleted == false
                 && x.ProductGroupID == item.ProductGroupID);
 
-            return existing.Any();
+            var existingApproved = GetAll(
+                x => x.ProductCode.Trim().ToLower() == item.ProductCode.Trim().ToLower()
+                && x.ProductGroupID != item.ProductGroupID
+                && x.IsDeleted != true
+                && (x.IsApproved == true || x.IsFix == true)
+                && (
+                     x.ProductName != item.ProductName ||
+                     x.Maker != item.Maker ||
+                     x.Unit != item.Unit
+                   )
+             );
+
+            return existing.Any() || existingApproved.Any();
         }
     }
 }
