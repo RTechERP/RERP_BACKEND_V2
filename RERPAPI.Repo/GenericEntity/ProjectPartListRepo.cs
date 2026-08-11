@@ -230,8 +230,8 @@ namespace RERPAPI.Repo.GenericEntity
             if (!string.IsNullOrWhiteSpace(item.SpecialCode))
             {
                 //var specialCode = GetAll(x => x.SpecialCode == item.SpecialCode && x.ID != item.ID && x.IsDeleted != true);
-                var specialCode = GetAll(x => x.SpecialCode == item.SpecialCode && x.ProductCode != item.ProductCode && x.IsDeleted != true); // VTNam update
-                if (specialCode.Count > 0)
+                bool specialCode = CheckSpecialCode(item.ProductCode, item.SpecialCode); // VTNam update mã đb
+                if (specialCode)
                 {
                     message = $"Mã đặc biệt [{item.SpecialCode}] đã tồn tại .\nVui lòng kiểm tra lại!";
                     return false;
@@ -363,12 +363,9 @@ namespace RERPAPI.Repo.GenericEntity
 
                 if (!string.IsNullOrWhiteSpace(item.SpecialCode))
                 {
-                    var specialCode = GetAll(x =>
-                        x.SpecialCode == item.SpecialCode
-                        && x.ProductCode != item.ProductCode // VTN update
-                        && x.IsDeleted != true);
+                    var specialCode = CheckSpecialCode(item.ProductCode, item.SpecialCode); //VTN update mã đb
 
-                    if (specialCode.Count > 0)
+                    if (specialCode)
                     {
                         duplicateSpecialCodes.Add(item.SpecialCode);
                     }
@@ -578,8 +575,9 @@ namespace RERPAPI.Repo.GenericEntity
             }
             if (!string.IsNullOrWhiteSpace(item.SpecialCode))
             {
-                var specialCode = GetAll(x => x.SpecialCode == item.SpecialCode && x.ProductCode != item.ProductCode && x.IsDeleted != true); // VTN update
-                if (specialCode.Count > 0)
+                //var specialCode = GetAll(x => x.SpecialCode == item.SpecialCode && x.ProductCode != item.ProductCode && x.IsDeleted != true); // VTN update
+                var specialCode = CheckSpecialCode(item.ProductCode, item.SpecialCode); // VTN update mã đb
+                if (specialCode)
                 {
                     message = $"Mã đặc biệt [{item.SpecialCode}] đã tồn tại .\nVui lòng kiểm tra lại!";
                     return false;
@@ -1253,9 +1251,10 @@ namespace RERPAPI.Repo.GenericEntity
                         //    return Fail(result, $"Mã đặc biệt [{specialCode}] đã tồn tại\n(TT: {stt}).\nVui lòng kiểm tra lại!");
                         //} //VTNam update
 
-                        var checkExist = GetAll(x => x.SpecialCode == specialCode && x.ProductCode != productCode && x.IsDeleted != true);
+                        //var checkExist = GetAll(x => x.SpecialCode == specialCode && x.ProductCode != productCode && x.IsDeleted != true);
+                        var checkExist = CheckSpecialCode(item.ProductCode, item.SpecialCode); //VTNam update mã đb
 
-                        if (checkExist.Count() > 0)
+                        if (checkExist)
                         {
                             return Fail(result, $"Mã đặc biệt [{specialCode}] đã tồn tại\n(TT: {stt}).\nVui lòng kiểm tra lại!"); //VTNam update
                         }
@@ -1486,6 +1485,25 @@ namespace RERPAPI.Repo.GenericEntity
                 parentId = parent.ID;
             }
             return parentId;
+        }
+
+        public bool CheckSpecialCode(string productCode, string specialCode)
+        {
+            var data = SQLHelper<dynamic>.ProcedureToList(
+                "spCheckSpecialCode",
+                new string[] { "@ProductCode", "@SpecialCode" },
+                new object[] { productCode, specialCode }
+            );
+
+            if (data == null || data.Count == 0)
+                return false;
+
+            var result = data[0];
+
+            if (result == null || result.Count == 0)
+                return false;
+
+            return Convert.ToBoolean(result[0].IsDuplicate);
         }
     }
 }

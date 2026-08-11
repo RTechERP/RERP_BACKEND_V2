@@ -3094,14 +3094,9 @@ namespace RERPAPI.Controllers.Project
                     return BadRequest(ApiResponseFactory.Fail(null, "Không tìm thấy partList. Vui lòng kiểm tra lại!"));
                 }
 
-                var existsData = _projectPartlistRepo.GetAll(x =>
-                    x.SpecialCode.Trim().ToLower() == specialCode.Trim().ToLower() &&
-                    x.ID != partlistId &&
-                    x.ProductCode != partlistData.ProductCode &&
-                    x.IsDeleted != true //VTNam update
-                );
+                var existsData = _projectPartlistRepo.CheckSpecialCode(partlistData.ProductCode, specialCode);
 
-                if (existsData.Count > 0 && !string.IsNullOrWhiteSpace(specialCode))
+                if (existsData)
                 {
                     return BadRequest(ApiResponseFactory.Fail(null, $"Mã đặc biệt [{specialCode}] đã tồn tại."));
                 }
@@ -3388,23 +3383,16 @@ namespace RERPAPI.Controllers.Project
 
 
         [HttpGet("project-partlist")]
-        public IActionResult GetProjectPartList()
+        public async Task<IActionResult> GetProjectPartList()
         {
             try
             {
-                var dt = _projectPartlistRepo.GetAll(x =>
-                    x.IsDeleted != true &&
-                    !string.IsNullOrWhiteSpace(x.ProductCode) &&
-                    !string.IsNullOrWhiteSpace(x.SpecialCode)
-                )
-                .GroupBy(x => new
+                var param = new
                 {
-                    x.ProductCode,
-                    x.SpecialCode
-                })
-                .Select(g => g.First())
-                .ToList();
+                    ProductCode = ""
+                };
 
+                var dt = await SqlDapper<object>.ProcedureToListAsync("spGetProductSpecialCodes", param);
                 return Ok(ApiResponseFactory.Success(dt, ""));
             }
             catch (Exception ex)
