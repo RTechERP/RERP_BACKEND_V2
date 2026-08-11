@@ -166,4 +166,6 @@ public partial class BillImportDetail
     public bool? IsNotKeep { get; set; }
 
     public int? ProcessedGoods { get; set; }
+
+    public int? POKHDetailImportAgainID { get; set; }
 }

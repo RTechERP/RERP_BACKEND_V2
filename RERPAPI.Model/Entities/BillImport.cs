@@ -122,4 +122,6 @@ public partial class BillImport
     /// ID phiếu xuất
     /// </summary>
     public int? BillExportID { get; set; }
+
+    public bool? IsReturnedInventory { get; set; }
 }
