@@ -229,7 +229,8 @@ namespace RERPAPI.Repo.GenericEntity
             }
             if (!string.IsNullOrWhiteSpace(item.SpecialCode))
             {
-                var specialCode = GetAll(x => x.SpecialCode == item.SpecialCode && x.ID != item.ID && x.IsDeleted != true);
+                //var specialCode = GetAll(x => x.SpecialCode == item.SpecialCode && x.ID != item.ID && x.IsDeleted != true);
+                var specialCode = GetAll(x => x.SpecialCode == item.SpecialCode && x.ProductCode != item.ProductCode && x.IsDeleted != true); // VTNam update
                 if (specialCode.Count > 0)
                 {
                     message = $"Mã đặc biệt [{item.SpecialCode}] đã tồn tại .\nVui lòng kiểm tra lại!";
@@ -364,7 +365,7 @@ namespace RERPAPI.Repo.GenericEntity
                 {
                     var specialCode = GetAll(x =>
                         x.SpecialCode == item.SpecialCode
-                        && x.ID != item.ID
+                        && x.ProductCode != item.ProductCode // VTN update
                         && x.IsDeleted != true);
 
                     if (specialCode.Count > 0)
@@ -577,7 +578,7 @@ namespace RERPAPI.Repo.GenericEntity
             }
             if (!string.IsNullOrWhiteSpace(item.SpecialCode))
             {
-                var specialCode = GetAll(x => x.SpecialCode == item.SpecialCode && x.ID != item.ID && x.IsDeleted != true);
+                var specialCode = GetAll(x => x.SpecialCode == item.SpecialCode && x.ProductCode != item.ProductCode && x.IsDeleted != true); // VTN update
                 if (specialCode.Count > 0)
                 {
                     message = $"Mã đặc biệt [{item.SpecialCode}] đã tồn tại .\nVui lòng kiểm tra lại!";
@@ -1165,7 +1166,7 @@ namespace RERPAPI.Repo.GenericEntity
 
             List<string> listSTT = new();
             List<string> listSttAll = new();
-            List<string> listSPCode = new();
+            //List<string> listSPCode = new(); // VTNam update
 
             // 1. Thu thập STT
             foreach (var item in request.Items)
@@ -1174,10 +1175,10 @@ namespace RERPAPI.Repo.GenericEntity
 
                 listSttAll.Add(item.TT);
 
-                if (!string.IsNullOrWhiteSpace(item.SpecialCode))
-                {
-                    listSPCode.Add(item.SpecialCode.Trim().ToLower());
-                }
+                //if (!string.IsNullOrWhiteSpace(item.SpecialCode))
+                //{
+                //    listSPCode.Add(item.SpecialCode.Trim().ToLower()); // VTNam update
+                //}
 
                 if (!item.TT.Contains(".")) continue;
                 if (!regexStt.IsMatch(item.TT)) continue;
@@ -1245,11 +1246,18 @@ namespace RERPAPI.Repo.GenericEntity
                     // Check SpecialCode duplicate
                     if (!string.IsNullOrWhiteSpace(specialCode))
                     {
-                        string normalized = specialCode.Trim().ToLower();
+                        //string normalized = specialCode.Trim().ToLower();
 
-                        if (listSPCode.Count(x => x == normalized) > 1)
+                        //if (listSPCode.Count(x => x == normalized) > 1)
+                        //{
+                        //    return Fail(result, $"Mã đặc biệt [{specialCode}] đã tồn tại\n(TT: {stt}).\nVui lòng kiểm tra lại!");
+                        //} //VTNam update
+
+                        var checkExist = GetAll(x => x.SpecialCode == specialCode && x.ProductCode != productCode && x.IsDeleted != true);
+
+                        if (checkExist.Count() > 0)
                         {
-                            return Fail(result, $"Mã đặc biệt [{specialCode}] đã tồn tại\n(TT: {stt}).\nVui lòng kiểm tra lại!");
+                            return Fail(result, $"Mã đặc biệt [{specialCode}] đã tồn tại\n(TT: {stt}).\nVui lòng kiểm tra lại!"); //VTNam update
                         }
                     }
 
