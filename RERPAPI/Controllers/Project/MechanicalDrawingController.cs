@@ -204,7 +204,7 @@ namespace RERPAPI.Controllers.Project
                     ? $"Project_{project.ID}"
                     : rawProjectCode);
 
-                string targetFolder = Path.Combine(uploadPath, year.ToString(), projectCode, "BanVeCoKhi");
+                string targetFolder = Path.Combine(uploadPath, year.ToString(), projectCode, "TaiLieuChung", "GiaiPhap", "BanVeCoKhi");
 
                 if (!Directory.Exists(targetFolder))
                     Directory.CreateDirectory(targetFolder);
@@ -447,7 +447,7 @@ namespace RERPAPI.Controllers.Project
                     ? $"Project_{project.ID}"
                     : rawProjectCode);
 
-                string thumbnailFolder = Path.Combine(uploadPath, year.ToString(), projectCode, "BanVeCoKhi", "Thumbnails");
+                string thumbnailFolder = Path.Combine(uploadPath, year.ToString(), projectCode, "TaiLieuChung", "GiaiPhap", "BanVeCoKhi", "Thumbnails");
                 if (!Directory.Exists(thumbnailFolder))
                     Directory.CreateDirectory(thumbnailFolder);
 

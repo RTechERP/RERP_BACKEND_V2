@@ -8095,7 +8095,6 @@ FROM (
                     <ul>
                         <li><strong>Team:</strong> {team.TeamName}</li>
                         <li><strong>Kỳ KPI:</strong> {periodCode}</li>
-                        <li><strong>Số mục tiêu đã duyệt:</strong> {approvedCount}</li>
                         <li><strong>Người duyệt (BGD):</strong> {boardApprover}</li>
                         <li><strong>Thời gian duyệt:</strong> {DateTime.Now:dd/MM/yyyy HH:mm}</li>
                     </ul>
