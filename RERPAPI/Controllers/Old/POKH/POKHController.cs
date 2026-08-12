@@ -568,29 +568,29 @@ namespace RERPAPI.Controllers.Old.POKH
             // =======================
             // Validate POKH Details
             // =======================
-            if (dto.POKHDetails != null)
-            {
-                int row = 1;
-                var product = _productSaleRepo.GetAll(x => x.IsDeleted != true);
-                foreach (var d in dto.POKHDetails)
-                {
-                    if (d.IsDeleted == true)
-                    {
-                        row++;
-                        continue;
-                    }
-                    if (d.ProductID > 0 && !string.IsNullOrWhiteSpace(d.GuestCode))
-                    {
-                        string productCode = product.FirstOrDefault(x => x.ID == d.ProductID).ProductCode;
-                        var checkSpecialCode = _pokhDetailRepo.CheckSpecialCode(productCode, d.GuestCode);
-                        if (checkSpecialCode)
-                            errors.Add($"Dòng {row}: mã khách hàng đã tồn tại");
+            //if (dto.POKHDetails != null)
+            //{
+            //    int row = 1;
+            //    var product = _productSaleRepo.GetAll(x => x.IsDeleted != true);
+            //    foreach (var d in dto.POKHDetails)
+            //    {
+            //        if (d.IsDeleted == true)
+            //        {
+            //            row++;
+            //            continue;
+            //        }
+            //        if (d.ProductID > 0 && !string.IsNullOrWhiteSpace(d.GuestCode))
+            //        {
+            //            string productCode = product.FirstOrDefault(x => x.ID == d.ProductID)?.ProductCode ?? "";
+            //            var checkSpecialCode = _pokhDetailRepo.CheckSpecialCode(productCode, d.GuestCode);
+            //            if (checkSpecialCode)
+            //                errors.Add($"Dòng {row}: mã khách hàng đã tồn tại");
 
-                    }
-                    row++;
+            //        }
+            //        row++;
 
-                }
-            }
+            //    }
+            //}
 
             // =======================
             // Validate POKH Detail Money
