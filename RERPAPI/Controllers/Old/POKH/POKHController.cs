@@ -568,44 +568,29 @@ namespace RERPAPI.Controllers.Old.POKH
             // =======================
             // Validate POKH Details
             // =======================
-            //if (dto.POKHDetails != null)
-            //{
-            //    int row = 1;
-            //    foreach (var d in dto.POKHDetails)
-            //    {
-            //        if (d.IsDeleted == true)
-            //        {
-            //            row++;
-            //            continue;
-            //        }
+            if (dto.POKHDetails != null)
+            {
+                int row = 1;
+                var product = _productSaleRepo.GetAll(x => x.IsDeleted != true);
+                foreach (var d in dto.POKHDetails)
+                {
+                    if (d.IsDeleted == true)
+                    {
+                        row++;
+                        continue;
+                    }
+                    if (d.ProductID > 0 && !string.IsNullOrWhiteSpace(d.GuestCode))
+                    {
+                        string productCode = product.FirstOrDefault(x => x.ID == d.ProductID).ProductCode;
+                        var checkSpecialCode = _pokhDetailRepo.CheckSpecialCode(productCode, d.GuestCode);
+                        if (checkSpecialCode)
+                            errors.Add($"Dòng {row}: mã khách hàng đã tồn tại");
 
-            //        if (!d.ProductID.HasValue || d.ProductID <= 0)
-            //            errors.Add($"Dòng {row}: ProductID là bắt buộc");
+                    }
+                    row++;
 
-            //        if (string.IsNullOrWhiteSpace(d.GuestCode) == false && d.GuestCode.Length > 100)
-            //            errors.Add($"Dòng {row}: GuestCode vượt quá 100 ký tự");
-
-            //        if (string.IsNullOrWhiteSpace(d.FilmSize) == false && d.FilmSize.Length > 200)
-            //            errors.Add($"Dòng {row}: FilmSize vượt quá 200 ký tự");
-
-            //        if (d.Qty.HasValue && d.Qty < 0)
-            //            errors.Add($"Dòng {row}: Qty không được âm");
-
-            //        if (d.UnitPrice.HasValue && d.UnitPrice < 0)
-            //            errors.Add($"Dòng {row}: UnitPrice không được âm");
-
-            //        if (d.VAT.HasValue && (d.VAT < 0 || d.VAT > 100))
-            //            errors.Add($"Dòng {row}: VAT phải từ 0–100%");
-
-            //        if (!string.IsNullOrWhiteSpace(d.BillNumber) && d.BillNumber.Length > 100)
-            //            errors.Add($"Dòng {row}: BillNumber vượt quá 100 ký tự");
-
-            //        if (!string.IsNullOrWhiteSpace(d.Note) && d.Note.Length > 500)
-            //            errors.Add($"Dòng {row}: Note vượt quá 500 ký tự");
-
-            //        row++;
-            //    }
-            //}
+                }
+            }
 
             // =======================
             // Validate POKH Detail Money
@@ -1386,7 +1371,7 @@ namespace RERPAPI.Controllers.Old.POKH
                     var checkExist = _productSaleRepo
                         .GetAll(x => x.ProductCode.Trim() == productSale.ProductCode.Trim() && x.IsDeleted != true);
 
-                    if(checkExist.Count() > 1)
+                    if (checkExist.Count() > 1)
                     {
                         idProductSaleCheck.Add(productSale.ID);
                     }
@@ -1444,7 +1429,7 @@ namespace RERPAPI.Controllers.Old.POKH
                         </a>.
                     </p>
                 </div>";
-                
+
                 // Gửi mail
                 await _emailHelper.SendAsync(emailTo, subject, body, true, emailCc);
 

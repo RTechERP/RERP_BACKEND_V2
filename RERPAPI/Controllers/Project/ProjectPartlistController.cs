@@ -3094,15 +3094,14 @@ namespace RERPAPI.Controllers.Project
                     return BadRequest(ApiResponseFactory.Fail(null, "Không tìm thấy partList. Vui lòng kiểm tra lại!"));
                 }
 
-                var existsData = _projectPartlistRepo.GetAll(
-                    x => x.SpecialCode.Trim().ToLower() == specialCode.Trim().ToLower()
-                         && x.ID != partlistId && x.ProductCode != partlistData.ProductCode);
+                var existsData = _projectPartlistRepo.CheckSpecialCode(partlistData.ProductCode, specialCode);
 
-                if (existsData.Count > 0 && !string.IsNullOrWhiteSpace(specialCode))
+                if (existsData)
                 {
                     return BadRequest(ApiResponseFactory.Fail(null, $"Mã đặc biệt [{specialCode}] đã tồn tại."));
                 }
 
+                //partlistData.SpecialCode = specialCode; //VTNam update
                 partlistData.SpecialCode = specialCode;
                 partlistData.SpecialCode = specialCode;
                 await _projectPartlistRepo.UpdateAsync(partlistData);
@@ -3375,6 +3374,26 @@ namespace RERPAPI.Controllers.Project
             {
                 var result = await _partListHistoryLogRepo.GetLogsWithVersionInfo(projectId, versionId);
                 return Ok(ApiResponseFactory.Success(result, "Lấy lịch sử thao tác thành công!"));
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ApiResponseFactory.Fail(ex, $"Lỗi: {ex.Message}"));
+            }
+        }
+
+
+        [HttpGet("project-partlist")]
+        public async Task<IActionResult> GetProjectPartList()
+        {
+            try
+            {
+                var param = new
+                {
+                    ProductCode = ""
+                };
+
+                var dt = await SqlDapper<object>.ProcedureToListAsync("spGetProductSpecialCodes", param);
+                return Ok(ApiResponseFactory.Success(dt, ""));
             }
             catch (Exception ex)
             {
