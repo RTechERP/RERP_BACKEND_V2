@@ -1,4 +1,4 @@
-﻿using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc;
 using RERPAPI.Attributes;
 using RERPAPI.Model.Common;
 using RERPAPI.Model.DTO;
@@ -55,7 +55,7 @@ namespace RERPAPI.Controllers
 
         // POST: /api/vehiclebookingmanagement
         [HttpPost("get-vehicle-booking-management")]
-        [RequiresPermission("N2,N34,N1,N68")]
+        [RequiresPermission("N2,N34,N1,N68,N117")]
         public IActionResult GetVehicleBookingManagement([FromBody] VehicleBookingManagementRequestParam request)
         {
             try
