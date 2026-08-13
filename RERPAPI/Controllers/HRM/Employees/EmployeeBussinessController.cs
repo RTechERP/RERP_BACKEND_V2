@@ -27,7 +27,7 @@ namespace RERPAPI.Controllers.HRM.Employees
             _employeeBussinessVehicleRepo = employeeBussinessVehicleRepo;
         }
 
-        [RequiresPermission("N1,N2,N113")]
+        [RequiresPermission("N1,N2,N113,N117")]
         [HttpPost]
         public IActionResult getEmployeeBussiness(EmployeeBussinessParam param)
         {
@@ -145,7 +145,7 @@ namespace RERPAPI.Controllers.HRM.Employees
             }
         }
 
-        [RequiresPermission("N1,N2,N113")]
+        [RequiresPermission("N1,N2,N113,N117")]
         [HttpPost("get-work-management")]
         public IActionResult GetWorkManagement([FromBody] EmployeeNightShiftSummaryRequestParam request)
         {
@@ -166,7 +166,7 @@ namespace RERPAPI.Controllers.HRM.Employees
             }
         }
 
-        [RequiresPermission("N1,N2,N113")]
+        [RequiresPermission("N1,N2,N113,N117")]
         [HttpGet("detail")]
         public IActionResult GetEmployeeBussinessDetail(int employeeId, DateTime dayBussiness)
         {
