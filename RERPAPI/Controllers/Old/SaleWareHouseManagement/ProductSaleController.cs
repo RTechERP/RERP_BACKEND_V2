@@ -1228,6 +1228,7 @@ namespace RERPAPI.Controllers.Old.SaleWareHouseManagement
 
         private bool CheckProductCode(ProductsSaleDTO dto)
         {
+            if (dto.ProductSale != null && dto.ProductSale.IsDeleted == true) return true;
             bool check = true;
             var exists = _productsaleRepo.GetAll(x => x.ProductCode == dto.ProductSale.ProductCode
                             && x.ProductGroupID == dto.ProductSale.ProductGroupID
