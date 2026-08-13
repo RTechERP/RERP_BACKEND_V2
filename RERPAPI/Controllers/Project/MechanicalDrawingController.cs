@@ -44,13 +44,13 @@ namespace RERPAPI.Controllers.Project
             }
         }
 
-        [RequiresPermission("N114,N1")]
+        //[RequiresPermission("N114,N1")]
         [HttpGet("get-mechanical-drawings")]
-        public IActionResult GetMechanicalDrawings(int page, int size, int? projectId, string keyword = "")
+        public IActionResult GetMechanicalDrawings(int page, int size, int? projectId, string keyword = "", bool isDeleted = false)
         {
             try
             {
-                var query = _mechanicalDrawingRepo.GetAll(x => x.IsDeleted != true);
+                var query = _mechanicalDrawingRepo.GetAll(x => isDeleted ? x.IsDeleted == true : x.IsDeleted != true);
                 if (projectId.HasValue && projectId > 0)
                     query = query.Where(x => x.ProjectID == projectId).ToList();
                 if (!string.IsNullOrWhiteSpace(keyword))
@@ -167,6 +167,26 @@ namespace RERPAPI.Controllers.Project
             }
         }
 
+        [HttpPost("restore-mechanical-drawing")]
+        public async Task<IActionResult> RestoreMechanicalDrawing(int id)
+        {
+            try
+            {
+                var model = _mechanicalDrawingRepo.GetByID(id);
+                if (model == null)
+                    return BadRequest(ApiResponseFactory.Fail(null, "Bản ghi không tồn tại"));
+
+                model.IsDeleted = false;
+                await _mechanicalDrawingRepo.UpdateAsync(model);
+
+                return Ok(ApiResponseFactory.Success(null, "Khôi phục thành công"));
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
+            }
+        }
+
         [HttpPost("upload-file")]
         [DisableRequestSizeLimit]
         public async Task<IActionResult> UploadFile(int id)
@@ -243,13 +263,33 @@ namespace RERPAPI.Controllers.Project
             }
         }
 
+        [HttpGet("get-file-path")]
+        public IActionResult GetFilePath(int id)
+        {
+            try
+            {
+                var drawing = _mechanicalDrawingRepo.GetByID(id);
+                if (drawing == null)
+                    return BadRequest(ApiResponseFactory.Fail(null, "Không tìm thấy bản vẽ"));
+
+                if (string.IsNullOrWhiteSpace(drawing.FilePath))
+                    return BadRequest(ApiResponseFactory.Fail(null, "Bản vẽ chưa có đường dẫn file"));
+
+                return Ok(ApiResponseFactory.Success(new { FilePath = drawing.FilePath }, ""));
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
+            }
+        }
+
         [HttpGet("download-file")]
         public IActionResult DownloadFile(int id)
         {
             try
             {
                 var drawing = _mechanicalDrawingRepo.GetByID(id);
-                if (drawing == null || drawing.IsDeleted == true)
+                if (drawing == null)
                     return BadRequest(ApiResponseFactory.Fail(null, "Không tìm thấy bản vẽ"));
 
                 if (string.IsNullOrWhiteSpace(drawing.FilePath) || !System.IO.File.Exists(drawing.FilePath))
@@ -286,7 +326,7 @@ namespace RERPAPI.Controllers.Project
             try
             {
                 var drawing = _mechanicalDrawingRepo.GetByID(id);
-                if (drawing == null || drawing.IsDeleted == true)
+                if (drawing == null)
                     return NotFound("Không tìm thấy bản vẽ");
 
                 if (string.IsNullOrWhiteSpace(drawing.ThumbnailPath) || !System.IO.File.Exists(drawing.ThumbnailPath))
@@ -308,7 +348,7 @@ namespace RERPAPI.Controllers.Project
             try
             {
                 var drawing = _mechanicalDrawingRepo.GetByID(id);
-                if (drawing == null || drawing.IsDeleted == true)
+                if (drawing == null)
                     return NotFound("Không tìm thấy bản vẽ");
 
                 if (string.IsNullOrWhiteSpace(drawing.FilePath))
