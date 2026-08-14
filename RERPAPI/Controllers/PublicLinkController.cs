@@ -3,6 +3,8 @@ using Microsoft.AspNetCore.Mvc;
 using RERPAPI.Model.Common;
 using RERPAPI.Model.DTO;
 using RERPAPI.Model.Param;
+using RERPAPI.Repo.GenericEntity;
+using RERPAPI.Repo.GenericEntity.Duan.MeetingMinutes;
 
 namespace RERPAPI.Controllers
 {
@@ -24,10 +26,17 @@ namespace RERPAPI.Controllers
     public class PublicLinkController : ControllerBase
     {
         private readonly IConfiguration _configuration;
+        private readonly ProjectHistoryProblemRepo _historyProblemRepo;
+        private readonly ProjectHistoryProblemFileRepo _historyProblemFileRepo;
 
-        public PublicLinkController(IConfiguration configuration)
+        public PublicLinkController(
+            IConfiguration configuration,
+            ProjectHistoryProblemRepo historyProblemRepo,
+            ProjectHistoryProblemFileRepo historyProblemFileRepo)
         {
             _configuration = configuration;
+            _historyProblemRepo = historyProblemRepo;
+            _historyProblemFileRepo = historyProblemFileRepo;
         }
 
         private string Secret => _configuration["PublicLinkSettings:SecretKey"] ?? "";
@@ -93,6 +102,40 @@ namespace RERPAPI.Controllers
             }
         }
 
+        /// <summary>
+        /// Đọc dữ liệu chi tiết của một dòng (file đính kèm + các bảng liên kết).
+        /// Không cần đăng nhập, chỉ đọc.
+        ///
+        /// `id` được kiểm tra phải thuộc đúng dự án ghi trong token — nếu không,
+        /// một token hợp lệ của dự án A sẽ trở thành chìa khoá đọc chi tiết mọi
+        /// dòng của mọi dự án khác.
+        /// </summary>
+        [HttpGet("detail")]
+        [AllowAnonymous]
+        public IActionResult GetDetail(string t, int id)
+        {
+            try
+            {
+                if (!PublicLinkSigner.TryVerify(t, Secret, out PublicLinkPayload? payload) || payload == null)
+                    return BadRequest(ApiResponseFactory.Fail(null, "Link không hợp lệ hoặc đã hết hạn."));
+
+                switch (payload.Route)
+                {
+                    case "issuelog":
+                    case "issue-log":
+                    case "project-history-problem-new":
+                        return GetIssueLogDetail(payload, id);
+
+                    default:
+                        return BadRequest(ApiResponseFactory.Fail(null, "Trang này không hỗ trợ xem công khai."));
+                }
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
+            }
+        }
+
         // -------------------------------------------------------------------
         // Các trang được phép xem công khai
         // -------------------------------------------------------------------
@@ -119,6 +162,53 @@ namespace RERPAPI.Controllers
                 filters = payload.Filters,
                 dtDetail,
                 dtMaster
+            }, "Lấy dữ liệu thành công"));
+        }
+
+        /// <summary>Chi tiết một dòng lịch sử phát sinh: file đính kèm + các bảng liên kết.</summary>
+        private IActionResult GetIssueLogDetail(PublicLinkPayload payload, int id)
+        {
+            int projectID = GetInt(payload.Filters, "projectId");
+
+            if (projectID <= 0 || id <= 0)
+                return BadRequest(ApiResponseFactory.Fail(null, "Thiếu thông tin để lấy chi tiết."));
+
+            // Chốt chặn quan trọng: dòng phải thuộc đúng dự án mà token cho phép.
+            bool belongsToProject = _historyProblemRepo
+                .GetAll(x => x.ID == id && x.ProjectID == projectID && x.IsDeleted != true)
+                .Any();
+
+            if (!belongsToProject)
+                return BadRequest(ApiResponseFactory.Fail(null, "Không tìm thấy dữ liệu."));
+
+            var files = _historyProblemFileRepo
+                .GetAll(x => x.ProjectHistoryProblemID == id && x.IsDeleted == false)
+                .Select(x => new
+                {
+                    x.ID,
+                    x.FileName,
+                    x.ServerPath,
+                    x.OriginPath,
+                    x.ProjectHistoryProblemID,
+                    x.FileType
+                })
+                .ToList();
+
+            var data = SQLHelper<object>.ProcedureToList(
+                "spGetProjectHistoryProblemLinkedData",
+                new string[] { "@ProjectHistoryProblemID" },
+                new object[] { id });
+
+            var dtProjectItemLink = SQLHelper<object>.GetListData(data, 0);
+            var dtWorkerVersionLink = SQLHelper<object>.GetListData(data, 1);
+            var dtPartlistVersionLink = SQLHelper<object>.GetListData(data, 2);
+
+            return Ok(ApiResponseFactory.Success(new
+            {
+                files,
+                dtProjectItemLink,
+                dtWorkerVersionLink,
+                dtPartlistVersionLink
             }, "Lấy dữ liệu thành công"));
         }
 
