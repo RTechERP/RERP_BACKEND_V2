@@ -154,7 +154,7 @@ namespace RERPAPI.Controllers.Old.SaleWareHouseManagement
                     ID = id,
                     Find = keyWords,
                     WarehouseCode = warehouse.WarehouseCode,
-                    IsStock = 1
+                    IsStock = 0
                 };
 
                 var paramWarehouse = new
@@ -163,7 +163,7 @@ namespace RERPAPI.Controllers.Old.SaleWareHouseManagement
                     ProductGroupID = id == 0 ? 99 : id
                 };
 
-                var dtMaster = await SqlDapper<object>.ProcedureToListAsync("spGetInventoryStock", param);
+                var dtMaster = await SqlDapper<object>.ProcedureToListAsync("spGetInventoryStock_Old", param);
                 var dtWarehouse = await SqlDapper<object>.ProcedureToListAsync("spGetProductGroupWarehouse", paramWarehouse);
 
                 var result = new
