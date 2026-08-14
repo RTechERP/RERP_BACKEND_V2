@@ -76,6 +76,25 @@ namespace RERPAPI.Controllers.Old.Asset
                 });
             }
         }
+
+        [HttpPost("export-excel-asset-management")]
+        public IActionResult ExportExcelAssetManagement([FromBody] AssetmanagementRequestParam request)
+        {
+            try
+            {
+                var assets = SQLHelper<dynamic>.ProcedureToList("spExportExcelTSAssetManagement",
+                    new string[] { "@FilterText", "@PageNumber", "@PageSize", "@DateStart", "@DateEnd"},
+                    new object[] { request.FilterText ?? "", request.PageNumber <= 0 ? 1 : request.PageNumber, request.PageSize <= 0 ? 9999999 : request.PageSize, request.DateStart, request.DateEnd });
+
+                var data = SQLHelper<dynamic>.GetListData(assets, 0);
+                return Ok(ApiResponseFactory.Success(data));
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
+            }
+        }
+
         [HttpPost("get-asset-person")]
         public IActionResult GetPersonalPropertiesByPerson([FromBody] AssetmanagementRequestParam request)
         {
