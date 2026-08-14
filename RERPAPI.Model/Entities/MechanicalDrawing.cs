@@ -24,4 +24,6 @@ public partial class MechanicalDrawing
     public DateTime? UpdatedDate { get; set; }
 
     public string? ThumbnailPath { get; set; }
+
+    public int? ProjectTypeID { get; set; }
 }
