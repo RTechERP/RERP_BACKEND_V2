@@ -5681,6 +5681,8 @@ public partial class RTCContext : DbContext
                 .HasComment("Tiền hàng phát sinh")
                 .HasColumnType("decimal(18, 2)");
             entity.Property(e => e.BillImportID).HasComment("Id phiếu nhập");
+            entity.Property(e => e.CreatedBy).HasMaxLength(255);
+            entity.Property(e => e.CreatedDate).HasColumnType("datetime");
             entity.Property(e => e.CurrencyID).HasComment("Loại tiền");
             entity.Property(e => e.DeliverID).HasComment("Nhân viên mua/ người giao");
             entity.Property(e => e.DomesticPayable)
@@ -5712,6 +5714,10 @@ public partial class RTCContext : DbContext
             entity.Property(e => e.UnitPrice)
                 .HasComment("Đơn giá")
                 .HasColumnType("decimal(18, 2)");
+            entity.Property(e => e.UpdatedBy).HasMaxLength(255);
+            entity.Property(e => e.UpdatedDate).HasColumnType("datetime");
+            entity.Property(e => e.WeekEndDate).HasColumnType("datetime");
+            entity.Property(e => e.WeekStartDate).HasColumnType("datetime");
         });
 
         modelBuilder.Entity<ExpectedPayableLog>(entity =>

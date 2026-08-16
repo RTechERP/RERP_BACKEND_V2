@@ -82,4 +82,18 @@ public partial class ExpectedPayable
     /// % Thanh toán
     /// </summary>
     public decimal? PaymentPercentage { get; set; }
+
+    public bool? IsAdditional { get; set; }
+
+    public DateTime? WeekStartDate { get; set; }
+
+    public DateTime? WeekEndDate { get; set; }
+
+    public DateTime? CreatedDate { get; set; }
+
+    public string? CreatedBy { get; set; }
+
+    public DateTime? UpdatedDate { get; set; }
+
+    public string? UpdatedBy { get; set; }
 }
