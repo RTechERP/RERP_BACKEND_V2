@@ -7,8 +7,11 @@ using RERPAPI.Repo.GenericEntity;
 using RERPAPI.Repo.GenericEntity.Project;
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.IO;
 using System.Linq;
+using System.Text;
+using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 
 namespace RERPAPI.Controllers.Project
@@ -21,6 +24,8 @@ namespace RERPAPI.Controllers.Project
         private readonly ProjectGateStepCheckListDetailLinkRepo _stepCheckListDetailLinkRepo;
         private readonly ProjectGateStepCheckListDetailRepo _stepCheckListDetailRepo;
         private readonly ProjectGateStepFileRepo _stepFileRepo;
+        private readonly ProjectGateStepLinkRepo _stepLinkRepo;
+        private readonly ProjectRepo _projectRepo;
         private readonly ConfigSystemRepo _configSystemRepo;
         private readonly CurrentUser _currentUser;
 
@@ -28,12 +33,16 @@ namespace RERPAPI.Controllers.Project
             ProjectGateStepCheckListDetailLinkRepo stepCheckListDetailLinkRepo,
             ProjectGateStepCheckListDetailRepo stepCheckListDetailRepo,
             ProjectGateStepFileRepo stepFileRepo,
+            ProjectGateStepLinkRepo stepLinkRepo,
+            ProjectRepo projectRepo,
             ConfigSystemRepo configSystemRepo,
             CurrentUser currentUser)
         {
             _stepCheckListDetailLinkRepo = stepCheckListDetailLinkRepo;
             _stepCheckListDetailRepo = stepCheckListDetailRepo;
             _stepFileRepo = stepFileRepo;
+            _stepLinkRepo = stepLinkRepo;
+            _projectRepo = projectRepo;
             _configSystemRepo = configSystemRepo;
             _currentUser = currentUser;
         }
@@ -51,6 +60,20 @@ namespace RERPAPI.Controllers.Project
                     return NotFound(ApiResponseFactory.Fail(null, "Không tìm thấy Quy tắc liên kết"));
 
                 var ruleDef = _stepCheckListDetailRepo.GetByID(checkListLink.ProjectGateStepCheckListDetailID);
+                string? projectCode = null;
+                string? projectName = null;
+
+                var stepLink = _stepLinkRepo.GetByID(checkListLink.ProjectGateStepLinkID);
+                if (stepLink != null && stepLink.ProjectID.HasValue && stepLink.ProjectID.Value > 0)
+                {
+                    var proj = _projectRepo.GetByID(stepLink.ProjectID.Value);
+                    if (proj != null)
+                    {
+                        projectCode = proj.ProjectCode;
+                        projectName = proj.ProjectName;
+                    }
+                }
+
                 if (ruleDef != null)
                 {
                     // 1. Kiểm tra định dạng (FileFormat / Type)
@@ -70,12 +93,10 @@ namespace RERPAPI.Controllers.Project
                     // 2. Kiểm tra tên quy chuẩn (FileName / StandardFileName)
                     if (ruleDef.IsFile && !string.IsNullOrWhiteSpace(ruleDef.FileName))
                     {
-                        var standardName = Path.GetFileNameWithoutExtension(ruleDef.FileName).Trim().ToLower();
-                        var uploadName = Path.GetFileNameWithoutExtension(dto.FileName).Trim().ToLower();
-
-                        if (!uploadName.Contains(standardName))
+                        if (!IsFileNameMatchStandard(dto.FileName, ruleDef.FileName, projectCode, projectName))
                         {
-                            return BadRequest(ApiResponseFactory.Fail(null, $"Tên tệp tin không đúng quy chuẩn. Tên tệp yêu cầu có chứa: {ruleDef.FileName}"));
+                            var resolvedName = GetResolvedStandardFileName(ruleDef.FileName, projectCode, projectName, dto.FileName);
+                            return BadRequest(ApiResponseFactory.Fail(null, $"Tên tệp tin không đúng quy chuẩn. Quy chuẩn yêu cầu: \"{resolvedName}\" (Mẫu: {ruleDef.FileName})"));
                         }
                     }
 
@@ -90,10 +111,21 @@ namespace RERPAPI.Controllers.Project
                     }
                 }
 
+                // Đảm bảo FileName lưu vào DB luôn là OriginalFileName sạch (không chứa hậu tố unique do server sinh ra nếu lỡ bị truyền vào)
+                string cleanFileName = dto.FileName;
+                var fileExt = Path.GetExtension(cleanFileName);
+                var baseName = Path.GetFileNameWithoutExtension(cleanFileName);
+                baseName = Regex.Replace(baseName, @"(_[0-9]{14}_[a-fA-F0-9]{8})$", "");
+                if (!string.IsNullOrWhiteSpace(projectCode))
+                {
+                    baseName = Regex.Replace(baseName, @"(_" + Regex.Escape(projectCode.Trim()) + @"_[0-9]{14}_[a-fA-F0-9]{8})$", "");
+                }
+                cleanFileName = $"{baseName}{fileExt}";
+
                 var newFile = new ProjectGateStepFile
                 {
                     ProjectGateStepCheckListDetailLinkID = checkListLinkId,
-                    FileName = dto.FileName,
+                    FileName = cleanFileName,
                     FilePath = dto.FilePath,
                     FileSize = dto.FileSize,
                     ContentType = dto.ContentType,
@@ -111,6 +143,209 @@ namespace RERPAPI.Controllers.Project
             {
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
+        }
+
+        /// <summary>
+        /// Chuyển chuỗi tiếng Việt có dấu thành không dấu, viết hoa chữ cái đầu mỗi từ (PascalCase) và loại bỏ ký tự đặc biệt, dấu câu
+        /// Ví dụ: "Máy đóng gói, tự động - 2026" -> "MayDongGoiTuDong2026"
+        /// </summary>
+        private static string SanitizeProjectName(string? str)
+        {
+            if (string.IsNullOrWhiteSpace(str)) return string.Empty;
+
+            // 1. Chuyển tiếng Việt có dấu thành không dấu
+            string normalized = str.Normalize(NormalizationForm.FormD);
+            var sb = new StringBuilder();
+            foreach (char c in normalized)
+            {
+                var uc = CharUnicodeInfo.GetUnicodeCategory(c);
+                if (uc != UnicodeCategory.NonSpacingMark)
+                {
+                    sb.Append(c);
+                }
+            }
+            string nonAccent = sb.ToString().Normalize(NormalizationForm.FormC)
+                .Replace('đ', 'd')
+                .Replace('Đ', 'D');
+
+            // 2. Tách từ theo khoảng trắng và các ký tự đặc biệt / dấu câu
+            var words = Regex.Split(nonAccent, @"[^a-zA-Z0-9]+");
+            var result = new StringBuilder();
+            foreach (var w in words)
+            {
+                if (string.IsNullOrEmpty(w)) continue;
+                if (w.Length == 1)
+                {
+                    result.Append(char.ToUpperInvariant(w[0]));
+                }
+                else
+                {
+                    result.Append(char.ToUpperInvariant(w[0])).Append(w.Substring(1));
+                }
+            }
+
+            string res = result.ToString();
+            return !string.IsNullOrEmpty(res) ? res : Regex.Replace(nonAccent, @"[^a-zA-Z0-9]", "");
+        }
+
+        /// <summary>
+        /// Sinh chuỗi tên file quy chuẩn mẫu với các biến động được thay thế bằng thông tin thực tế của dự án để người dùng dễ quan sát và copy
+        /// </summary>
+        private static string GetResolvedStandardFileName(string templateFileName, string? projectCode, string? projectName, string? uploadFileName = null)
+        {
+            if (string.IsNullOrWhiteSpace(templateFileName)) return string.Empty;
+
+            string safeProjCode = !string.IsNullOrWhiteSpace(projectCode) ? projectCode.Trim() : "MãDựÁn";
+            string sanitizedProjName = SanitizeProjectName(projectName);
+            string cleanProjName = !string.IsNullOrWhiteSpace(sanitizedProjName) ? sanitizedProjName : "TenDuAn";
+
+            string resolved = templateFileName.Trim();
+            resolved = Regex.Replace(resolved, @"\{(?i)(projectcode|maduan)\}", safeProjCode);
+            resolved = Regex.Replace(resolved, @"\{(?i)(projectname|tenduan)\}", cleanProjName);
+            resolved = Regex.Replace(resolved, @"\{(?i)(rv|revision|ver|version)\}", "Rv01");
+            resolved = Regex.Replace(resolved, @"\{(?i)xx\}", "01");
+            resolved = Regex.Replace(resolved, @"\{(?i)(gatecode|magate)\}", "GateCode");
+            resolved = Regex.Replace(resolved, @"\{(?i)(stepcode|macongdoan)\}", "StepCode");
+            resolved = Regex.Replace(resolved, @"\{(?i)(any|text|all)\}", "TenFile");
+            resolved = resolved.Replace("*", "");
+            resolved = Regex.Replace(resolved, @"([-_])(?i)(rv|revision|ver|version)$", "$1RV01");
+
+            if (!string.IsNullOrWhiteSpace(uploadFileName) && !resolved.Contains('.'))
+            {
+                string ext = Path.GetExtension(uploadFileName);
+                if (!string.IsNullOrWhiteSpace(ext))
+                {
+                    resolved = $"{resolved}{ext}";
+                }
+            }
+
+            return resolved;
+        }
+
+        /// <summary>
+        /// Lấy phần tên cơ bản của file (loại bỏ đuôi mở rộng như .jpg, .png, .pdf nếu có, nhưng không cắt nhầm dấu chấm trong mã dự án như 1.25.023)
+        /// </summary>
+        private static string GetFileNameBase(string? fileName)
+        {
+            if (string.IsNullOrWhiteSpace(fileName)) return string.Empty;
+            fileName = fileName.Trim();
+
+            // Chỉ cắt phần mở rộng nếu sau dấu chấm cuối cùng là extension hợp lệ (1-6 ký tự chữ/số không chứa gạch ngang/dưới và không phải số nguyên)
+            int lastDot = fileName.LastIndexOf('.');
+            if (lastDot > 0 && lastDot < fileName.Length - 1)
+            {
+                string potentialExt = fileName.Substring(lastDot + 1);
+                if (potentialExt.Length <= 6 && Regex.IsMatch(potentialExt, @"^[a-zA-Z0-9]+$") && !int.TryParse(potentialExt, out _))
+                {
+                    return fileName.Substring(0, lastDot).Trim();
+                }
+            }
+
+            return fileName;
+        }
+
+        /// <summary>
+        /// Kiểm tra tên file upload có khớp với mẫu quy chuẩn (hỗ trợ cả chuỗi tĩnh lẫn template regex: {ProjectCode}, {ProjectName}, {Rv}, {StepCode}, *)
+        /// </summary>
+        private static bool IsFileNameMatchStandard(string uploadFileName, string templateFileName, string? projectCode, string? projectName)
+        {
+            if (string.IsNullOrWhiteSpace(templateFileName)) return true;
+
+            var uploadBase = GetFileNameBase(uploadFileName);
+            var templateBase = GetFileNameBase(templateFileName);
+
+            // Bóc tách hậu tố unique do server upload sinh ra (_yyyyMMddHHmmss_guid) nếu có
+            uploadBase = Regex.Replace(uploadBase, @"(_[0-9]{14}_[a-fA-F0-9]{8})$", "");
+            if (!string.IsNullOrWhiteSpace(projectCode))
+            {
+                uploadBase = Regex.Replace(uploadBase, @"(_" + Regex.Escape(projectCode.Trim()) + @"_[0-9]{14}_[a-fA-F0-9]{8})$", "");
+            }
+
+            if (!Regex.IsMatch(templateBase, @"\{.*?\}|\*"))
+            {
+                return uploadBase.IndexOf(templateBase, StringComparison.OrdinalIgnoreCase) >= 0;
+            }
+
+            // Chuẩn hóa ProjectCode & ProjectName
+            string safeProjectCode = !string.IsNullOrWhiteSpace(projectCode) ? Regex.Escape(projectCode.Trim()) : @"[a-zA-Z0-9_\-\.]+";
+            string sanitizedProjName = SanitizeProjectName(projectName);
+            string rawCleanProjName = !string.IsNullOrWhiteSpace(projectName) ? Regex.Replace(projectName.Trim(), @"\s+", "") : "";
+
+            string projNamePattern;
+            if (!string.IsNullOrWhiteSpace(sanitizedProjName) && !string.IsNullOrWhiteSpace(rawCleanProjName) && !sanitizedProjName.Equals(rawCleanProjName, StringComparison.OrdinalIgnoreCase))
+            {
+                projNamePattern = $"(?:{Regex.Escape(sanitizedProjName)}|{Regex.Escape(rawCleanProjName)})";
+            }
+            else if (!string.IsNullOrWhiteSpace(sanitizedProjName))
+            {
+                projNamePattern = Regex.Escape(sanitizedProjName);
+            }
+            else
+            {
+                projNamePattern = @"[a-zA-Z0-9_\-\.]+";
+            }
+
+            // Chuẩn hóa hậu tố -RV ở cuối template thành {Rv} nếu người dùng cấu hình không có ngoặc nhọn
+            string pattern = templateBase;
+            pattern = Regex.Replace(pattern, @"([-_])(?i)(rv|revision|ver|version)$", "$1{Rv}");
+
+            // Tách theo các token placeholder {...} và wildcard * để ráp biểu thức Regex hoàn chỉnh
+            var parts = Regex.Split(pattern, @"(\{[^}]+\}|\*)");
+            var patternBuilder = new StringBuilder();
+            patternBuilder.Append('^');
+
+            foreach (var part in parts)
+            {
+                if (string.IsNullOrEmpty(part)) continue;
+
+                if (part == "*")
+                {
+                    patternBuilder.Append(".*");
+                }
+                else if (part.StartsWith("{") && part.EndsWith("}"))
+                {
+                    string token = part.Substring(1, part.Length - 2).Trim();
+                    if (Regex.IsMatch(token, @"^(?i)(projectcode|maduan)$"))
+                    {
+                        patternBuilder.Append(safeProjectCode);
+                    }
+                    else if (Regex.IsMatch(token, @"^(?i)(projectname|tenduan)$"))
+                    {
+                        patternBuilder.Append(projNamePattern);
+                    }
+                    else if (Regex.IsMatch(token, @"^(?i)(rv|revision|xx|ver|version)$"))
+                    {
+                        patternBuilder.Append(@"(?:Rv|rv|RV|v|V)?\d*");
+                    }
+                    else if (Regex.IsMatch(token, @"^(?i)(gatecode|magate)$"))
+                    {
+                        patternBuilder.Append(@"[a-zA-Z0-9_\-]+");
+                    }
+                    else if (Regex.IsMatch(token, @"^(?i)(stepcode|macongdoan)$"))
+                    {
+                        patternBuilder.Append(@"[a-zA-Z0-9_\-]+");
+                    }
+                    else if (Regex.IsMatch(token, @"^(?i)(any|text|all)$"))
+                    {
+                        patternBuilder.Append(@".*");
+                    }
+                    else
+                    {
+                        patternBuilder.Append(@"[a-zA-Z0-9_\-\.]+");
+                    }
+                }
+                else
+                {
+                    // Phần tĩnh: chỉ escape regex, giữ nguyên dấu - và _ (không cần thay thế linh hoạt vì pattern đã IgnoreCase)
+                    string escapedStatic = Regex.Escape(part);
+                    patternBuilder.Append(escapedStatic);
+                }
+            }
+
+            patternBuilder.Append('$');
+
+            var finalRegex = new Regex(patternBuilder.ToString(), RegexOptions.IgnoreCase);
+            return finalRegex.IsMatch(uploadBase);
         }
 
         [HttpGet("GetCheckLists/{stepLinkId}")]
@@ -390,7 +625,9 @@ namespace RERPAPI.Controllers.Project
                         var fileExtension = Path.GetExtension(file.FileName);
                         var originalFileName = Path.GetFileNameWithoutExtension(file.FileName);
 
-                        var projCodePart = !string.IsNullOrWhiteSpace(projectCode) ? $"_{projectCode}" : "";
+                        var projCodePart = (!string.IsNullOrWhiteSpace(projectCode) && !originalFileName.Contains(projectCode, StringComparison.OrdinalIgnoreCase))
+                            ? $"_{projectCode}"
+                            : "";
                         var uniqueFileName = $"{originalFileName}{projCodePart}_{DateTime.Now:yyyyMMddHHmmss}_{Guid.NewGuid().ToString("N")[..8]}{fileExtension}";
                         var fullPath = Path.Combine(targetFolder, uniqueFileName);
 
