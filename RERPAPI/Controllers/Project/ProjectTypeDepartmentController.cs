@@ -25,6 +25,29 @@ namespace RERPAPI.Controllers.Project
             _projectTypeDepartmentRepo = projectTypeDepartmentRepo;
 
         }
+        /// <summary>
+        /// Lấy danh sách dự án theo kiểu dự án / phòng ban, đi qua bảng nối ProjectTypeLink.
+        /// Truyền 0 để bỏ qua điều kiện tương ứng.
+        /// </summary>
+        [HttpGet("get-projects-by-type")]
+        public IActionResult GetProjectsByType(int departmentId, int projectTypeId)
+        {
+            try
+            {
+                var data = SQLHelper<object>.ProcedureToList(
+                    "spGetProjectByProjectTypeDepartment",
+                    new string[] { "@DepartmentID", "@ProjectTypeID" },
+                    new object[] { departmentId, projectTypeId }
+                );
+
+                return Ok(ApiResponseFactory.Success(SQLHelper<object>.GetListData(data, 0), "Lấy dữ liệu thành công"));
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
+            }
+        }
+
         //Lấy kiểu dự án theo phòng ban
         [HttpGet("get-by-department/{departmentId}")]
         public IActionResult GetByDepartment(int departmentId)
