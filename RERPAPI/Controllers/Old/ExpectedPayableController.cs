@@ -2,6 +2,7 @@
 using Microsoft.AspNetCore.Mvc;
 using RERPAPI.Attributes;
 using RERPAPI.Model.Common;
+using RERPAPI.Model.DTO;
 using RERPAPI.Model.Entities;
 using RERPAPI.Repo.GenericEntity;
 
@@ -276,6 +277,24 @@ namespace RERPAPI.Controllers.Old
             try
             {
                 var data = _expectedPayableLogRepo.GetAll().Where(x => x.ExpectedPayableID == expectedPayableId).OrderByDescending(x => x.CreatedDate).ToList();
+                return Ok(ApiResponseFactory.Success(data, ""));
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
+            }
+        }
+
+        [HttpGet("poncc-infor")]
+        public async Task<IActionResult> GetProcurementData(int ponccID)
+        {
+            try
+            {
+                var param = new
+                {
+                    @PONCCID = ponccID
+                };
+                var data = await SqlDapper<object>.ProcedureToListAsync("spGetPONCCInfor", param);
                 return Ok(ApiResponseFactory.Success(data, ""));
             }
             catch (Exception ex)
