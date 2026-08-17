@@ -192,7 +192,7 @@ namespace RERPAPI.Controllers.Old.POKH
                         if (dict.ContainsKey("MoneyDate") && dict["MoneyDate"] != null)
                         {
                             if (DateTime.TryParse(dict["MoneyDate"].ToString(), out DateTime date))
-                                worksheet.Cell(row, 2).Value = date.ToString("dd/MM/yyyy");
+                                worksheet.Cell(row, 2).Value = date;
                         }
 
                         worksheet.Cell(row, 3).Value = dict.ContainsKey("Money") && dict["Money"] != null ? Convert.ToDecimal(dict["Money"]) : 0;
@@ -218,9 +218,10 @@ namespace RERPAPI.Controllers.Old.POKH
                     rngTable.Style.Border.LeftBorder = XLBorderStyleValues.Thin;
                     rngTable.Style.Border.RightBorder = XLBorderStyleValues.Thin;
 
-                    // Format money columns
+                    // Format date and money columns
                     if (row > 2)
                     {
+                        worksheet.Range($"B2:B{row - 1}").Style.NumberFormat.Format = "dd/mm/yyyy";
                         worksheet.Range($"C2:C{row - 1}").Style.NumberFormat.Format = "#,##0";
                         worksheet.Range($"K2:K{row - 1}").Style.NumberFormat.Format = "#,##0";
                     }
@@ -288,7 +289,7 @@ namespace RERPAPI.Controllers.Old.POKH
                         if (dict.ContainsKey("MoneyDate") && dict["MoneyDate"] != null)
                         {
                             if (DateTime.TryParse(dict["MoneyDate"].ToString(), out DateTime date))
-                                worksheet.Cell(row, 4).Value = date.ToString("dd/MM/yyyy");
+                                worksheet.Cell(row, 4).Value = date;
                         }
 
                         worksheet.Cell(row, 5).Value = dict.ContainsKey("Money") && dict["Money"] != null ? Convert.ToDecimal(dict["Money"]) : 0;
@@ -314,9 +315,10 @@ namespace RERPAPI.Controllers.Old.POKH
                     rngTable.Style.Border.LeftBorder = XLBorderStyleValues.Thin;
                     rngTable.Style.Border.RightBorder = XLBorderStyleValues.Thin;
 
-                    // Format money columns
+                    // Format date and money columns
                     if (row > 2)
                     {
+                        worksheet.Range($"D2:D{row - 1}").Style.NumberFormat.Format = "dd/mm/yyyy";
                         worksheet.Range($"E2:E{row - 1}").Style.NumberFormat.Format = "#,##0";
                         worksheet.Range($"M2:M{row - 1}").Style.NumberFormat.Format = "#,##0";
                     }

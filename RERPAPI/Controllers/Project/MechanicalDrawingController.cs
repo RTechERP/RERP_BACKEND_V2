@@ -17,17 +17,20 @@ namespace RERPAPI.Controllers.Project
         private readonly ProjectRepo _projectRepo;
         private readonly CurrentUser _currentUser;
         private readonly ConfigSystemRepo _configSystemRepo;
+        private readonly ProjectTypeRepo _projectTypeRepo;
 
         public MechanicalDrawingController(
             MechanicalDrawingRepo mechanicalDrawingRepo,
             ProjectRepo projectRepo,
             CurrentUser currentUser,
-            ConfigSystemRepo configSystemRepo)
+            ConfigSystemRepo configSystemRepo,
+            ProjectTypeRepo projectTypeRepo)
         {
             _mechanicalDrawingRepo = mechanicalDrawingRepo;
             _projectRepo = projectRepo;
             _currentUser = currentUser;
             _configSystemRepo = configSystemRepo;
+            _projectTypeRepo = projectTypeRepo;
         }
 
         [HttpGet("get-projects")]
@@ -43,16 +46,31 @@ namespace RERPAPI.Controllers.Project
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
+        [HttpGet("get-project-types")]
+        public IActionResult GetProjectTypes()
+        {
+            try
+            {
+                var data = _projectTypeRepo.GetAll(x => x.IsDeleted != true).ToList();
+                return Ok(ApiResponseFactory.Success(data, ""));
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
+            }
+        }
 
         //[RequiresPermission("N114,N1")]
         [HttpGet("get-mechanical-drawings")]
-        public IActionResult GetMechanicalDrawings(int page, int size, int? projectId, string keyword = "", bool isDeleted = false)
+        public IActionResult GetMechanicalDrawings(int page, int size, int? projectId, int? projectTypeId, string keyword = "", bool isDeleted = false)
         {
             try
             {
                 var query = _mechanicalDrawingRepo.GetAll(x => isDeleted ? x.IsDeleted == true : x.IsDeleted != true);
                 if (projectId.HasValue && projectId > 0)
                     query = query.Where(x => x.ProjectID == projectId).ToList();
+                if (projectTypeId.HasValue && projectTypeId > 0)
+                    query = query.Where(x => x.ProjectTypeID == projectTypeId).ToList();
                 if (!string.IsNullOrWhiteSpace(keyword))
                 {
                     var keywordLower = keyword.Trim().ToLower();
@@ -65,13 +83,19 @@ namespace RERPAPI.Controllers.Project
                 var projectIds = list.Select(x => x.ProjectID).Distinct().ToList();
                 var projects = _projectRepo.GetAll(x => projectIds.Contains(x.ID)).ToList();
 
+                var projectTypeIds = list.Select(x => x.ProjectTypeID).Where(x => x.HasValue).Select(x => x.Value).Distinct().ToList();
+                var projectTypes = _projectTypeRepo.GetAll(x => projectTypeIds.Contains(x.ID)).ToList();
+
                 var data = list.Select(x => {
                     var proj = projects.FirstOrDefault(p => p.ID == x.ProjectID);
+                    var projType = projectTypes.FirstOrDefault(pt => pt.ID == x.ProjectTypeID);
                     return new {
                         x.ID,
                         x.Name,
                         x.ProjectID,
                         ProjectName = proj?.ProjectName ?? "",
+                        x.ProjectTypeID,
+                        ProjectTypeName = projType?.ProjectTypeName ?? "",
                         x.FilePath,
                         x.ThumbnailPath,
                         x.CreatedBy,
@@ -122,6 +146,7 @@ namespace RERPAPI.Controllers.Project
                         return BadRequest(ApiResponseFactory.Fail(null, "Bản ghi không tồn tại"));
                     exist.Name = model.Name?.Trim();
                     exist.ProjectID = model.ProjectID;
+                    exist.ProjectTypeID = model.ProjectTypeID;
                     exist.FilePath = model.FilePath?.Trim();
                     await _mechanicalDrawingRepo.UpdateAsync(exist);
                     return Ok(ApiResponseFactory.Success(exist, "Cập nhật thành công"));
@@ -132,6 +157,7 @@ namespace RERPAPI.Controllers.Project
                     {
                         Name = model.Name?.Trim(),
                         ProjectID = model.ProjectID,
+                        ProjectTypeID = model.ProjectTypeID,
                         FilePath = model.FilePath?.Trim(),
                     };
                     await _mechanicalDrawingRepo.CreateAsync(newModel);
