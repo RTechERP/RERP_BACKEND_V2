@@ -1011,6 +1011,16 @@ namespace RERPAPI.Controllers.Project
         #endregion
 
         #region SendMail
+        
+        // Helper method để chuyển newline thành <br/> cho HTML
+        private string ConvertNewlinesToHtml(string text)
+        {
+            if (string.IsNullOrEmpty(text))
+                return "";
+            
+            return text.Replace("\r\n", "<br/>").Replace("\n", "<br/>").Replace("\r", "<br/>");
+        }
+
         [HttpPost("send-email-problem")]
         public async Task<IActionResult> SendEmailProblem([FromBody] SendEmailProblemRequest request)
         {
@@ -1103,11 +1113,20 @@ namespace RERPAPI.Controllers.Project
                 };
 
                 // Gom danh sách Email: Lấy người đầu tiên gán cho Email To, phần còn lại gán vào Email CC
-                string emailTo = emails.First();
-                string emailCc = emails.Count > 1 ? string.Join(",", emails.Skip(1)) : "";
+                //string emailTo = emails.First();
+                //string emailCc = emails.Count > 1 ? string.Join(",", emails.Skip(1)) : "";
 
-                //string emailTo = "tuananh.ng011004@gmail.com";
-                //string emailCc = "vutunam.cv@gmail.com";
+                string emailTo = "tuananh.ng011004@gmail.com";
+                string emailCc = "vutunam.cv@gmail.com";
+
+                // Chuyển đổi các trường text có xuống dòng thành HTML
+                string contentErrorHtml = ConvertNewlinesToHtml(problem.ContentError);
+                string reasonHtml = ConvertNewlinesToHtml(problem.Reason);
+                string remediesHtml = ConvertNewlinesToHtml(problem.Remedies);
+                string impactHtml = ConvertNewlinesToHtml(problem.Impact);
+                string errorLocationHtml = ConvertNewlinesToHtml(problem.ErrorLocation);
+                string noteHtml = ConvertNewlinesToHtml(problem.Note);
+                string issueConclusionHtml = ConvertNewlinesToHtml(problem.IssueConclusion);
 
                 // Xây dựng Tiêu đề và Nội dung HTML
                 //string subject = $"THÔNG BÁO PHÁT SINH DỰ ÁN {projectCode} - {projectName}".ToUpper();
@@ -1115,15 +1134,19 @@ namespace RERPAPI.Controllers.Project
                 string body = $@"
             <div style='font-family: Arial, sans-serif; line-height: 1.6;'>
                 <h2 style='color: #d9534f;'>ISSUE LOG {projectCode}</h2>
-                <p><strong>Dự án:</strong>{projectCode} - {projectName}</p>
+                <p><strong>Dự án:</strong> {projectCode} - {projectName}</p>
                 <p><strong>Ngày phát sinh:</strong> {(problem.DateProblem.HasValue ? problem.DateProblem.Value.ToString("dd/MM/yyyy") : "")}</p>
                 <p><strong>Mức độ ưu tiên:</strong> {priorityText}</p>
                 <p><strong>Loại phát sinh:</strong> {issueLogTypeText}</p>
                 <p><strong>Trạng thái xử lý:</strong> {statusProblemText}</p>
-                <p><strong>Nội dung lỗi:</strong> {problem.ContentError}</p>
-                <p><strong>Nguyên nhân:</strong> {problem.Reason}</p>
-                <p><strong>Biện pháp khắc phục:</strong> {problem.Remedies}</p>
+                {(!string.IsNullOrWhiteSpace(errorLocationHtml) ? $"<p><strong>Vị trí lỗi:</strong> {errorLocationHtml}</p>" : "")}
+                <p><strong>Nội dung lỗi:</strong> {contentErrorHtml}</p>
+                <p><strong>Nguyên nhân:</strong> {reasonHtml}</p>
+                {(!string.IsNullOrWhiteSpace(impactHtml) ? $"<p><strong>Ảnh hưởng:</strong> {impactHtml}</p>" : "")}
+                <p><strong>Biện pháp khắc phục:</strong> {remediesHtml}</p>
+                {(!string.IsNullOrWhiteSpace(issueConclusionHtml) ? $"<p><strong>Kết quả sau xử lý:</strong> {issueConclusionHtml}</p>" : "")}
                 <p><strong>PIC:</strong> {problem.PIC}</p>
+                {(!string.IsNullOrWhiteSpace(noteHtml) ? $"<p><strong>Ghi chú:</strong> {noteHtml}</p>" : "")}
                 <hr/>
                 <p><small>Đây là email thông báo tự động từ hệ thống R-ERP, vui lòng không phản hồi lại email này.</small></p>
             </div>";
