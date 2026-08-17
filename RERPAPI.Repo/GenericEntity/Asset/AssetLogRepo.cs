@@ -41,9 +41,11 @@ namespace RERPAPI.Repo.GenericEntity.Asset
             ["DateEffect"] = "Ngày hiệu lực",
             ["SpecificationsAsset"] = "Mô tả chi tiết",
             ["Note"] = "Ghi chú",
-            ["IsAllocation"] = "Cấp phát",
-            ["WindowActiveStatus"] = "Active Windows",
-            ["OfficeActiveStatus"] = "Active Office",
+            ["KeyWin"] = "Key Windows",
+            ["KeyOffice"] = "Key Office",
+            ["DateActiveWin"] = "Ngày kích hoạt Windows",
+            ["DateActiveOffice"] = "Ngày kích hoạt Office",
+            ["DateExpireOffice"] = "Ngày hết hạn Office",
         };
 
         #endregion Tên hiển thị tiếng Việt cho các property (thay vì tên cột DB)
@@ -113,16 +115,6 @@ namespace RERPAPI.Repo.GenericEntity.Asset
                     continue;
                 }
 
-                // ── Status: enum nội bộ, map số → text (case 6 phụ thuộc IsTransfer) ──
-                if (prop.Name == "WindowActiveStatus" || prop.Name == "OfficeActiveStatus")
-                {
-                    var oldInt = oldVal as int? ?? 0;
-                    var newInt = newVal as int? ?? 0;
-                    if (oldInt == newInt) continue;
-
-                    changes.Add($"{label}: {StatusText(oldInt)} → {StatusText(newInt)}");
-                    continue;
-                }
 
                 // ── Int: coi 0 và null là giống nhau (thường dùng cho FK) ──
                 if (propType == typeof(int))

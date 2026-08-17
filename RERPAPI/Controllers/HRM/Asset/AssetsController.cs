@@ -135,6 +135,27 @@ namespace RERPAPI.Controllers.Old.Asset
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
+        [HttpGet("get-quantity-unapprove")]
+        public IActionResult GetQuantityUnApprove([FromQuery] DateTime dateStart,
+           [FromQuery] DateTime dateEnd,
+           [FromQuery] int receiverID = 0,
+           [FromQuery] int assetCategory = 0)
+        {
+            try
+            {
+                var claims = User.Claims.ToDictionary(x => x.Type, x => x.Value);
+                CurrentUser currentUser = ObjectMapper.GetCurrentUser(claims);
+                var assets = SQLHelper<dynamic>.ProcedureToList("spGetPersonalProperty",
+                       new string[] { "@DateStart", "@DateEnd", "@ReceiverID", "@AssetCategory" },
+                    new object[] { dateStart, dateEnd, currentUser.EmployeeID, assetCategory });
+                var data = SQLHelper<dynamic>.GetListData(assets, 1);
+                return Ok(ApiResponseFactory.Success(data));
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
+            }
+        }
         [HttpGet("get-personal-property-details")]
         public IActionResult GetPersonalPropertyDetails(int assetID, int assetCategory)
         {
