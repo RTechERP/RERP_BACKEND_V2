@@ -1113,11 +1113,11 @@ namespace RERPAPI.Controllers.Project
                 };
 
                 // Gom danh sách Email: Lấy người đầu tiên gán cho Email To, phần còn lại gán vào Email CC
-                //string emailTo = emails.First();
-                //string emailCc = emails.Count > 1 ? string.Join(",", emails.Skip(1)) : "";
+                string emailTo = emails.First();
+                string emailCc = emails.Count > 1 ? string.Join(",", emails.Skip(1)) : "";
 
-                string emailTo = "tuananh.ng011004@gmail.com";
-                string emailCc = "vutunam.cv@gmail.com";
+                //string emailTo = "tuananh.ng011004@gmail.com";
+                //string emailCc = "vutunam.cv@gmail.com";
 
                 // Chuyển đổi các trường text có xuống dòng thành HTML
                 string contentErrorHtml = ConvertNewlinesToHtml(problem.ContentError);
