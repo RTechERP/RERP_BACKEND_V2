@@ -1837,6 +1837,35 @@ namespace RERPAPI.Controllers.Old.SaleWareHouseManagement
 
                 string picDeliver = checkPicDeliver != null ? Path.Combine(pathStaticFile, $@"{emDeliver.Code.Trim()}.png") ?? "" : "";
                 string picReciver = checkPicReciver != null ? Path.Combine(pathStaticFile, $@"{emReciver.Code.Trim()}.png") ?? "" : "";
+
+                #region Áp dụng chữ ký mua hàng nếu chưa có 
+                PathStaticFile pathFile = _pathStaticFiles
+                            .FirstOrDefault(x => x.PathName == "Purchases") ?? new PathStaticFile();
+
+                if (Path.Exists(pathFile.PathFull))
+                {
+                    string pathImage = Path.Combine(
+                        pathFile.PathFull,
+                        @"2. quy trình. quy định chung\1. quy trình mua hàng\phần mềm misa\ảnh import misa\signnonback"
+                    );
+
+                    if (!string.IsNullOrWhiteSpace(picDeliver))
+                    {
+                        picDeliver = Path.Combine(
+                            pathImage,
+                            $"{emDeliver.Code.Trim()}.png"
+                        ) ?? "";
+                    }
+
+                    if (!string.IsNullOrWhiteSpace(picReciver))
+                    {
+                        picReciver = Path.Combine(
+                            pathImage,
+                            $"{emReciver.Code.Trim()}.png"
+                        ) ?? "";
+                    }
+                }
+                #endregion
                 //string picDeliver = Path.Combine(pathImage, $@"test.png");
                 //string picReciver = Path.Combine(pathImage, $@"test.png");
 
