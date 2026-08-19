@@ -39,7 +39,14 @@ namespace RERPAPI.Controllers
             _historyProblemFileRepo = historyProblemFileRepo;
         }
 
-        private string Secret => _configuration["PublicLinkSettings:SecretKey"] ?? "";
+        private string Secret
+        {
+            get
+            {
+                string key = _configuration["PublicLinkSettings:SecretKey"];
+                return !string.IsNullOrWhiteSpace(key) ? key : "RERP_PUBLIC_LINK_SECRET_KEY_DEFAULT_FALLBACK_2026";
+            }
+        }
 
         private int DefaultExpireDays =>
             int.TryParse(_configuration["PublicLinkSettings:ExpireDays"], out int days) ? days : 0;
@@ -91,6 +98,11 @@ namespace RERPAPI.Controllers
                     case "issue-log":
                     case "project-history-problem-new":
                         return GetIssueLogData(payload);
+
+                    case "masterplan":
+                    case "master-plan":
+                    case "project-gate-step-master-plan":
+                        return GetMasterPlanData(payload);
 
                     default:
                         return BadRequest(ApiResponseFactory.Fail(null, "Trang này không hỗ trợ xem công khai."));
@@ -209,6 +221,46 @@ namespace RERPAPI.Controllers
                 dtProjectItemLink,
                 dtWorkerVersionLink,
                 dtPartlistVersionLink
+            }, "Lấy dữ liệu thành công"));
+        }
+
+        /// <summary>Timeline Master Plan theo dự án cho link công khai.</summary>
+        private IActionResult GetMasterPlanData(PublicLinkPayload payload)
+        {
+            int projectID = GetInt(payload.Filters, "projectId");
+
+            if (projectID <= 0)
+                return BadRequest(ApiResponseFactory.Fail(null, "Link thiếu thông tin dự án."));
+
+            string dateStartStr = payload.Filters.TryGetValue("dateStart", out var ds) ? ds : "";
+            string dateEndStr = payload.Filters.TryGetValue("dateEnd", out var de) ? de : "";
+            string statusStr = payload.Filters.TryGetValue("status", out var st) ? st : "-1";
+
+            DateTime dateStart = string.IsNullOrEmpty(dateStartStr) ? DateTime.Now.AddMonths(-1) : DateTime.Parse(dateStartStr);
+            DateTime dateEnd = string.IsNullOrEmpty(dateEndStr) ? DateTime.Now.AddMonths(2) : DateTime.Parse(dateEndStr);
+
+            dateStart = dateStart.Date;
+            dateEnd = dateEnd.Date.AddDays(1).AddSeconds(-1);
+
+            var timelineDataRaw = SQLHelper<object>.ProcedureToList(
+                "spGetProjectTaskTimeLineByTeam_Luong",
+                new string[] { "@DateStart", "@DateEnd", "@DepartmentID", "@TeamID", "@UserID", "@ProjectID", "@Status", "@Approve", "@TypeSearch" },
+                new object[] { dateStart, dateEnd, 0, 0, 0, projectID, statusStr, -1, 1 });
+
+            var dayOffDataRaw = SQLHelper<object>.ProcedureToList(
+                "spProjectTaskGetDayOff",
+                new string[] { "@DateStart", "@DateEnd" },
+                new object[] { dateStart, dateEnd });
+
+            var timelineData = SQLHelper<object>.GetListData(timelineDataRaw, 0);
+            var dayOffData = SQLHelper<object>.GetListData(dayOffDataRaw, 0);
+
+            return Ok(ApiResponseFactory.Success(new
+            {
+                route = payload.Route,
+                filters = payload.Filters,
+                timelineData,
+                dayOffData
             }, "Lấy dữ liệu thành công"));
         }
 
