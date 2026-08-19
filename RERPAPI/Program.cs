@@ -29,7 +29,6 @@ using RERPAPI.Repo.GenericEntity.HRM;
 using RERPAPI.Repo.GenericEntity.HRM.DepartmentRequire;
 using RERPAPI.Repo.GenericEntity.HRM.FlightBooking;
 using RERPAPI.Repo.GenericEntity.HRM.HotelBooking;
-using RERPAPI.Repo.GenericEntity.HRM.HotelBooking;
 using RERPAPI.Repo.GenericEntity.HRM.HRRecruitmentInterviewAssessment;
 using RERPAPI.Repo.GenericEntity.HRM.ProductProtectiveGear;
 using RERPAPI.Repo.GenericEntity.HRM.Vehicle;

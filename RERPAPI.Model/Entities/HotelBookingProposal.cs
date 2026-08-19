@@ -85,4 +85,19 @@ public partial class HotelBookingProposal
     public string? ReasonDecline { get; set; }
 
     public string? HotelName { get; set; }
+
+    /// <summary>
+    /// Diện tích
+    /// </summary>
+    public string? Area { get; set; }
+
+    /// <summary>
+    /// Tiện ích
+    /// </summary>
+    public string? Convenience { get; set; }
+
+    /// <summary>
+    /// Khoảng cách
+    /// </summary>
+    public string? Distance { get; set; }
 }

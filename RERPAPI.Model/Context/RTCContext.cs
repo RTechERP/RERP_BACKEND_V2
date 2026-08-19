@@ -7801,12 +7801,21 @@ public partial class RTCContext : DbContext
             entity.ToTable("HotelBookingProposal", tb => tb.HasComment("Bảng đề xuất thông tin phòng và chi phí đặt khách sạn"));
 
             entity.Property(e => e.ID).HasComment("ID bản ghi, tự động tăng");
+            entity.Property(e => e.Area)
+                .HasMaxLength(500)
+                .HasComment("Diện tích");
+            entity.Property(e => e.Convenience)
+                .HasMaxLength(500)
+                .HasComment("Tiện ích");
             entity.Property(e => e.CreatedBy)
                 .HasMaxLength(50)
                 .HasComment("Người tạo bản ghi");
             entity.Property(e => e.CreatedDate)
                 .HasComment("Ngày tạo bản ghi")
                 .HasColumnType("datetime");
+            entity.Property(e => e.Distance)
+                .HasMaxLength(500)
+                .HasComment("Khoảng cách");
             entity.Property(e => e.HotelBookingManagementID).HasComment("ID bản ghi master trong bảng HotelBookingManagement");
             entity.Property(e => e.HotelName).HasMaxLength(250);
             entity.Property(e => e.IsApprove).HasDefaultValue(0);
