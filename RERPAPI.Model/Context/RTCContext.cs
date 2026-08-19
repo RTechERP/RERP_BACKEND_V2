@@ -15014,14 +15014,18 @@ public partial class RTCContext : DbContext
 
             entity.Property(e => e.CreatedBy).HasMaxLength(50);
             entity.Property(e => e.CreatedDate).HasColumnType("datetime");
+            entity.Property(e => e.DateActiveOffice).HasColumnType("datetime");
+            entity.Property(e => e.DateActiveWin).HasColumnType("datetime");
             entity.Property(e => e.DateBuy).HasColumnType("datetime");
             entity.Property(e => e.DateEffect)
                 .HasComment("Thời gian áp dụng")
                 .HasColumnType("datetime");
+            entity.Property(e => e.DateExpireOffice).HasColumnType("datetime");
             entity.Property(e => e.EmployeeID).HasComment("Trưởng phòng quản lý tài sản");
             entity.Property(e => e.Insurance)
                 .HasComment("Thời gian bảo hành")
                 .HasColumnType("decimal(18, 2)");
+            entity.Property(e => e.KeyWin).HasMaxLength(200);
             entity.Property(e => e.Model).HasMaxLength(550);
             entity.Property(e => e.Note).HasMaxLength(500);
             entity.Property(e => e.OfficeActiveStatus).HasComment("1: Chưa active; 2: Đã active; 3: Crack");
@@ -15034,6 +15038,7 @@ public partial class RTCContext : DbContext
             entity.Property(e => e.UpdatedBy).HasMaxLength(50);
             entity.Property(e => e.UpdatedDate).HasColumnType("datetime");
             entity.Property(e => e.WindowActiveStatus).HasComment("1: Chưa active; 2: Đã active; 3: Crack");
+            entity.Property(e => e.keyOffice).HasMaxLength(200);
         });
 
         modelBuilder.Entity<TSAssetManagementPersonal>(entity =>

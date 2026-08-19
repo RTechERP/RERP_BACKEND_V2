@@ -87,4 +87,14 @@ public partial class TSAssetManagement
     public string? Model { get; set; }
 
     public bool? IsDeleted { get; set; }
+
+    public string? KeyWin { get; set; }
+
+    public string? keyOffice { get; set; }
+
+    public DateTime? DateExpireOffice { get; set; }
+
+    public DateTime? DateActiveOffice { get; set; }
+
+    public DateTime? DateActiveWin { get; set; }
 }

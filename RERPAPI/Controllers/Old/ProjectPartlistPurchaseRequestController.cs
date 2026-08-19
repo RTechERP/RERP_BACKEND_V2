@@ -424,9 +424,9 @@ namespace RERPAPI.Controllers.Old
 
                     try
                     {
-                    _repo.UpdateData(item);
-                    item.IsRequestApproved = status;
-                    item.EmployeeIDRequestApproved = currentUser.EmployeeID;
+                        _repo.UpdateData(item);
+                        item.IsRequestApproved = status;
+                        item.EmployeeIDRequestApproved = currentUser.EmployeeID;
 
                         await _repo.UpdateAsync(item);
 
@@ -439,25 +439,25 @@ namespace RERPAPI.Controllers.Old
                         }
 
                         // Chỉ ghi log SAU KHI đã xác nhận lưu thành công, tránh log "đã duyệt" giả khi lưu thất bại
-                    if (existingRequest != null) //logycmh
-                    {
-                        string log = _projectPartListPurchaseRequestLogRepo.GenerateLog(existingRequest, item);
-                        if (!String.IsNullOrWhiteSpace(log))
+                        if (existingRequest != null) //logycmh
                         {
-                            log += $"\n+ Đã {textStatus} mua sản phẩm.\n";
-                            await _projectPartListPurchaseRequestLogRepo.
-                                AddLog(item.ID, $"{currentUser.FullName} đã cập nhật:\n{log}", "Cập nhật");
+                            string log = _projectPartListPurchaseRequestLogRepo.GenerateLog(existingRequest, item);
+                            if (!String.IsNullOrWhiteSpace(log))
+                            {
+                                log += $"\n+ Đã {textStatus} mua sản phẩm.\n";
+                                await _projectPartListPurchaseRequestLogRepo.
+                                    AddLog(item.ID, $"{currentUser.FullName} đã cập nhật:\n{log}", "Cập nhật");
+                            }
+                            else
+                            {
+                                await _projectPartListPurchaseRequestLogRepo.
+                                    AddLog(item.ID, $"{currentUser.FullName} đã {textStatus} mua sản phẩm", "Cập nhật");
+                            }
                         }
-                        else
-                        {
-                            await _projectPartListPurchaseRequestLogRepo.
-                                AddLog(item.ID, $"{currentUser.FullName} đã {textStatus} mua sản phẩm", "Cập nhật");
-                        }
-                    }
 
-                    await _projectPartListPurchaseRequestApproveLogRepo.CreateLogAsync(item.ID, logStatus, currentUser.EmployeeID, currentUser.LoginName);
+                        await _projectPartListPurchaseRequestApproveLogRepo.CreateLogAsync(item.ID, logStatus, currentUser.EmployeeID, currentUser.LoginName);
                         updatedCount++;
-                }
+                    }
                     catch (Exception itemEx)
                     {
                         failedItems.Add($"[{item.ProductCode}] {itemEx.Message}");
@@ -567,7 +567,7 @@ namespace RERPAPI.Controllers.Old
                     }
 
                     var existingRequest = _repo.GetByID(item.ID);
-                    if (existingRequest == null) continue;
+                    if (existingRequest.ID <= 0) continue;
 
                     PurchaseRequestApproveStatus logStatus;
 
@@ -1453,12 +1453,12 @@ namespace RERPAPI.Controllers.Old
                         continue;
 
                     //var dt = SQLHelper<dynamic>.ProcedureToList("spGetInventory", new[] { "@ProductSaleID" }, new object[] { item.ProductSaleID });
-					var warehouse = _warehouseRepo.GetByID(item.WarehouseID ?? 0);
-					if (warehouse.ID <= 0)
-					{
-						return BadRequest(ApiResponseFactory.Fail(null, $"Không tìm thấy kho được chọn trên cơ sơ dữ liệu!"));
-					}
-					var dt = SQLHelper<dynamic>.ProcedureToList("spGetInventory_Test", new[] { "@ProductSaleID", "@WarehouseCode" }, new object[] { item.ProductSaleID, warehouse.WarehouseCode });
+                    var warehouse = _warehouseRepo.GetByID(item.WarehouseID ?? 0);
+                    if (warehouse.ID <= 0)
+                    {
+                        return BadRequest(ApiResponseFactory.Fail(null, $"Không tìm thấy kho được chọn trên cơ sơ dữ liệu!"));
+                    }
+                    var dt = SQLHelper<dynamic>.ProcedureToList("spGetInventory_Test", new[] { "@ProductSaleID", "@WarehouseCode" }, new object[] { item.ProductSaleID, warehouse.WarehouseCode });
 
                     var inventoryData = SQLHelper<dynamic>.GetListData(dt, 0);
                     if (inventoryData.Count < 0) return BadRequest(ApiResponseFactory.Fail(null, $"Sản phẩm [{item.ProductName}] không có trong tồn kho!"));
@@ -1478,7 +1478,7 @@ namespace RERPAPI.Controllers.Old
                     inventoryProject.ProjectID = item.ProjectID;
                     inventoryProject.ProductSaleID = item.ProductSaleID;
                     inventoryProject.EmployeeID = item.EmployeeIDRequestApproved;
-					inventoryProject.WarehouseID = item.WarehouseID ?? 1;
+                    inventoryProject.WarehouseID = item.WarehouseID ?? 1;
                     inventoryProject.Quantity = item.Quantity;
                     inventoryProject.CustomerID = item.CustomerID;
                     inventoryProject.POKHDetailID = item.POKHDetailID;
