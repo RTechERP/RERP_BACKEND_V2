@@ -1,4 +1,4 @@
-﻿using RERPAPI.Model.Common;
+using RERPAPI.Model.Common;
 using RERPAPI.Model.DTO;
 using RERPAPI.Model.Entities;
 
@@ -44,6 +44,17 @@ namespace RERPAPI.Repo.GenericEntity
                 }
 
                 var registerDate = item.DateRegister.Value.Date;
+                var today = DateTime.Now.Date;
+                var yesterday = today.AddDays(-1);
+
+              
+                    if (registerDate < yesterday || registerDate > today)
+                    {
+                        return ApiResponseFactory.Fail(
+                            null,
+                            $"Ngày đăng ký chỉ được phép trong khoảng từ hôm qua ({yesterday:dd/MM/yyyy}) đến hôm nay ({today:dd/MM/yyyy})."
+                        );
+                    }
                 var time20h = registerDate.AddHours(20);
 
                 if (item.EndTime < time20h && item.Overnight == true)
