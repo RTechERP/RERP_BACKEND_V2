@@ -151,8 +151,28 @@ namespace RERPAPI.Controllers.Project
                             realParentID = null;
                         }
 
+                        // Tìm link tương ứng hiện có trong DB (chỉ match khi step.ID > 0)
+                        ProjectGateStepLink matchingLink = null;
+                        if (step.ID > 0)
+                        {
+                            matchingLink = existingLinks.FirstOrDefault(l => l.ID == step.ID);
+                        }
+
                         string gateCode = "";
-                        var gateStep = _stepRepo.GetByID(step.ProjectGateStepID);
+                        int targetStepId = step.ProjectGateStepID;
+                        if (targetStepId <= 0 && step.ParentID.HasValue)
+                        {
+                            var parentStepInReq = request.Steps?.FirstOrDefault(s => s.ID == step.ParentID.Value);
+                            if (parentStepInReq != null && parentStepInReq.ProjectGateStepID > 0)
+                            {
+                                targetStepId = parentStepInReq.ProjectGateStepID;
+                            }
+                        }
+                        if (targetStepId <= 0 && matchingLink != null && matchingLink.ProjectGateStepID.HasValue)
+                        {
+                            targetStepId = matchingLink.ProjectGateStepID.Value;
+                        }
+                        var gateStep = _stepRepo.GetByID(targetStepId);
                         if (gateStep != null && gateStep.ProjectGateID.HasValue)
                         {
                             var gate = _gateRepo.GetByID(gateStep.ProjectGateID.Value);
@@ -162,18 +182,12 @@ namespace RERPAPI.Controllers.Project
                             }
                         }
 
-                        // Tìm link tương ứng hiện có trong DB (chỉ match khi step.ID > 0)
-                        ProjectGateStepLink matchingLink = null;
-                        if (step.ID > 0)
-                        {
-                            matchingLink = existingLinks.FirstOrDefault(l => l.ID == step.ID);
-                        }
-
                         // Xác định parentProjectTaskId: Lấy ProjectTaskID của công đoạn cha (ProjectGateStepLink cha)
                         int? parentProjectTaskId = null;
                         if (realParentID.HasValue && realParentID.Value > 0)
                         {
-                            var parentGateLink = existingLinks.FirstOrDefault(l => l.ID == realParentID.Value);
+                            var parentGateLink = await _stepLinkRepo.GetByIDAsync(realParentID.Value)
+                                                 ?? existingLinks.FirstOrDefault(l => l.ID == realParentID.Value);
                             if (parentGateLink != null && parentGateLink.ProjectTaskID.HasValue && parentGateLink.ProjectTaskID.Value > 0)
                             {
                                 parentProjectTaskId = parentGateLink.ProjectTaskID.Value;
@@ -266,6 +280,31 @@ namespace RERPAPI.Controllers.Project
                                         projectItem.EmployeeIDRequest = _currentUser.EmployeeID;
                                         projectItem.TypeProjectItem = step.ProjectTypeID;
                                         projectItem.ParentID = parentProjectTaskId;
+
+                                         if (parentProjectTaskId.HasValue && parentProjectTaskId.Value > 0)
+                                         {
+                                             var parentTask = _projectItemRepo.GetByID(parentProjectTaskId.Value);
+                                             if (parentTask != null && !string.IsNullOrEmpty(parentTask.Code))
+                                             {
+                                                 string expectedChildPrefix = parentTask.Code.Trim() + ".";
+                                                 if (string.IsNullOrEmpty(projectItem.Code) || !projectItem.Code.StartsWith(expectedChildPrefix))
+                                                 {
+                                                     string newChildCode = _projectItemRepo.GenerateChildProjectItemCode(parentProjectTaskId.Value);
+                                                     if (!string.IsNullOrEmpty(newChildCode))
+                                                     {
+                                                         projectItem.Code = newChildCode;
+                                                     }
+                                                 }
+                                             }
+                                         }
+                                         else
+                                         {
+                                             if (string.IsNullOrEmpty(projectItem.Code) || !projectItem.Code.Contains("_G") || projectItem.Code.Contains("."))
+                                             {
+                                                 projectItem.Code = _projectItemRepo.GenerateProjectItemCodeByGateStepLink(request.ProjectID, gateCode);
+                                             }
+                                         }
+
                                         _projectItemRepo.CalculateDays(projectItem);
                                         await _projectItemRepo.UpdateAsync(projectItem);
 
@@ -274,6 +313,14 @@ namespace RERPAPI.Controllers.Project
                                 }
                                 else
                                 {
+                                    string itemCode = (parentProjectTaskId.HasValue && parentProjectTaskId.Value > 0)
+                                         ? _projectItemRepo.GenerateChildProjectItemCode(parentProjectTaskId.Value)
+                                         : _projectItemRepo.GenerateProjectItemCodeByGateStepLink(request.ProjectID, gateCode);
+                                    if (string.IsNullOrEmpty(itemCode))
+                                    {
+                                        itemCode = _projectItemRepo.GenerateProjectItemCodeByGateStepLink(request.ProjectID, gateCode);
+                                    }
+
                                     var newItem = new ProjectItem
                                     {
                                         ProjectID = request.ProjectID,
@@ -285,7 +332,7 @@ namespace RERPAPI.Controllers.Project
                                         Deadline = planEnd,
                                         Status = 0,
                                         ItemLate = 0,
-                                        Code = _projectItemRepo.GenerateProjectItemCodeByGateStepLink(request.ProjectID, gateCode),
+                                        Code = itemCode,
                                         EstimatedTime = (int)(step.DayCount.Value * 8),
                                         UserID = step.Workers.First().EmployeeID,
                                         STT = _projectItemRepo.GetMaxSTT(request.ProjectID),
@@ -367,6 +414,14 @@ namespace RERPAPI.Controllers.Project
                                         ? step.DateEnd.Value
                                         : (step.DayCount.Value > 0 ? planStart.AddDays((double)step.DayCount.Value - 1) : planStart);
 
+                                    string itemCode = (parentProjectTaskId.HasValue && parentProjectTaskId.Value > 0)
+                                         ? _projectItemRepo.GenerateChildProjectItemCode(parentProjectTaskId.Value)
+                                         : _projectItemRepo.GenerateProjectItemCodeByGateStepLink(request.ProjectID, gateCode);
+                                    if (string.IsNullOrEmpty(itemCode))
+                                    {
+                                        itemCode = _projectItemRepo.GenerateProjectItemCodeByGateStepLink(request.ProjectID, gateCode);
+                                    }
+
                                     var newItem = new ProjectItem
                                     {
                                         ProjectID = request.ProjectID,
@@ -380,7 +435,7 @@ namespace RERPAPI.Controllers.Project
                                         NeedApprove = true,
                                         Priority = 1,
                                         Deadline = planEnd,
-                                        Code = _projectItemRepo.GenerateProjectItemCodeByGateStepLink(request.ProjectID, gateCode),
+                                        Code = itemCode,
                                         EstimatedTime = (int)(step.DayCount.Value * 8),
                                         UserID = step.Workers.First().EmployeeID,
                                         STT = _projectItemRepo.GetMaxSTT(request.ProjectID),
@@ -448,9 +503,7 @@ namespace RERPAPI.Controllers.Project
                                                 ProjectGateStepLinkID = newLink.ID,
                                                 ProjectGateStepCheckListDetailID = def.ID,
                                                 IsCompleted = false,
-                                                IsApprovedTBP = 0,
-                                                CreatedDate = DateTime.Now,
-                                                CreatedBy = _currentUser.LoginName ?? "system"
+                                                IsApprovedTBP = 0
                                             });
                                         }
 
@@ -485,9 +538,22 @@ namespace RERPAPI.Controllers.Project
                             foreach (var te in taskEmps)
                             {
                                 te.IsDeleted = true;
-                                te.UpdatedDate = DateTime.Now;
-                                te.UpdatedBy = _currentUser.FullName;
                                 await _taskEmployeeRepo.UpdateAsync(te);
+                            }
+
+                            // Xóa mềm các công việc con (nếu có) trực thuộc ProjectItem này
+                            var childProjectItems = _projectItemRepo.GetAll(x => x.ParentID == pi.ID && (x.IsDeleted == null || x.IsDeleted == false)).ToList();
+                            foreach (var childPi in childProjectItems)
+                            {
+                                childPi.IsDeleted = true;
+                                await _projectItemRepo.UpdateAsync(childPi);
+
+                                var childTaskEmps = _taskEmployeeRepo.GetAll(x => x.ProjectTaskID == childPi.ID && x.IsDeleted != true).ToList();
+                                foreach (var te in childTaskEmps)
+                                {
+                                    te.IsDeleted = true;
+                                    await _taskEmployeeRepo.UpdateAsync(te);
+                                }
                             }
                         }
                     }
@@ -584,7 +650,7 @@ namespace RERPAPI.Controllers.Project
                 }
             }
         }
-        [RequiresPermission("N109")]
+        
         [HttpGet("GetByProject/{projectId}")]
         public async Task<IActionResult> GetByProject(int projectId)
         {
@@ -974,6 +1040,45 @@ namespace RERPAPI.Controllers.Project
                 var param = new { ProjectID = projectId, GateCode = gateCode };
                 var list = await SqlDapper<ProjectGateDepartmentReportDto>.ProcedureToListTAsync("spGetProjectGateDepartmentReport", param);
                 return Ok(ApiResponseFactory.Success(list));
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
+            }
+        }
+        [HttpGet("project-task-timeline-by-team-project-gate")]
+        public async Task<IActionResult> GetProjectTaskTimeLineByTeam(
+         [FromQuery] DateTime dateStart,
+         [FromQuery] DateTime dateEnd,
+         [FromQuery] int departmentID = 0,
+         [FromQuery] int teamID = 0,
+         [FromQuery] int userID = 0,
+         [FromQuery] int projectID = 0,
+         [FromQuery] string status = "0,1",
+         [FromQuery] int approve = -1,
+         [FromQuery] int typeSearch = 1
+         )
+        {
+            try
+            {
+                var claims = User.Claims.GroupBy(x => x.Type).ToDictionary(x => x.Key, x => x.First().Value);
+                var currentUser = ObjectMapper.GetCurrentUser(claims);
+                dateStart = dateStart.Date;
+                dateEnd = dateEnd.Date.AddDays(1).AddSeconds(-1);
+                var param = new
+                {
+                    DateStart = dateStart,
+                    DateEnd = dateEnd,
+                    DepartmentID = departmentID,
+                    TeamID = teamID,
+                    UserID = userID,
+                    ProjectID = projectID,
+                    Status = status,
+                    Approve = approve,
+                    TypeSearch = typeSearch
+                };
+                var projectTasks = await SqlDapper<object>.ProcedureToListAsync("spGetProjectTaskTimeLineByTeam_Luong", param);
+                return Ok(ApiResponseFactory.Success(projectTasks));
             }
             catch (Exception ex)
             {

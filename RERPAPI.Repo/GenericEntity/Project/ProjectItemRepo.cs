@@ -51,7 +51,8 @@ namespace RERPAPI.Repo.GenericEntity.Project
                     : $"{project.ProjectCode}_{gateCode.Trim()}_";
 
                 var projectItem = GetAll(x => x.ProjectID == projectId)
-                    .Where(x => (x.Code ?? "").StartsWith(prefix));
+                    .Where(x => (x.Code ?? "").StartsWith(prefix) &&
+                                !(x.Code ?? "").Substring(prefix.Length).Contains("."));
 
                 string newCode = $"{prefix}{projectItem.Count() + 1}";
                 return newCode;
