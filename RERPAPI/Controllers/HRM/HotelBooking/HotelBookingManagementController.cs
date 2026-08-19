@@ -201,6 +201,9 @@ namespace RERPAPI.Controllers.HRM.HotelBooking
                                 Note = prop.Note,
                                 IsHCNSProposal = prop.IsHCNSProposal,
                                 ReasonHCNSProposal = prop.ReasonHCNSProposal,
+                                Distance = prop.Distance,
+                                Area = prop.Area,
+                                Convenience = prop.Convenience,
                                 IsDeleted = false,
                                 IsApprove = prop.IsApprove ?? 0,
                                 ApproveID = prop.ApproveID,
@@ -657,6 +660,283 @@ namespace RERPAPI.Controllers.HRM.HotelBooking
 
                     var stream = new System.IO.MemoryStream(package.GetAsByteArray());
                     string fileName = $"HotelBooking_{DateTime.Now:yyyyMMddHHmmss}.xlsx";
+                    return File(stream, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", fileName);
+                }
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
+            }
+        }
+
+        [RequiresPermission("N1,N2,N34")]
+        [HttpPost("ExportExcelDetail")]
+        public IActionResult ExportExcelDetail(int id)
+        {
+            try
+            {
+                OfficeOpenXml.ExcelPackage.License.SetNonCommercialOrganization("RTC");
+
+                var data = SQLHelper<dynamic>.ProcedureToList("spGetHotelBookingManagementByID", new string[] { "@ID" }, new object[] { id });
+                var masterList = SQLHelper<dynamic>.GetListData(data, 0);
+                var proposalsList = SQLHelper<dynamic>.GetListData(data, 1);
+                var employees = _hotelBookingEmployeeRepo.GetAll(x => x.HotelBookingManagementID == id && x.IsDeleted == false);
+
+                if (masterList == null || masterList.Count == 0)
+                {
+                    return BadRequest(ApiResponseFactory.Fail(null, "Không tìm thấy dữ liệu yêu cầu đặt phòng!"));
+                }
+
+                var master = masterList.FirstOrDefault() as IDictionary<string, object>;
+                var proposals = proposalsList != null ? proposalsList.Cast<IDictionary<string, object>>().ToList() : new List<IDictionary<string, object>>();
+
+                string GetDictVal(IDictionary<string, object>? dict, string key)
+                {
+                    if (dict == null) return "";
+                    var k = dict.Keys.FirstOrDefault(x => string.Equals(x, key, StringComparison.OrdinalIgnoreCase));
+                    if (k != null && dict[k] != null && dict[k] != DBNull.Value)
+                    {
+                        return dict[k].ToString() ?? "";
+                    }
+                    return "";
+                }
+
+                // Tiêu đề động: KHÁCH SẠN CHO [Tên người] ĐÊM [CheckinDate]
+                string passengerNames = employees != null && employees.Any()
+                    ? string.Join(", ", employees.Select(e => e.FullName))
+                    : GetDictVal(master, "RequesterName");
+
+                if (string.IsNullOrEmpty(passengerNames))
+                {
+                    passengerNames = GetDictVal(master, "RequesterName");
+                }
+
+                string checkinStr = "";
+                var checkinObj = master != null && master.ContainsKey("CheckinDate") ? master["CheckinDate"] : null;
+                if (checkinObj != null && checkinObj != DBNull.Value && DateTime.TryParse(checkinObj.ToString(), out DateTime checkinDt))
+                {
+                    checkinStr = $"ĐÊM {checkinDt.Day}/{checkinDt.Month}";
+                }
+
+                string title = $"KHÁCH SẠN CHO {passengerNames.ToUpper()} {checkinStr}".Trim();
+
+                int proposalCount = proposals.Count;
+                int totalCols = Math.Max(2 + proposalCount, 3); // Ít nhất 3 cột (STT, DANH MỤC, Phương án 1)
+
+                using (var package = new OfficeOpenXml.ExcelPackage())
+                {
+                    var sheet = package.Workbook.Worksheets.Add("Chi tiết đặt phòng");
+                    sheet.Cells.Style.Font.Name = "Times New Roman";
+                    sheet.Cells.Style.Font.Size = 11;
+
+                    // 1. Tiêu đề
+                    sheet.Cells[1, 1].Value = title;
+                    sheet.Cells[1, 1, 1, totalCols].Merge = true;
+                    using (var range = sheet.Cells[1, 1])
+                    {
+                        range.Style.Font.Size = 14;
+                        range.Style.Font.Bold = true;
+                        range.Style.HorizontalAlignment = OfficeOpenXml.Style.ExcelHorizontalAlignment.Center;
+                        range.Style.VerticalAlignment = OfficeOpenXml.Style.ExcelVerticalAlignment.Center;
+                    }
+                    sheet.Row(1).Height = 35;
+
+                    // 2. Tiêu đề cột Dòng 2 (Headers)
+                    sheet.Cells[2, 1].Value = "STT";
+                    sheet.Cells[2, 2].Value = "DANH MỤC";
+
+                    for (int i = 0; i < proposalCount; i++)
+                    {
+                        sheet.Cells[2, 3 + i].Value = $"Phương án {i + 1}";
+                    }
+                    if (proposalCount == 0)
+                    {
+                        sheet.Cells[2, 3].Value = "Phương án 1";
+                    }
+
+                    using (var range = sheet.Cells[2, 1, 2, totalCols])
+                    {
+                        range.Style.Font.Bold = true;
+                        range.Style.HorizontalAlignment = OfficeOpenXml.Style.ExcelHorizontalAlignment.Center;
+                        range.Style.VerticalAlignment = OfficeOpenXml.Style.ExcelVerticalAlignment.Center;
+                        range.Style.Fill.PatternType = OfficeOpenXml.Style.ExcelFillStyle.Solid;
+                        range.Style.Fill.BackgroundColor.SetColor(System.Drawing.Color.FromArgb(226, 239, 218)); // Light green #E2EFDA
+                        range.Style.Border.Top.Style = OfficeOpenXml.Style.ExcelBorderStyle.Thin;
+                        range.Style.Border.Bottom.Style = OfficeOpenXml.Style.ExcelBorderStyle.Thin;
+                        range.Style.Border.Left.Style = OfficeOpenXml.Style.ExcelBorderStyle.Thin;
+                        range.Style.Border.Right.Style = OfficeOpenXml.Style.ExcelBorderStyle.Thin;
+                    }
+                    sheet.Row(2).Height = 28;
+
+                    // 3. Các dòng danh mục (Dòng 3 - 12)
+                    string[] categories = new string[]
+                    {
+                        "Tên khách sạn",
+                        "Địa chỉ",
+                        "Khoảng cách với địa chỉ công tác",
+                        "Số lượng phòng",
+                        "Loại phòng",
+                        "Diện tích phòng (m2)",
+                        "Tiện ích",
+                        "Giá tiền (gồm thuế phí)",
+                        "Ghi chú",
+                        "Đề xuất"
+                    };
+
+                    for (int r = 0; r < categories.Length; r++)
+                    {
+                        int rowNum = 3 + r;
+                        sheet.Cells[rowNum, 1].Value = r + 1;
+                        sheet.Cells[rowNum, 1].Style.HorizontalAlignment = OfficeOpenXml.Style.ExcelHorizontalAlignment.Center;
+
+                        sheet.Cells[rowNum, 2].Value = categories[r];
+                        sheet.Cells[rowNum, 2].Style.Font.Bold = true;
+                        sheet.Cells[rowNum, 2].Style.HorizontalAlignment = OfficeOpenXml.Style.ExcelHorizontalAlignment.Left;
+
+                        int maxLinesInRow = 1;
+
+                        for (int p = 0; p < proposalCount; p++)
+                        {
+                            var prop = proposals[p];
+                            int colNum = 3 + p;
+                            string cellText = "";
+
+                            switch (r)
+                            {
+                                case 0: // Tên khách sạn
+                                    cellText = GetDictVal(prop, "HotelName");
+                                    sheet.Cells[rowNum, colNum].Value = cellText;
+                                    sheet.Cells[rowNum, colNum].Style.HorizontalAlignment = OfficeOpenXml.Style.ExcelHorizontalAlignment.Center;
+                                    break;
+
+                                case 1: // Địa chỉ
+                                    cellText = GetDictVal(master, "Location");
+                                    sheet.Cells[rowNum, colNum].Value = cellText;
+                                    sheet.Cells[rowNum, colNum].Style.HorizontalAlignment = OfficeOpenXml.Style.ExcelHorizontalAlignment.Center;
+                                    break;
+
+                                case 2: // Khoảng cách với địa chỉ công tác
+                                    cellText = GetDictVal(prop, "Distance");
+                                    sheet.Cells[rowNum, colNum].Value = cellText;
+                                    sheet.Cells[rowNum, colNum].Style.HorizontalAlignment = OfficeOpenXml.Style.ExcelHorizontalAlignment.Center;
+                                    break;
+
+                                case 3: // Số lượng phòng
+                                    var qtyStr = GetDictVal(prop, "Quantity");
+                                    cellText = qtyStr;
+                                    if (int.TryParse(qtyStr, out int qtyVal))
+                                    {
+                                        sheet.Cells[rowNum, colNum].Value = qtyVal;
+                                    }
+                                    else
+                                    {
+                                        sheet.Cells[rowNum, colNum].Value = qtyStr;
+                                    }
+                                    sheet.Cells[rowNum, colNum].Style.HorizontalAlignment = OfficeOpenXml.Style.ExcelHorizontalAlignment.Center;
+                                    break;
+
+                                case 4: // Loại phòng
+                                    cellText = GetDictVal(prop, "TypeRoom");
+                                    sheet.Cells[rowNum, colNum].Value = cellText;
+                                    sheet.Cells[rowNum, colNum].Style.HorizontalAlignment = OfficeOpenXml.Style.ExcelHorizontalAlignment.Center;
+                                    break;
+
+                                case 5: // Diện tích phòng (m2)
+                                    var areaStr = GetDictVal(prop, "Area");
+                                    cellText = areaStr;
+                                    if (decimal.TryParse(areaStr, out decimal areaVal) && areaVal > 0)
+                                    {
+                                        sheet.Cells[rowNum, colNum].Value = areaVal;
+                                        sheet.Cells[rowNum, colNum].Style.Numberformat.Format = "#,##0.##";
+                                    }
+                                    else
+                                    {
+                                        sheet.Cells[rowNum, colNum].Value = areaStr;
+                                    }
+                                    sheet.Cells[rowNum, colNum].Style.HorizontalAlignment = OfficeOpenXml.Style.ExcelHorizontalAlignment.Center;
+                                    break;
+
+                                case 6: // Tiện ích
+                                    var convVal = GetDictVal(prop, "Convenience");
+                                    if (string.IsNullOrEmpty(convVal))
+                                    {
+                                        convVal = "Bao gồm bữa sáng";
+                                    }
+                                    cellText = convVal;
+                                    sheet.Cells[rowNum, colNum].Value = cellText;
+                                    sheet.Cells[rowNum, colNum].Style.HorizontalAlignment = OfficeOpenXml.Style.ExcelHorizontalAlignment.Center;
+                                    break;
+
+                                case 7: // Giá tiền (gồm thuế phí)
+                                    var priceStr = GetDictVal(prop, "UnitPrice");
+                                    if (string.IsNullOrEmpty(priceStr) || priceStr == "0")
+                                    {
+                                        priceStr = GetDictVal(prop, "TotalAmount");
+                                    }
+                                    cellText = priceStr;
+                                    if (decimal.TryParse(priceStr, out decimal priceVal))
+                                    {
+                                        sheet.Cells[rowNum, colNum].Value = priceVal;
+                                        sheet.Cells[rowNum, colNum].Style.Numberformat.Format = "#,##0";
+                                    }
+                                    sheet.Cells[rowNum, colNum].Style.HorizontalAlignment = OfficeOpenXml.Style.ExcelHorizontalAlignment.Right;
+                                    break;
+
+                                case 8: // Ghi chú
+                                    cellText = GetDictVal(prop, "Note");
+                                    sheet.Cells[rowNum, colNum].Value = cellText;
+                                    sheet.Cells[rowNum, colNum].Style.HorizontalAlignment = OfficeOpenXml.Style.ExcelHorizontalAlignment.Center;
+                                    break;
+
+                                case 9: // Đề xuất
+                                    bool isHCNS = prop.ContainsKey("IsHCNSProposal") && prop["IsHCNSProposal"] != null && prop["IsHCNSProposal"] != DBNull.Value && Convert.ToBoolean(prop["IsHCNSProposal"]);
+                                    if (isHCNS)
+                                    {
+                                        string reason = GetDictVal(prop, "ReasonHCNSProposal");
+                                        cellText = $"Phương án {p + 1}\n{reason}";
+                                        sheet.Cells[rowNum, colNum].Value = cellText;
+                                        sheet.Cells[rowNum, colNum].Style.Font.Color.SetColor(System.Drawing.Color.Red);
+                                        sheet.Cells[rowNum, colNum].Style.HorizontalAlignment = OfficeOpenXml.Style.ExcelHorizontalAlignment.Center;
+                                    }
+                                    break;
+                            }
+
+                            if (!string.IsNullOrEmpty(cellText))
+                            {
+                                int explicitLines = cellText.Split('\n').Length;
+                                int estimatedWrappedLines = (int)Math.Ceiling((double)cellText.Length / 35.0);
+                                int totalCellLines = Math.Max(explicitLines, estimatedWrappedLines);
+                                if (totalCellLines > maxLinesInRow) maxLinesInRow = totalCellLines;
+                            }
+                        }
+
+                        // Đặt chiều cao dòng: tối thiểu 28pt, tăng theo số dòng text + 12pt padding
+                        sheet.Row(rowNum).Height = Math.Max(28, maxLinesInRow * 16 + 12);
+                    }
+
+                    int lastDataRow = 2 + categories.Length;
+
+                    // Kẻ khung & WrapText cho toàn bộ bảng
+                    using (var range = sheet.Cells[2, 1, lastDataRow, totalCols])
+                    {
+                        range.Style.VerticalAlignment = OfficeOpenXml.Style.ExcelVerticalAlignment.Center;
+                        range.Style.WrapText = true;
+                        range.Style.Border.Top.Style = OfficeOpenXml.Style.ExcelBorderStyle.Thin;
+                        range.Style.Border.Bottom.Style = OfficeOpenXml.Style.ExcelBorderStyle.Thin;
+                        range.Style.Border.Left.Style = OfficeOpenXml.Style.ExcelBorderStyle.Thin;
+                        range.Style.Border.Right.Style = OfficeOpenXml.Style.ExcelBorderStyle.Thin;
+                    }
+
+                    // Độ rộng các cột
+                    sheet.Column(1).Width = 8;   // STT
+                    sheet.Column(2).Width = 25;  // DANH MỤC
+                    for (int p = 0; p < Math.Max(proposalCount, 1); p++)
+                    {
+                        sheet.Column(3 + p).Width = 40; // Các phương án thoáng hơn
+                    }
+
+                    var stream = new System.IO.MemoryStream(package.GetAsByteArray());
+                    string fileName = $"ChiTietDatPhong_{id}_{DateTime.Now:yyyyMMddHHmmss}.xlsx";
                     return File(stream, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", fileName);
                 }
             }

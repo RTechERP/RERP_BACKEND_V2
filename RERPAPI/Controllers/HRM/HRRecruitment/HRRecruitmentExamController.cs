@@ -1230,13 +1230,15 @@ namespace RERPAPI.Controllers.HRM.HRRecruitment
                     {
                         IsCompleted = isCompleted,
                         //thêm quyền n2 có quyền như admin
-                        EmployeeRequestID = ((currentUser.IsAdmin == true
-        || currentUser.Permissions
-            .Split(',', StringSplitOptions.RemoveEmptyEntries)
-            .Select(p => p.Trim())
-            .Contains("N2"))
-        ? 0
-        : currentUser.EmployeeID),
+                        EmployeeRequestID = ((currentUser.IsAdmin == true|| 
+                        currentUser.Permissions.Split(',', StringSplitOptions.RemoveEmptyEntries)
+                        .Select(p => p.Trim())
+                        .Contains("N2") || currentUser.Permissions
+                        .Split(',', StringSplitOptions.RemoveEmptyEntries)
+                        .Select(p => p.Trim())
+                        .Contains("N94"))
+                        ? 0
+                        : currentUser.EmployeeID),
                         InterviewID = currentUser.EmployeeID
                     };
 
