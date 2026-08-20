@@ -14,4 +14,8 @@ public partial class LuckyDrawParticipant
     public DateTime JoinedAt { get; set; }
 
     public DateTime CreatedAt { get; set; }
+
+    public string? PhotoPath { get; set; }
+
+    public DateTime? PhotoUpdatedAt { get; set; }
 }

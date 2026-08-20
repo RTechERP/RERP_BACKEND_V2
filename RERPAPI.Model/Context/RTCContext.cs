@@ -9363,6 +9363,10 @@ public partial class RTCContext : DbContext
             entity.Property(e => e.JoinedAt)
                 .HasDefaultValueSql("(getdate())")
                 .HasColumnType("datetime");
+            entity.Property(e => e.PhotoPath)
+                .HasMaxLength(64)
+                .IsUnicode(false);
+            entity.Property(e => e.PhotoUpdatedAt).HasColumnType("datetime");
         });
 
         modelBuilder.Entity<LuckyDrawSession>(entity =>
@@ -15785,18 +15789,111 @@ public partial class RTCContext : DbContext
                 .HasColumnType("datetime");
             entity.Property(e => e.DangKyHLKGChieuDi).HasMaxLength(200);
             entity.Property(e => e.DangKyHLKGChieuVe).HasMaxLength(200);
+            entity.Property(e => e.DateDepartureVinWonder)
+                .HasComment("Ngày đi Vinwonder")
+                .HasColumnType("datetime");
             entity.Property(e => e.Department).HasMaxLength(200);
+            entity.Property(e => e.DepartureDate)
+                .HasComment("Ngày bay chuyến đi")
+                .HasColumnType("datetime");
+            entity.Property(e => e.DepartureFlightCode)
+                .HasMaxLength(200)
+                .HasComment("Mã chuyến bay chuyến đi");
+            entity.Property(e => e.DepartureFlightTime)
+                .HasMaxLength(200)
+                .HasComment("Giờ bay chuyến đi");
+            entity.Property(e => e.DepartureHLKG)
+                .HasMaxLength(200)
+                .HasComment("Hành lý ký gửi chuyến đi");
             entity.Property(e => e.DepartureLocation).HasMaxLength(100);
             entity.Property(e => e.EmployeeCode).HasMaxLength(50);
             entity.Property(e => e.EmployeeName).HasMaxLength(200);
             entity.Property(e => e.Gender).HasMaxLength(10);
+            entity.Property(e => e.GroupNumber)
+                .HasMaxLength(500)
+                .HasComment("Đoàn");
+            entity.Property(e => e.HLKGCost)
+                .HasMaxLength(200)
+                .HasComment("Mua hành lý ký gửi");
             entity.Property(e => e.Height).HasMaxLength(200);
             entity.Property(e => e.IsPublish).HasDefaultValue(false);
+            entity.Property(e => e.Note)
+                .HasMaxLength(200)
+                .HasComment("Ghi chú của BTC");
+            entity.Property(e => e.Note2)
+                .HasMaxLength(200)
+                .HasComment("Ghi chú 2");
             entity.Property(e => e.PhoneNumber).HasMaxLength(20);
             entity.Property(e => e.PositionName).HasMaxLength(200);
             entity.Property(e => e.Relationship).HasMaxLength(50);
+            entity.Property(e => e.ReturnDate)
+                .HasComment("Ngày bay chuyến về")
+                .HasColumnType("datetime");
+            entity.Property(e => e.ReturnFlightCode)
+                .HasMaxLength(200)
+                .HasComment("Mã chuyến bay chuyến về");
+            entity.Property(e => e.ReturnFlightTime)
+                .HasMaxLength(200)
+                .HasComment("Giờ bay chuyến về");
+            entity.Property(e => e.ReturnHLKG)
+                .HasMaxLength(200)
+                .HasComment("Hành lý ký gửi chuyến về");
+            entity.Property(e => e.RommCode)
+                .HasMaxLength(200)
+                .HasComment("Mã phòng (cung cấp sau)");
+            entity.Property(e => e.RoomNumber)
+                .HasMaxLength(200)
+                .HasComment("Số phòng");
+            entity.Property(e => e.RoomType)
+                .HasMaxLength(200)
+                .HasComment("Loại giường");
+            entity.Property(e => e.SeptemberDeductionAmount)
+                .HasMaxLength(200)
+                .HasComment("Tổng thanh toán theo từng người");
+            entity.Property(e => e.SupportFlightCost)
+                .HasMaxLength(200)
+                .HasComment("Hỗ trợ tự túc vé máy bay");
+            entity.Property(e => e.SupportLunchCost)
+                .HasMaxLength(200)
+                .HasComment("Công ty hỗ trợ: Hỗ trợ từ 5 tuổi; tự túc 1 bữa tối 200.000 đồng/người; tự túc 1 bữa trưa 200.000 đồng/người");
+            entity.Property(e => e.SupportTotalCost)
+                .HasMaxLength(200)
+                .HasComment("Tổng cộng công ty hỗ trợ");
+            entity.Property(e => e.TableNumberGala)
+                .HasMaxLength(200)
+                .HasComment("Xếp bàn Gala Dinner");
+            entity.Property(e => e.TotalCost)
+                .HasMaxLength(200)
+                .HasComment("Tổng cộng CBNV thanh toán");
+            entity.Property(e => e.TotalPaymentAmount)
+                .HasMaxLength(200)
+                .HasComment("Tổng thanh toán");
+            entity.Property(e => e.TripCost)
+                .HasMaxLength(200)
+                .HasComment("Đồng thanh toán: Chính thức 1,5 triệu/người; Thử việc 2 triệu/người; Người thân từ 5 tuổi 4 triệu/người");
             entity.Property(e => e.UpdatedBy).HasMaxLength(50);
             entity.Property(e => e.UpdatedDate).HasColumnType("datetime");
+            entity.Property(e => e.VinWonderCost)
+                .HasMaxLength(200)
+                .HasComment("Chiều cao từ 1m đi Vinwonder, hỗ trợ thêm 200.000 đồng/người");
+            entity.Property(e => e.XeGalaDinner)
+                .HasMaxLength(200)
+                .HasComment("Xe đi Gala Dinner");
+            entity.Property(e => e.XeKSSB)
+                .HasMaxLength(200)
+                .HasComment("Xe tiễn khách sạn đến sân bay Cam Ranh");
+            entity.Property(e => e.XeSBKS)
+                .HasMaxLength(200)
+                .HasComment("Xe đón tại sân bay Cam Ranh");
+            entity.Property(e => e.XeSBVP)
+                .HasMaxLength(200)
+                .HasComment("Xe đón sân bay Nội Bài đến VP HN / sân bay Tân Sơn Nhất đến VP HCM");
+            entity.Property(e => e.XeVPSB)
+                .HasMaxLength(200)
+                .HasComment("Xe tiễn VP HN đến sân bay Nội Bài / VP HCM đến sân bay Tân Sơn Nhất");
+            entity.Property(e => e.XeVinWonder)
+                .HasMaxLength(200)
+                .HasComment("Xe đi Vinwonder");
         });
 
         modelBuilder.Entity<UnitCount>(entity =>
