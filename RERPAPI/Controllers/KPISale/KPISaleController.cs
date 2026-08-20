@@ -2936,15 +2936,14 @@ namespace RERPAPI.Controllers.KPISale
             if (approval.IsDirectorApproved)
             {
                 throw new Exception(
-                    $"KPI của nhân viên {users.FullName} đã được duyệt cho kỳ {period.PeriodName}. " +
-                    //$"Trạng thái: {approval.CurrentStep ?? "PENDING"}. " +
-                    $"Vui lòng hủy duyệt trước khi tính lại KPI.");
+                    $"KPI của nhân viên {users.FullName} đã được Giám đốc duyệt cho kỳ {period.PeriodName}. " +
+                    $"Vui lòng hủy duyệt BGD trước khi tính lại KPI.");
             }
         }
 
         /// <summary>
-        /// Nếu team đã được Admin duyệt (P0) ở kỳ này thì không cho phép tính lại KPI nhóm.
-        /// Muốn tính lại phải hủy duyệt trước.
+        /// Nếu team đã được BGD duyệt (P4) ở kỳ này thì không cho phép tính lại KPI nhóm.
+        /// Muốn tính lại phải hủy duyệt BGD trước.
         /// </summary>
         private async Task EnsureTeamNotAdminApprovedAsync(int teamId, int periodId)
         {
@@ -2961,7 +2960,7 @@ namespace RERPAPI.Controllers.KPISale
             {
                 throw new Exception(
                     $"KPI của team đã được Giám đốc duyệt cho kỳ. " +
-                    $"Vui lòng hủy duyệt team trước khi tính lại KPI.");
+                    $"Vui lòng hủy duyệt BGD trước khi tính lại KPI nhóm.");
             }
         }
 
@@ -4185,7 +4184,7 @@ namespace RERPAPI.Controllers.KPISale
 
             var teamId = team.ID;
 
-            // 2. Pre-check: nếu bất kỳ thành viên nào đã được Admin duyệt ở kỳ này
+            // 2. Pre-check: nếu bất kỳ thành viên nào đã được BGD duyệt (P4) ở kỳ này
             //    thì chặn ngay từ đầu (fail-fast), tránh tính dở rồi mới nửa chừng bị throw.
             int quarterPeriodId = await ResolveQuarterPeriodIdAsync(request.PeriodID);
             if (quarterPeriodId > 0)
@@ -4194,14 +4193,14 @@ namespace RERPAPI.Controllers.KPISale
                 {
                     var memberApproval = await _approvalRepo.GetCurrentAsync(
                         "EMPLOYEE", empId, null, quarterPeriodId);
-                    if (memberApproval != null && memberApproval.IsAdminApproved)
+                    if (memberApproval != null && memberApproval.IsDirectorApproved)
                     {
                         var users = _userRepo.GetByID(empId);
                         var periodName = (await _kpiSaleRepo.KPISalePeriods.AsNoTracking()
                             .FirstOrDefaultAsync(p => p.ID == quarterPeriodId))?.PeriodName ?? "";
                         throw new Exception(
-                            $"Nhân viên {users.FullName} đã được Admin duyệt cho kỳ {periodName}. " +
-                            $"Vui lòng hủy duyệt trước khi tính lại KPI nhóm.");
+                            $"Team {team.TeamName} có nhân viên {users.FullName} đã được BGD duyệt cho kỳ {periodName}. " +
+                            $"Vui lòng hủy duyệt BGD trước khi tính lại KPI nhóm.");
                     }
                 }
             }
@@ -7845,15 +7844,14 @@ FROM (
                     entity.IsDirectorApproved = true;
                     entity.DirectorApprovedBy = entity.DirectorApprovedBy ?? user;
                     entity.DirectorApprovedDate = entity.DirectorApprovedDate ?? now;
-                    entity.CurrentStep = "DONE";
-                    break;
-
-                case "P5_HR_DISBURSE":
-                case "DONE":
+                    entity.CurrentStep = "P5_HR_DISBURSE";
                     entity.IsHRDisbursed = true;
                     entity.HRDisbursedBy = entity.HRDisbursedBy ?? user;
                     entity.HRDisbursedDate = entity.HRDisbursedDate ?? now;
-                    entity.CurrentStep = "DONE";
+                    break;
+
+                case "P5_HR_DISBURSE":
+                    // Bước cuối, không làm gì thêm
                     break;
 
                 case "PENDING":
@@ -7877,7 +7875,7 @@ FROM (
         // ============================================================
         // Convention step code (khớp ApprovalCurrentStep của frontend kpi-summary.model.ts):
         //   PENDING -> P0_APPROVED -> P1_APPROVED -> P2_APPROVED
-        //   -> P3_APPROVED -> P4_APPROVED -> DONE
+        //   -> P3_APPROVED -> P4_APPROVED -> P5_HR_DISBURSE (cuối)
         // ============================================================
 
         private static readonly string[] ApprovalStepOrder = new[]
@@ -7888,7 +7886,7 @@ FROM (
             "P2_APPROVED",
             "P3_APPROVED",
             "P4_APPROVED",
-            "DONE",
+            "P5_HR_DISBURSE",
         };
 
         /// <summary>
@@ -7898,7 +7896,7 @@ FROM (
         /// index 3 (P2 - Kế toán):      N36
         /// index 4 (P3 - Trưởng KT):    N52
         /// index 5 (P4 - Giám đốc):     N58
-        /// index 6 (DONE - HR chi):     N34
+        /// index 6 (P5 - HR):           N34
         /// N1 luôn được phép (admin tổng). IsAdmin=true cũng được phép.
         /// </summary>
         private static readonly Dictionary<int, string[]> StepPermissionMap = new Dictionary<int, string[]>
@@ -7986,9 +7984,7 @@ FROM (
 
         private static void ApplyFlagsUpTo(KPISaleApproval e, int idx, string user, DateTime now)
         {
-            // idx: 0=PENDING, 1=P0_APPROVED, 2=P1_APPROVED, ..., 6=DONE
-            // Mỗi step đánh dấu thêm 1 cờ: P0=Admin, P1=SalesManager,
-            // P2=Accountant, P3=SeniorAccountant, P4=Director, DONE=HR.
+            // idx: 0=PENDING, 1=P0_APPROVED, 2=P1_APPROVED, 3=P2_APPROVED, 4=P3_APPROVED, 5=P4_APPROVED, 6=P5_HR_DISBURSE
             if (idx >= 1)
             {
                 e.IsAdminApproved = true;
@@ -8125,6 +8121,109 @@ FROM (
                 Console.WriteLine($"[KPISale] Lỗi gửi email BGD duyệt: {ex.Message}");
                 return null;
             }
+        }
+
+        /// <summary>
+        /// Gửi email thông báo khi các bước duyệt KPI Summary được hoàn tất
+        /// </summary>
+        private async Task<SendApprovalStepEmailResponse?> SendApprovalStepNotificationAsync(
+            KPISaleTeam team,
+            string periodCode,
+            string currentStep,
+            string stepName,
+            string approver,
+            List<int> memberIds)
+        {
+            try
+            {
+                if (memberIds == null || memberIds.Count == 0)
+                {
+                    Console.WriteLine($"[KPISale] Team {team.TeamName} không có thành viên để gửi email.");
+                    return null;
+                }
+
+                // Lấy email từ employee repo qua UserID
+                var emailList = _employeeRepo
+                    .GetAll(e => memberIds.Contains(e.UserID ?? 0) && e.Status != 1 && !string.IsNullOrWhiteSpace(e.EmailCongTy))
+                    .Select(e => e.EmailCongTy)
+                    .ToList();
+
+                // Chỉ lấy email đầu tiên nếu có nhiều email (cách nhau bởi dấu ; hoặc ,)
+                emailList = emailList
+                    .Where(email => !string.IsNullOrWhiteSpace(email))
+                    .Select(email => email!.Split(new[] { ';', ',' }, StringSplitOptions.RemoveEmptyEntries).FirstOrDefault()?.Trim())
+                    .Where(email => !string.IsNullOrWhiteSpace(email))
+                    .Distinct()
+                    .ToList()!;
+                    
+                if (emailList.Count == 0)
+                {
+                    Console.WriteLine($"[KPISale] Team {team.TeamName} không có email thành viên.");
+                    return null;
+                }
+
+                var emailTo = "tech70@rtc.edu.vn";
+                var emailCc = "";
+                //var emailTo = emailList.First();
+                //var emailCc = string.Join(";", emailList.Skip(1));
+                var subject = $"[KPI SALE] {stepName} đã duyệt KPI Team {team.TeamName} - Kỳ {periodCode}";
+                var body = $@"
+                    <p>Kính gửi các thành viên trong team <strong>{team.TeamName}</strong>,</p>
+
+                    <p>Hệ thống KPI Sale thông báo: <strong>{stepName} đã duyệt thành công</strong> kết quả KPI của team trong kỳ <strong>{periodCode}</strong>.</p>
+
+                    <ul>
+                        <li><strong>Team:</strong> {team.TeamName}</li>
+                        <li><strong>Kỳ KPI:</strong> {periodCode}</li>
+                        <li><strong>Bước duyệt:</strong> {stepName}</li>
+                        <li><strong>Người duyệt:</strong> {approver}</li>
+                        <li><strong>Thời gian duyệt:</strong> {DateTime.Now:dd/MM/yyyy HH:mm}</li>
+                    </ul>
+
+                    <p>Vui lòng đăng nhập hệ thống để xem chi tiết kết quả KPI đã được duyệt.</p>
+
+                    <p>Trân trọng,<br/>
+                    Hệ thống KPI Sale</p>
+                    ";
+
+                //await _emailHelper.SendAsync(emailTo, subject, body, true, emailCc);
+                Console.WriteLine($"[KPISale] Đã gửi email thông báo duyệt bước {stepName} đến {emailList.Count} thành viên team {team.TeamName}");
+
+                return new SendApprovalStepEmailResponse
+                {
+                    SentTo = emailTo,
+                    SentCc = emailCc,
+                    Subject = subject,
+                    TotalRecipients = emailList.Count,
+                    RecipientEmails = emailList,
+                    TeamName = team.TeamName,
+                    PeriodCode = periodCode,
+                    StepName = stepName,
+                    CurrentStep = currentStep
+                };
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"[KPISale] Lỗi gửi email thông báo duyệt: {ex.Message}");
+                return null;
+            }
+        }
+
+        /// <summary>
+        /// Lấy tên hiển thị của bước duyệt
+        /// </summary>
+        private string GetStepDisplayName(string step)
+        {
+            return step switch
+            {
+                "P0_APPROVED" => "Admin",
+                "P1_APPROVED" => "Sales Manager",
+                "P2_APPROVED" => "Kế toán",
+                "P3_APPROVED" => "Trưởng phòng Kế toán",
+                "P4_APPROVED" => "Ban Giám đốc",
+                "P5_HR_DISBURSE" => "HR nhận thông tin",
+                _ => "Hệ thống"
+            };
         }
 
         /// <summary>
@@ -8353,8 +8452,35 @@ FROM (
 
                 var employee = _userRepo.GetByID(refId ?? 0);
 
+                // Send email notification when TEAM scope is approved
+                object? emailResponse = null;
+                if (s == "TEAM" && mainEntity != null && refId.HasValue)
+                {
+                    var team = await _kpiSaleRepo.KPISaleTeams.AsNoTracking()
+                        .FirstOrDefaultAsync(t => t.ID == refId.Value);
+                    var period = await _kpiSaleRepo.KPISalePeriods.AsNoTracking()
+                        .FirstOrDefaultAsync(p => p.ID == request.PeriodID);
+                    
+                    if (team != null && period != null)
+                    {
+                        var stepName = GetStepDisplayName(mainEntity.CurrentStep);
+                        emailResponse = await SendApprovalStepNotificationAsync(
+                            team,
+                            period.PeriodCode ?? "",
+                            mainEntity.CurrentStep,
+                            stepName,
+                            user,
+                            employeeIds
+                        );
+                    }
+                }
+
                 string scopeLabel = s == "TEAM" ? $"team #{refId}" : $"cá nhân #{employee.FullName}";
-                return Ok(ApiResponseFactory.Success(mainEntity, $"Duyệt thành công: {scopeLabel} x {periodIds.Count} kỳ ({totalApproved} bản ghi)."));
+                return Ok(ApiResponseFactory.Success(new 
+                { 
+                    approval = mainEntity, 
+                    emailNotification = emailResponse 
+                }, $"Duyệt thành công: {scopeLabel} x {periodIds.Count} kỳ ({totalApproved} bản ghi)."));
             }
             catch (Exception ex)
             {
@@ -8520,6 +8646,246 @@ FROM (
 
         #region SendMail (Sales Manager gửi mail yêu cầu BGĐ duyệt)
 
+        /// <summary>
+        /// Gửi email thông báo yêu cầu duyệt cho bước tiếp theo.
+        /// Dùng trong kpi-summary-with-ranking.
+        /// UserID người nhận theo từng bước được cấu hình cứng bên dưới.
+        /// </summary>
+        public class SendApprovalStepEmailRequest
+        {
+            public string ApprovalScope { get; set; } = "TEAM";
+            public int? EmployeeID { get; set; }
+            public int? TeamID { get; set; }
+            public int PeriodID { get; set; }
+            public string? Note { get; set; }
+        }
+
+        /// <summary>
+        /// Gửi email thông báo yêu cầu duyệt cho bước tiếp theo.
+        /// Mỗi team gửi 1 email đến người có quyền duyệt bước hiện tại.
+        /// </summary>
+        [HttpPost("send-approval-step-email")]
+        public async Task<IActionResult> SendApprovalStepEmail([FromBody] SendApprovalStepEmailRequest request)
+        {
+            try
+            {
+                if (request == null)
+                    return BadRequest(ApiResponseFactory.Fail(null, "Request không được null."));
+
+                if (request.PeriodID <= 0)
+                    return BadRequest(ApiResponseFactory.Fail(null, "PeriodID không hợp lệ."));
+
+                var s = (request.ApprovalScope ?? "TEAM").Trim().ToUpperInvariant();
+
+                // Lấy thông tin kỳ
+                var period = await _kpiSaleRepo.KPISalePeriods.AsNoTracking()
+                    .FirstOrDefaultAsync(p => p.ID == request.PeriodID);
+                if (period == null)
+                    return BadRequest(ApiResponseFactory.Fail(null, "Không tìm thấy kỳ KPI."));
+
+                string periodCode = period.PeriodCode ?? $"#{request.PeriodID}";
+                var currentUser = GetCurrentUser();
+                string senderName = currentUser?.FullName ?? currentUser?.LoginName ?? "Hệ thống";
+                var now = DateTime.Now;
+
+                // Xác định bước hiện tại và bước tiếp theo cần duyệt
+                var currentStep = "PENDING";
+                var nextStepIdx = 1;
+
+                if (s == "TEAM" && request.TeamID.HasValue)
+                {
+                    var approval = _approvalRepo.GetAll(a =>
+                        a.TeamID == request.TeamID.Value && a.PeriodID == request.PeriodID)
+                        .FirstOrDefault();
+                    if (approval != null)
+                    {
+                        currentStep = approval.CurrentStep ?? "PENDING";
+                        var curIdx = Array.IndexOf(ApprovalStepOrder, currentStep);
+                        if (curIdx < 0) curIdx = 0;
+                        nextStepIdx = curIdx + 1;
+                    }
+                }
+                else if (s == "EMPLOYEE" && request.EmployeeID.HasValue)
+                {
+                    var approval = _approvalRepo.GetAll(a =>
+                        a.EmployeeID == request.EmployeeID.Value && a.PeriodID == request.PeriodID)
+                        .FirstOrDefault();
+                    if (approval != null)
+                    {
+                        currentStep = approval.CurrentStep ?? "PENDING";
+                        var curIdx = Array.IndexOf(ApprovalStepOrder, currentStep);
+                        if (curIdx < 0) curIdx = 0;
+                        nextStepIdx = curIdx + 1;
+                    }
+                }
+                else if (s == "TEAM" && !request.TeamID.HasValue)
+                {
+                    // All-Teams mode: lấy bước thấp nhất trong tất cả team
+                    var allApprovals = _approvalRepo.GetAll(a =>
+                        a.PeriodID == request.PeriodID && !string.IsNullOrEmpty(a.CurrentStep))
+                        .ToList();
+                    if (allApprovals.Count > 0)
+                    {
+                        var minStepIdx = ApprovalStepOrder.Length;
+                        foreach (var approval in allApprovals)
+                        {
+                            var stepIdx = Array.IndexOf(ApprovalStepOrder, approval.CurrentStep ?? "PENDING");
+                            if (stepIdx >= 0 && stepIdx < minStepIdx) minStepIdx = stepIdx;
+                        }
+                        currentStep = ApprovalStepOrder[minStepIdx];
+                        nextStepIdx = minStepIdx + 1;
+                    }
+                }
+
+                // Nếu đã ở bước cuối (P5) thì không gửi
+                if (currentStep == "P5_HR_DISBURSE")
+                {
+                    return Ok(ApiResponseFactory.Success(
+                        new SendApprovalStepEmailResponse { PeriodCode = periodCode },
+                        "Quy trình duyệt đã hoàn tất, không cần gửi email."));
+                }
+
+                // Lấy tên bước tiếp theo
+                var nextStep = nextStepIdx < ApprovalStepOrder.Length ? ApprovalStepOrder[nextStepIdx] : "P5_HR_DISBURSE";
+                var nextStepName = GetStepDisplayName(nextStep);
+                var stepName = GetStepDisplayName(currentStep);
+
+                // ============================================================
+                // CẤU HÌNH USERID NGƯỜI NHẬN THEO TỪNG BƯỚC
+                // ============================================================
+                // TODO: Điền UserID của người nhận mail cho từng bước duyệt
+                // Ví dụ: new HashSet<int> { 575 } // UserID của Giám đốc
+                // ============================================================
+
+                // Bước P0_APPROVED (Admin)
+                var p0ApproverUserIds = new HashSet<int> { 1561 };
+
+                // Bước P1_APPROVED (Sales Manager)
+                var p1ApproverUserIds = new HashSet<int> { 1561 };
+
+                // Bước P2_APPROVED (Kế toán)
+                var p2ApproverUserIds = new HashSet<int> { 1561 };
+
+                // Bước P3_APPROVED (Trưởng Kế Toán)
+                var p3ApproverUserIds = new HashSet<int> { 1561 };
+
+                // Bước P4_APPROVED (Giám đốc)
+                var p4ApproverUserIds = new HashSet<int> { 1561 };
+
+                // Bước P5_HR_DISBURSE (HR nhận thông tin)
+                var p5ApproverUserIds = new HashSet<int> { 1561 };
+
+                var approverUserIds = nextStep switch
+                {
+                    "P0_APPROVED" => p0ApproverUserIds,
+                    "P1_APPROVED" => p1ApproverUserIds,
+                    "P2_APPROVED" => p2ApproverUserIds,
+                    "P3_APPROVED" => p3ApproverUserIds,
+                    "P4_APPROVED" => p4ApproverUserIds,
+                    "P5_HR_DISBURSE" => p5ApproverUserIds,
+                    _ => new HashSet<int>()
+                };
+
+                if (approverUserIds.Count == 0 || approverUserIds.All(id => id == 0))
+                {
+                    return Ok(ApiResponseFactory.Success(
+                        new SendApprovalStepEmailResponse
+                        {
+                            PeriodCode = periodCode,
+                            CurrentStep = currentStep,
+                            StepName = nextStepName
+                        },
+                        $"Chưa cấu hình UserID cho bước '{nextStepName}'. Vui lòng điền UserID trong code."));
+                }
+
+                // Lấy email từ employeeRepo qua UserID
+                var approverEmails = _employeeRepo
+                    .GetAll(e => approverUserIds.Contains(e.UserID ?? 0) && e.Status != 1 && !string.IsNullOrWhiteSpace(e.EmailCongTy))
+                    .Select(e => e.EmailCongTy)
+                    .ToList()
+                    .Where(email => !string.IsNullOrWhiteSpace(email))
+                    .Select(email => email!.Split(new[] { ';', ',' }, StringSplitOptions.RemoveEmptyEntries).FirstOrDefault()?.Trim())
+                    .Where(email => !string.IsNullOrWhiteSpace(email))
+                    .Distinct()
+                    .ToList();
+
+                if (!approverEmails.Any())
+                {
+                    return Ok(ApiResponseFactory.Success(
+                        new SendApprovalStepEmailResponse
+                        {
+                            PeriodCode = periodCode,
+                            CurrentStep = currentStep,
+                            StepName = nextStepName
+                        },
+                        $"Không tìm thấy email công ty của người nhận cho bước '{nextStepName}'."));
+                }
+
+                // Lấy tên team
+                string teamNames = "";
+                if (s == "TEAM" && request.TeamID.HasValue)
+                {
+                    var team = await _kpiSaleRepo.KPISaleTeams.AsNoTracking()
+                        .FirstOrDefaultAsync(t => t.ID == request.TeamID.Value);
+                    teamNames = team?.TeamName ?? "";
+                }
+                else
+                {
+                    var teams = await _kpiSaleRepo.KPISaleTeams.AsNoTracking()
+                        .Where(t => t.IsActive).ToListAsync();
+                    teamNames = string.Join(", ", teams.Select(t => t.TeamName));
+                }
+
+                var emailTo = approverEmails.First()!;
+                var emailCc = approverEmails.Count > 1 ? string.Join(",", approverEmails.Skip(1)) : "";
+                var subject = $"[KPI SALE] YÊU CẦU DUYỆT BƯỚC '{nextStepName.ToUpper()}' - KỲ {periodCode}".ToUpper();
+                var frontendBaseUrl = "http://localhost:4200/rerpweb/kpi-summary-with-ranking";
+                var deepLinkUrl = $"{frontendBaseUrl}?mode=team&periodId={request.PeriodID}";
+
+                var body = $@"<div style='font-family: Arial, sans-serif; max-width: 700px; margin: auto; padding: 20px; border: 1px solid #ddd; border-radius: 8px;'>
+    <h2 style='color: #722ed1;'>YÊU CẦU DUYỆT KPI SALE</h2>
+    <p><strong>Kỳ KPI:</strong> {periodCode}</p>
+    <p><strong>Team:</strong> {teamNames}</p>
+    <p><strong>Bước cần duyệt:</strong> <strong style='color: #f5222d;'>{nextStepName}</strong></p>
+    <p><strong>Người gửi:</strong> {senderName}</p>
+    <p><strong>Thời gian gửi:</strong> {now:dd/MM/yyyy HH:mm}</p>
+    {(string.IsNullOrEmpty(request.Note) ? "" : $"<p><strong>Ghi chú:</strong> {request.Note}</p>")}
+    <hr/>
+    <p>Yêu cầu duyệt KPI Sale cho kỳ <strong>{periodCode}</strong> của team(s) <strong>{teamNames}</strong>.</p>
+    <p style='margin-top: 10px;'>Vui lòng đăng nhập hệ thống để thực hiện duyệt.</p>
+    <p style='margin-top: 20px;'>
+        <a href='{deepLinkUrl}' style='background-color: #722ed1; color: white; padding: 12px 24px; text-decoration: none; border-radius: 4px; font-weight: bold; display: inline-block;'>XEM VÀ DUYỆT TRÊN HỆ THỐNG</a>
+    </p>
+    <p style='margin-top: 10px;'><small>Hoặc truy cập đường dẫn: <a href='{deepLinkUrl}'>{deepLinkUrl}</a></small></p>
+    <hr/>
+    <p><small>Đây là email thông báo tự động từ hệ thống R-ERP, vui lòng không phản hồi lại email này.</small></p>
+</div>";
+
+                //await _emailHelper.SendAsync(emailTo, subject, body, true, emailCc);
+
+                Console.WriteLine($"[KPISale] Đã gửi email yêu cầu duyệt bước '{nextStepName}' đến {approverEmails.Count} người nhận.");
+
+                var response = new SendApprovalStepEmailResponse
+                {
+                    SentTo = emailTo,
+                    SentCc = emailCc,
+                    Subject = subject,
+                    TotalRecipients = approverEmails.Count,
+                    RecipientEmails = approverEmails,
+                    StepName = nextStepName,
+                    CurrentStep = currentStep,
+                    PeriodCode = periodCode,
+                    TeamName = teamNames
+                };
+
+                return Ok(ApiResponseFactory.Success(response, $"Gửi email yêu cầu duyệt bước '{nextStepName}' thành công ({approverEmails.Count} người nhận)."));
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ApiResponseFactory.Fail(ex, $"Lỗi hệ thống khi gửi email: {ex.Message}"));
+            }
+        }
+
         public class SendBoardApprovedEmailResponse
         {
             public string SentTo { get; set; } = "";
@@ -8530,6 +8896,19 @@ FROM (
             public int ApprovedCount { get; set; }
             public string TeamName { get; set; } = "";
             public string PeriodCode { get; set; } = "";
+        }
+
+        public class SendApprovalStepEmailResponse
+        {
+            public string SentTo { get; set; } = "";
+            public string SentCc { get; set; } = "";
+            public string Subject { get; set; } = "";
+            public int TotalRecipients { get; set; }
+            public List<string> RecipientEmails { get; set; } = new();
+            public string TeamName { get; set; } = "";
+            public string PeriodCode { get; set; } = "";
+            public string StepName { get; set; } = "";
+            public string CurrentStep { get; set; } = "";
         }
 
         public class SendApprovalRequestEmailRequest
