@@ -8162,10 +8162,10 @@ FROM (
                     return null;
                 }
 
-                var emailTo = "tech70@rtc.edu.vn";
-                var emailCc = "";
-                //var emailTo = emailList.First();
-                //var emailCc = string.Join(";", emailList.Skip(1));
+                //var emailTo = "tech70@rtc.edu.vn";
+                //var emailCc = "";
+                var emailTo = emailList.First();
+                var emailCc = string.Join(";", emailList.Skip(1));
                 var subject = $"[KPI SALE] {stepName} đã duyệt KPI Team {team.TeamName} - Kỳ {periodCode}";
                 var body = $@"
                     <p>Kính gửi các thành viên trong team <strong>{team.TeamName}</strong>,</p>
@@ -8186,7 +8186,7 @@ FROM (
                     Hệ thống KPI Sale</p>
                     ";
 
-                //await _emailHelper.SendAsync(emailTo, subject, body, true, emailCc);
+                await _emailHelper.SendAsync(emailTo, subject, body, true, emailCc);
                 Console.WriteLine($"[KPISale] Đã gửi email thông báo duyệt bước {stepName} đến {emailList.Count} thành viên team {team.TeamName}");
 
                 return new SendApprovalStepEmailResponse
@@ -8737,6 +8737,18 @@ FROM (
                     }
                 }
 
+                // Lấy tên bước tiếp theo
+                var nextStep = nextStepIdx < ApprovalStepOrder.Length ? ApprovalStepOrder[nextStepIdx] : "P5_HR_DISBURSE";
+                var nextStepName = GetStepDisplayName(nextStep);
+
+                // Không gửi mail cho bước P0_APPROVED (Admin tự duyệt)
+                if (nextStep == "P0_APPROVED")
+                {
+                    return Ok(ApiResponseFactory.Success(
+                        new SendApprovalStepEmailResponse { PeriodCode = periodCode, CurrentStep = currentStep, StepName = nextStepName },
+                        "Bước P0 (Admin) không cần gửi email yêu cầu duyệt."));
+                }
+
                 // Nếu đã ở bước cuối (P5) thì không gửi
                 if (currentStep == "P5_HR_DISBURSE")
                 {
@@ -8744,10 +8756,6 @@ FROM (
                         new SendApprovalStepEmailResponse { PeriodCode = periodCode },
                         "Quy trình duyệt đã hoàn tất, không cần gửi email."));
                 }
-
-                // Lấy tên bước tiếp theo
-                var nextStep = nextStepIdx < ApprovalStepOrder.Length ? ApprovalStepOrder[nextStepIdx] : "P5_HR_DISBURSE";
-                var nextStepName = GetStepDisplayName(nextStep);
                 var stepName = GetStepDisplayName(currentStep);
 
                 // ============================================================
@@ -8761,19 +8769,19 @@ FROM (
                 var p0ApproverUserIds = new HashSet<int> { 1561 };
 
                 // Bước P1_APPROVED (Sales Manager)
-                var p1ApproverUserIds = new HashSet<int> { 1561 };
+                var p1ApproverUserIds = new HashSet<int> { 17 };
 
                 // Bước P2_APPROVED (Kế toán)
-                var p2ApproverUserIds = new HashSet<int> { 1561 };
+                var p2ApproverUserIds = new HashSet<int> { 1520, 1657 };
 
                 // Bước P3_APPROVED (Trưởng Kế Toán)
-                var p3ApproverUserIds = new HashSet<int> { 1561 };
+                var p3ApproverUserIds = new HashSet<int> { 1657 };
 
                 // Bước P4_APPROVED (Giám đốc)
-                var p4ApproverUserIds = new HashSet<int> { 1561 };
+                var p4ApproverUserIds = new HashSet<int> { 1, 2, 1293 };
 
                 // Bước P5_HR_DISBURSE (HR nhận thông tin)
-                var p5ApproverUserIds = new HashSet<int> { 1561 };
+                var p5FixedEmails = new List<string> { "hr@rtc.edu.vn", "hrm@rtc.edu.vn" };
 
                 var approverUserIds = nextStep switch
                 {
@@ -8782,32 +8790,28 @@ FROM (
                     "P2_APPROVED" => p2ApproverUserIds,
                     "P3_APPROVED" => p3ApproverUserIds,
                     "P4_APPROVED" => p4ApproverUserIds,
-                    "P5_HR_DISBURSE" => p5ApproverUserIds,
+                    "P5_HR_DISBURSE" => new HashSet<int>(),
                     _ => new HashSet<int>()
                 };
 
-                if (approverUserIds.Count == 0 || approverUserIds.All(id => id == 0))
-                {
-                    return Ok(ApiResponseFactory.Success(
-                        new SendApprovalStepEmailResponse
-                        {
-                            PeriodCode = periodCode,
-                            CurrentStep = currentStep,
-                            StepName = nextStepName
-                        },
-                        $"Chưa cấu hình UserID cho bước '{nextStepName}'. Vui lòng điền UserID trong code."));
-                }
+                List<string> approverEmails = [];
 
-                // Lấy email từ employeeRepo qua UserID
-                var approverEmails = _employeeRepo
-                    .GetAll(e => approverUserIds.Contains(e.UserID ?? 0) && e.Status != 1 && !string.IsNullOrWhiteSpace(e.EmailCongTy))
-                    .Select(e => e.EmailCongTy)
-                    .ToList()
-                    .Where(email => !string.IsNullOrWhiteSpace(email))
-                    .Select(email => email!.Split(new[] { ';', ',' }, StringSplitOptions.RemoveEmptyEntries).FirstOrDefault()?.Trim())
-                    .Where(email => !string.IsNullOrWhiteSpace(email))
-                    .Distinct()
-                    .ToList();
+                if (nextStep == "P5_HR_DISBURSE")
+                {
+                    // Bước P5: dùng 2 email HR cố định
+                    approverEmails = p5FixedEmails;
+                }
+                else
+                {
+                    // Lấy email từ employeeRepo qua UserID
+                    approverEmails = _employeeRepo
+                        .GetAll(e => approverUserIds.Contains(e.UserID ?? 0) && e.Status != 1 && !string.IsNullOrWhiteSpace(e.EmailCongTy))
+                        .Where(e => e.EmailCongTy != null)
+                        .Select(e => e.EmailCongTy!.Split(new[] { ';', ',' }, StringSplitOptions.RemoveEmptyEntries).FirstOrDefault()!.Trim())
+                        .Where(email => !string.IsNullOrWhiteSpace(email))
+                        .Distinct()
+                        .ToList();
+                }
 
                 if (!approverEmails.Any())
                 {
@@ -8839,7 +8843,7 @@ FROM (
                 var emailTo = approverEmails.First()!;
                 var emailCc = approverEmails.Count > 1 ? string.Join(",", approverEmails.Skip(1)) : "";
                 var subject = $"[KPI SALE] YÊU CẦU DUYỆT BƯỚC '{nextStepName.ToUpper()}' - KỲ {periodCode}".ToUpper();
-                var frontendBaseUrl = "http://localhost:4200/rerpweb/kpi-summary-with-ranking";
+                var frontendBaseUrl = "https://erp.rtc.edu.vn/rerpweb/kpi-summary-with-ranking";
                 var deepLinkUrl = $"{frontendBaseUrl}?mode=team&periodId={request.PeriodID}";
 
                 var body = $@"<div style='font-family: Arial, sans-serif; max-width: 700px; margin: auto; padding: 20px; border: 1px solid #ddd; border-radius: 8px;'>
@@ -8861,7 +8865,7 @@ FROM (
     <p><small>Đây là email thông báo tự động từ hệ thống R-ERP, vui lòng không phản hồi lại email này.</small></p>
 </div>";
 
-                //await _emailHelper.SendAsync(emailTo, subject, body, true, emailCc);
+                await _emailHelper.SendAsync(emailTo, subject, body, true, emailCc);
 
                 Console.WriteLine($"[KPISale] Đã gửi email yêu cầu duyệt bước '{nextStepName}' đến {approverEmails.Count} người nhận.");
 
