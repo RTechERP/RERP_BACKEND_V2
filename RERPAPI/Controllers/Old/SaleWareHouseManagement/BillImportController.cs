@@ -101,7 +101,7 @@ namespace RERPAPI.Controllers.Old.SaleWareHouseManagement
         /// <param name="filter"></param>
         /// <returns></returns>
         [HttpPost("get-all")]
-        [RequiresPermission("N27,N29,N50,N1,N36,N52,N35,N33,N34,N69")]
+        [RequiresPermission("N27,N29,N50,N1,N36,N52,N35,N33,N34,N69,N118")]
         public IActionResult getBillImport([FromBody] BillImportParamRequest filter)
         {
             try
