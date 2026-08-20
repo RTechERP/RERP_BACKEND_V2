@@ -133,7 +133,7 @@ namespace RERPAPI.Controllers.Old.SaleWareHouseManagement
         }
 
         [HttpPost("")]
-        [RequiresPermission("N27,N29,N50,N1,N36,N52,N35,N33,N34,N69")]
+        [RequiresPermission("N27,N29,N50,N1,N36,N52,N35,N33,N34,N69,N118")]
         public IActionResult getBillExport([FromBody] BillExportParamRequest filter)
         {
             try
