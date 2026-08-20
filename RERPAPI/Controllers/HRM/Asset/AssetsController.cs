@@ -83,8 +83,8 @@ namespace RERPAPI.Controllers.Old.Asset
             try
             {
                 var assets = SQLHelper<dynamic>.ProcedureToList("spExportExcelTSAssetManagement",
-                    new string[] { "@FilterText", "@PageNumber", "@PageSize", "@DateStart", "@DateEnd", "@Department" },
-                    new object[] { request.FilterText ?? "", request.PageNumber <= 0 ? 1 : request.PageNumber, request.PageSize <= 0 ? 9999999 : request.PageSize, request.DateStart, request.DateEnd, request.Department });
+                    new string[] { "@FilterText", "@PageNumber", "@PageSize", "@DateStart", "@DateEnd", "@Status", "@Department" },
+                    new object[] { request.FilterText ?? "", request.PageNumber <= 0 ? 1 : request.PageNumber, request.PageSize <= 0 ? 9999999 : request.PageSize, request.DateStart, request.DateEnd,request.Status, request.Department });
 
                 var data = SQLHelper<dynamic>.GetListData(assets, 0);
                 return Ok(ApiResponseFactory.Success(data));
