@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using NPOI.SS.Formula.Functions;
 using RERPAPI.Attributes;
 using RERPAPI.Model.Common;
 using RERPAPI.Model.DTO;
@@ -57,22 +58,58 @@ namespace RERPAPI.Controllers.HRM
         {
             try
             {
-                if (obj.ID <= 0)
+                TravelRegistration? exist = null;
+                if (obj.ID > 0)
                 {
-                    await _travelRegistrationRepo.CreateAsync(obj);
+                    var code = obj.EmployeeCode.Trim().ToLower();
+                    var fullName = obj.EmployeeName.Trim().ToLower();
+                    // exist = _travelRegistrationRepo.GetByID(obj.ID);
+                    exist = _travelRegistrationRepo.GetAll(x => !x.IsDeleted && x.EmployeeCode.ToLower() == code && x.EmployeeName.ToLower() == fullName).FirstOrDefault();
                 }
                 else
                 {
-                    var exist = _travelRegistrationRepo.GetByID(obj.ID);
-                    if (exist != null)
+                    if (!string.IsNullOrWhiteSpace(obj.EmployeeCode))
                     {
-                        obj.IsDeleted = exist.IsDeleted;
+                        var code = obj.EmployeeCode.Trim().ToLower();
+                        var fullName = obj.EmployeeName.Trim().ToLower();
+                        exist = _travelRegistrationRepo.GetAll(x => !x.IsDeleted && x.EmployeeCode.ToLower() == code&&x.EmployeeName.ToLower()==fullName).FirstOrDefault();
                     }
-                    else
+
+                    if (exist == null && !string.IsNullOrWhiteSpace(obj.EmployeeName))
                     {
-                        obj.CreatedDate = DateTime.Now;
+                        var name = obj.EmployeeName.Trim().ToLower();
+                        if (obj.OwnerEmployeeID > 0)
+                        {
+                            exist = _travelRegistrationRepo.GetAll(x => !x.IsDeleted 
+                                && x.OwnerEmployeeID == obj.OwnerEmployeeID 
+                                && x.EmployeeName.ToLower() == name
+                                && (string.IsNullOrEmpty(obj.Relationship) || x.Relationship == obj.Relationship)).FirstOrDefault();
+                        }
+                        else if (obj.EmployeeID > 0)
+                        {
+                            exist = _travelRegistrationRepo.GetAll(x => !x.IsDeleted 
+                                && x.EmployeeID == obj.EmployeeID 
+                                && x.EmployeeName.ToLower() == name).FirstOrDefault();
+                        }
                     }
-                 await   _travelRegistrationRepo.UpdateAsync(obj);
+                }
+
+                if (exist != null)
+                {
+                    obj.ID = exist.ID;
+                    obj.CreatedDate = exist.CreatedDate;
+                    obj.CreatedBy = exist.CreatedBy;
+                    obj.IsDeleted = exist.IsDeleted;
+                    if (obj.IsPublish == null) obj.IsPublish = exist.IsPublish;
+                    obj.UpdatedDate = DateTime.Now;
+                    obj.UpdatedBy = _currentUser.FullName;
+                    await _travelRegistrationRepo.UpdateAsync(obj);
+                }
+                else
+                {
+                    obj.CreatedDate = DateTime.Now;
+                    obj.CreatedBy = _currentUser.FullName;
+                    await _travelRegistrationRepo.CreateAsync(obj);
                 }
 
                 return Ok(ApiResponseFactory.Success(1, "Lưu thành công"));
