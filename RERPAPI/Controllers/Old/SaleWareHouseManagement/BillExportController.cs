@@ -1635,7 +1635,7 @@ namespace RERPAPI.Controllers.Old.SaleWareHouseManagement
                         @"2. quy trình. quy định chung\1. quy trình mua hàng\phần mềm misa\ảnh import misa\signnonback"
                     );
 
-                    if (!string.IsNullOrWhiteSpace(picDeliver))
+                    if (string.IsNullOrWhiteSpace(picDeliver))
                     {
                         picDeliver = Path.Combine(
                             pathImage,
@@ -1643,7 +1643,7 @@ namespace RERPAPI.Controllers.Old.SaleWareHouseManagement
                         ) ?? "";
                     }
 
-                    if (!string.IsNullOrWhiteSpace(picReciver))
+                    if (string.IsNullOrWhiteSpace(picReciver))
                     {
                         picReciver = Path.Combine(
                             pathImage,
