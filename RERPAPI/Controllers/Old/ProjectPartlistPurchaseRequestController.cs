@@ -1110,7 +1110,7 @@ namespace RERPAPI.Controllers.Old
 
                         var productSales = _productSaleRepo.GetAll(x =>
                                 x.ProductCode.ToLower() == item.ProductCode.ToLower() &&
-                                x.IsDeleted != true && x.IsStandardized == true
+                                x.IsDeleted != true && x.IsStandardized == true 
                             ).ToList();
 
                         ProductSale productSale = productSales
