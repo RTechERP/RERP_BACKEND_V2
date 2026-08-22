@@ -422,7 +422,7 @@ namespace RERPAPI.Repo.GenericEntity
 
         //    return true;
         //}
-        public bool validateDeleted(List<ProjectPartlistPurchaseRequestDTO> requests, bool isPurchaseRequestDemo, out string message)
+        public bool validateDeleted(List<ProjectPartlistPurchaseRequestDTO> requests, bool isPurchaseRequestDemo, int currentEmployeeID, out string message)
         {
             message = "";
 
@@ -443,7 +443,9 @@ namespace RERPAPI.Repo.GenericEntity
                 if (item.ProjectPartlistPurchaseRequestTypeID.HasValue)
                 {
                     int typeId = item.ProjectPartlistPurchaseRequestTypeID.Value;
-                    isAllowedType = typeId == 5 || typeId == 6 || typeId == 7 || typeId == 8;
+                    isAllowedType = isPurchaseRequestDemo
+                        ? (typeId == 3 || typeId == 4)
+                        : (typeId == 5 || typeId == 6 || typeId == 7 || typeId == 8);
                 }
                 else
                 {
@@ -465,10 +467,25 @@ namespace RERPAPI.Repo.GenericEntity
                 if (!isPurchaseRequestDemo)
                     continue;
 
-                // ---- Rule riêng cho DEMO ----
-                if (!string.IsNullOrEmpty(item.UpdatedName) && item.StatusRequest != 1)
+                // ---- Rule riêng cho DEMO: chỉ được xoá khi đang ở trạng thái "Yêu cầu mua/mượn hàng",
+                // chưa được nhân viên mua Check đặt hàng, và là người tạo yêu cầu ----
+                if (item.StatusRequest != 1)
                 {
-                    message = $"Sản phẩm mã [{productCode}] đã nhân viên mua.\nBạn không thể huỷ yêu cầu!";
+                    message = $"Sản phẩm mã [{productCode}] không ở trạng thái yêu cầu mua/mượn hàng.\nBạn không thể huỷ yêu cầu!";
+                    return false;
+                }
+
+                if ((item.EmployeeIDRequestApproved ?? 0) > 0)
+                {
+                    message = $"Sản phẩm mã [{productCode}] đã được nhân viên mua Check đặt hàng.\nBạn không thể huỷ yêu cầu!";
+                    return false;
+                }
+
+                // Không tin EmployeeID do FE gửi lên (có thể null/không truyền) -> lấy từ DB để so sánh
+                var dbItem = GetByID(item.ID);
+                if (dbItem == null || dbItem.EmployeeID != currentEmployeeID)
+                {
+                    message = $"Sản phẩm mã [{productCode}] không phải yêu cầu của bạn.\nBạn không thể huỷ yêu cầu!";
                     return false;
                 }
 

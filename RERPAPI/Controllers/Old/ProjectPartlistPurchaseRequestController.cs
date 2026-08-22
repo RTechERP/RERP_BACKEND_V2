@@ -1217,7 +1217,7 @@ namespace RERPAPI.Controllers.Old
                 var currentUser = ObjectMapper.GetCurrentUser(claims);
                 if (!currentUser.IsAdmin)
                 {
-                    if (!_repo.validateDeleted(data, isPurchaseRequestDemo, out string message))
+                    if (!_repo.validateDeleted(data, isPurchaseRequestDemo, currentUser.EmployeeID, out string message))
                     {
                         return BadRequest(ApiResponseFactory.Fail(null, message));
                     }
@@ -1257,7 +1257,7 @@ namespace RERPAPI.Controllers.Old
                                 priceRequest.IsDeleted = true;
 
                                 await _projectPartListPurchaseRequestLogRepo.
-                                        AddLog(priceRequest.ID, $"{currentUser.FullName} đã xóa yêu cầu báo giá!", "Xóa");
+                                        AddLog(priceRequest.ID, $"{currentUser.FullName} đã xóa yêu cầu Mua hàng!", "Xóa");
                                 await _projectPartlistPriceRequestRepo.UpdateAsync(priceRequest);
                             }
                         }
