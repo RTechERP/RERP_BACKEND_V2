@@ -286,9 +286,8 @@ namespace RERPAPI.Controllers.Old.Asset
                 return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
             }
         }
-
-        [HttpPost("save-data")]
-        public async Task<IActionResult> SaveData([FromBody] AssetmanagementFullDTO asset)
+        [HttpPost("save-data-excel")]
+        public async Task<IActionResult> SaveDataExcel([FromBody] AssetmanagementFullDTO asset)
         {
             try
             {
@@ -322,6 +321,248 @@ namespace RERPAPI.Controllers.Old.Asset
                             {
                                 return BadRequest(ApiResponseFactory.Fail(null, message));
                             }
+                        }
+
+                        if (item.ID <= 0)
+                        {
+                            item.StatusID = 1;
+                            item.Status = "Chưa sử dụng";
+
+                            await _tsAssetManagementRepo.CreateAsync(item);
+                        }
+                        else
+                        {
+                            var existingMaster = _tsAssetManagementRepo.GetSingleNoTracking(x => x.ID == item.ID);
+                            await _tsAssetManagementRepo.UpdateAsync(item);
+                            assetId = item.ID;
+
+                            List<string> changeDetails = _assetLogRepo.GetEntityChanges(existingMaster, item);
+
+                            bool isSpecialAction =
+                                (asset.tSLostReportAsset != null && asset.tSLostReportAsset.ID <= 0) ||
+                                (asset.tSReportBrokenAsset != null && asset.tSReportBrokenAsset.ID <= 0) ||
+                                (asset.tSLiQuidationAsset != null && asset.tSLiQuidationAsset.ID <= 0) ||
+                                (asset.tSAllocationEvictionAssets != null && asset.tSAllocationEvictionAssets.Any(a => a.ID <= 0)) ||
+                                (asset.tSRepairAssets != null && asset.tSRepairAssets.Any(a => a.ID <= 0));
+
+                            if (changeDetails.Any() && !isSpecialAction)
+                            {
+                                await _assetLogRepo.CreateAsync(new AssetLog
+                                {
+                                    AssetID = assetId,
+                                    EmployeeID = currentUser.EmployeeID,
+                                    TypeLog = "CẬP NHẬT TÀI SẢN",
+                                    LogContent = $"Cập nhật tài sản: {string.Join(", ", changeDetails)}",
+                                    CreatedBy = currentUser.LoginName,
+                                    CreatedDate = DateTime.Now,
+                                    DateLog = DateTime.Now
+                                });
+                            }
+                        }
+
+                        string productCode = item.Model ?? "";
+                        var codeExist = _productsaleRepo.GetSingleNoTracking(x => x.ProductCode == productCode && x.ProductGroupID == groupID);
+
+                        if (codeExist != null && codeExist.ID > 0)
+                        {
+                            codeExist.ProductName = item.TSAssetName;
+                            codeExist.Unit = _unitCountRepo.GetByID(item.UnitID ?? 0)?.UnitName ?? "";
+                            await _productsaleRepo.UpdateAsync(codeExist);
+                        }
+                        else
+                        {
+                            codeExist = new ProductSale();
+                            codeExist.ProductNewCode = GenerateProductNewCode(groupID);
+                            codeExist.SupplierName = "";
+                            codeExist.ProductGroupID = groupID;
+                            codeExist.ProductCode = item.Model;
+                            codeExist.ProductName = item.TSAssetName;
+                            codeExist.Unit = _unitCountRepo.GetByID(item.UnitID ?? 0)?.UnitName ?? "";
+                            await _productsaleRepo.CreateAsync(codeExist);
+                        }
+                    }
+                }
+                if (asset.tSAllocationEvictionAssets != null && asset.tSAllocationEvictionAssets.Any())
+                {
+                    foreach (var item in asset.tSAllocationEvictionAssets)
+                    {
+                        bool isNew = item.ID <= 0;
+                        if (isNew)
+                            await _tSAllocationEvictionRepo.CreateAsync(item);
+                        else
+                            await _tSAllocationEvictionRepo.UpdateAsync(item);
+
+                        if (isNew)
+                        {
+                            var master = _tsAssetManagementRepo.GetSingleNoTracking(x => x.ID == item.AssetManagementID);
+                            string code = master?.TSCodeNCC ?? "Trống";
+                            string action = item.Status == "Đang sử dụng" ? "Cấp phát" : "Thu hồi";
+
+                            bool isSideEffectOfOtherReport =
+                                (asset.tSLostReportAsset != null && asset.tSLostReportAsset.ID <= 0) ||
+                                (asset.tSReportBrokenAsset != null && asset.tSReportBrokenAsset.ID <= 0) ||
+                                (asset.tSLiQuidationAsset != null && asset.tSLiQuidationAsset.ID <= 0) ||
+                                (asset.tSRepairAssets != null && asset.tSRepairAssets.Any(a => a.ID <= 0));
+
+                            if (!isSideEffectOfOtherReport)
+                            {
+                                await _assetLogRepo.CreateAsync(new AssetLog
+                                {
+                                    AssetID = item.AssetManagementID ?? 0,
+                                    EmployeeID = currentUser.EmployeeID,
+                                    TypeLog = $"{action.ToUpper()} TÀI SẢN",
+                                    LogContent = $"{action} tài sản. Mã: {code}. Ghi chú: {item.Note}",
+                                    CreatedBy = currentUser.LoginName,
+                                    CreatedDate = DateTime.Now,
+                                    DateLog = DateTime.Now
+                                });
+                            }
+                        }
+                    }
+                }
+                if (asset.tSLostReportAsset != null)
+                {
+                    bool isNew = asset.tSLostReportAsset.ID <= 0;
+                    if (isNew)
+                        await _tsLostReportRepo.CreateAsync(asset.tSLostReportAsset);
+                    else
+                        await _tsLostReportRepo.UpdateAsync(asset.tSLostReportAsset);
+
+                    if (isNew)
+                    {
+                        var master = _tsAssetManagementRepo.GetSingleNoTracking(x => x.ID == asset.tSLostReportAsset.AssetManagementID);
+                        string code = master?.TSCodeNCC ?? "Trống";
+                        await _assetLogRepo.CreateAsync(new AssetLog
+                        {
+                            AssetID = asset.tSLostReportAsset.AssetManagementID ?? 0,
+                            EmployeeID = currentUser.EmployeeID,
+                            TypeLog = "BÁO MẤT TÀI SẢN",
+                            LogContent = $"Báo mất tài sản. Mã: {code}. Lý do: {asset.tSLostReportAsset.Reason}",
+                            CreatedBy = currentUser.LoginName,
+                            CreatedDate = DateTime.Now,
+                            DateLog = DateTime.Now
+                        });
+                    }
+                }
+                if (asset.tSReportBrokenAsset != null)
+                {
+                    bool isNew = asset.tSReportBrokenAsset.ID <= 0;
+                    if (isNew)
+                        await _tsReportBrokenAssetRepo.CreateAsync(asset.tSReportBrokenAsset);
+                    else
+                        await _tsReportBrokenAssetRepo.UpdateAsync(asset.tSReportBrokenAsset);
+
+                    if (isNew)
+                    {
+                        var master = _tsAssetManagementRepo.GetSingleNoTracking(x => x.ID == asset.tSReportBrokenAsset.AssetManagementID);
+                        string code = master?.TSCodeNCC ?? "Trống";
+                        await _assetLogRepo.CreateAsync(new AssetLog
+                        {
+                            AssetID = asset.tSReportBrokenAsset.AssetManagementID ?? 0,
+                            EmployeeID = currentUser.EmployeeID,
+                            TypeLog = "BÁO HỎNG TÀI SẢN",
+                            LogContent = $"Báo hỏng tài sản. Mã: {code}. Lý do: {asset.tSReportBrokenAsset.Reason}",
+                            CreatedBy = currentUser.LoginName,
+                            CreatedDate = DateTime.Now,
+                            DateLog = DateTime.Now
+                        });
+                    }
+                }
+                if (asset.tSLiQuidationAsset != null)
+                {
+                    bool isNew = asset.tSLiQuidationAsset.ID <= 0;
+                    if (isNew)
+                        await _tsLiQuidationAssetRepo.CreateAsync(asset.tSLiQuidationAsset);
+                    else
+                        await _tsLiQuidationAssetRepo.UpdateAsync(asset.tSLiQuidationAsset);
+
+                    if (isNew)
+                    {
+                        var master = _tsAssetManagementRepo.GetSingleNoTracking(x => x.ID == asset.tSLiQuidationAsset.AssetManagementID);
+                        string code = master?.TSCodeNCC ?? "Trống";
+                        await _assetLogRepo.CreateAsync(new AssetLog
+                        {
+                            AssetID = asset.tSLiQuidationAsset.AssetManagementID ?? 0,
+                            EmployeeID = currentUser.EmployeeID,
+                            TypeLog = "ĐỀ NGHỊ THANH LÝ",
+                            LogContent = $"Đề nghị thanh lý tài sản. Mã: {code}. Lý do: {asset.tSLiQuidationAsset.Reason}",
+                            CreatedBy = currentUser.LoginName,
+                            CreatedDate = DateTime.Now,
+                            DateLog = DateTime.Now
+                        });
+                    }
+                }
+                if (asset.tSRepairAssets != null && asset.tSRepairAssets.Any())
+                {
+                    foreach (var item in asset.tSRepairAssets)
+                    {
+                        bool isNew = item.ID <= 0;
+                        if (isNew)
+                            await _tSRepairAssetRepo.CreateAsync(item);
+                        else
+                            await _tSRepairAssetRepo.UpdateAsync(item);
+
+                        if (isNew)
+                        {
+                            var master = _tsAssetManagementRepo.GetSingleNoTracking(x => x.ID == item.AssetManagementID);
+                            string code = master?.TSCodeNCC ?? "Trống";
+                            await _assetLogRepo.CreateAsync(new AssetLog
+                            {
+                                AssetID = item.AssetManagementID ?? 0,
+                                EmployeeID = currentUser.EmployeeID,
+                                TypeLog = "SỬA CHỮA / BẢO DƯỠNG",
+                                LogContent = $"Sửa chữa / bảo dưỡng tài sản. Mã: {code}. Đơn vị sửa chữa: {item.Name}. Chi phí dự kiến: {item.ExpectedCost}. Lý do: {item.Reason}",
+                                CreatedBy = currentUser.LoginName,
+                                CreatedDate = DateTime.Now,
+                                DateLog = DateTime.Now
+                            });
+                        }
+                    }
+                }
+                return Ok(ApiResponseFactory.Success(asset, "Lưu dữ liệu thành công"));
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ApiResponseFactory.Fail(ex, ex.Message));
+            }
+        }
+
+        [HttpPost("save-data")]
+        public async Task<IActionResult> SaveData([FromBody] AssetmanagementFullDTO asset)
+        {
+            try
+            {
+                int assetId;
+                var claims = User.Claims.ToDictionary(x => x.Type, x => x.Value);
+                var currentUser = ObjectMapper.GetCurrentUser(claims);
+
+                if (asset == null)
+                {
+                    return BadRequest(new { status = 0, message = "Dữ liệu gửi lên không hợp lệ." });
+                }
+                if (asset.tSAssetManagements != null && asset.tSAssetManagements.Any())
+                {
+                    var productgroupModel = _productgroupRepo.GetSingleNoTracking(x => x.ProductGroupID == "C");
+                    int groupID = productgroupModel?.ID ?? 0;
+
+                    foreach (var item in asset.tSAssetManagements)
+                    {
+                        if (item.IsDeleted != true)
+                        {
+                            if (!_tsAssetManagementRepo.Validate(item, out string message))
+                            {
+                                return BadRequest(ApiResponseFactory.Fail(null, message));
+                            }
+                            if (item.ID <= 0 && !string.IsNullOrWhiteSpace(item.TSCodeNCC))
+                            {
+                                var existingAsset = _tsAssetManagementRepo.GetSingleNoTracking(x => x.TSCodeNCC == item.TSCodeNCC && x.IsDeleted != true);
+                                if (existingAsset != null && existingAsset.ID > 0)
+                                {
+                                    item.ID = existingAsset.ID;
+                                }
+                            }
+
+                          
                         }
 
                         if (item.ID <= 0)
