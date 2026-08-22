@@ -241,13 +241,19 @@ namespace RERPAPI.Controllers.Old.Asset
                 {
                     if (allocations.tSAssetAllocation.ID <= 0)
                     {
-                        allocations.tSAssetAllocation.AllocationID = currentUser.EmployeeID;
+                        if (allocations.tSAssetAllocation.AllocationID == null || allocations.tSAssetAllocation.AllocationID <= 0)
+                        {
+                            allocations.tSAssetAllocation.AllocationID = currentUser.EmployeeID;
+                        }
                         await _tSAssetAllocationRepo.CreateAsync(allocations.tSAssetAllocation);
                     }
                     else
                     {
                         var existingMaster = _tSAssetAllocationRepo.GetSingleNoTracking(x => x.ID == allocations.tSAssetAllocation.ID);
-                        allocations.tSAssetAllocation.AllocationID = existingMaster?.AllocationID;
+                        if (allocations.tSAssetAllocation.AllocationID == null || allocations.tSAssetAllocation.AllocationID <= 0)
+                        {
+                            allocations.tSAssetAllocation.AllocationID = existingMaster?.AllocationID ?? currentUser.EmployeeID;
+                        }
 
                         await _tSAssetAllocationRepo.UpdateAsync(allocations.tSAssetAllocation);
                         assetId = allocations.tSAssetAllocation.ID;

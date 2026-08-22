@@ -151,7 +151,11 @@ namespace RERPAPI.Controllers.HRM
                 {
                     return BadRequest(ApiResponseFactory.Fail(null, message));
                 }
-                if (employee.ID <= 0) await _employeeRepo.CreateAsync(employee);
+                if (employee.ID <= 0)
+                {
+                    employee.IsExcludedFromSalary = true;
+                    await _employeeRepo.CreateAsync(employee);
+                } 
                 else await _employeeRepo.UpdateAsync(employee);
 
                 return Ok(ApiResponseFactory.Success(employee, ""));
