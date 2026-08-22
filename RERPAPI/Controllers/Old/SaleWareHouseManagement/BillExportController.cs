@@ -1615,8 +1615,8 @@ namespace RERPAPI.Controllers.Old.SaleWareHouseManagement
                 if (string.IsNullOrWhiteSpace(pathStaticFile))
                     return BadRequest(ApiResponseFactory.Fail(null, $"Không tìm thấy cấu hình đường dẫn cho key: EmployeeSignature"));
 
-                Employee emReciver = _employeeRepo.GetAll(x => x.UserID == billExp.UserID).FirstOrDefault(); // Người giao
-                Employee emDeliver = _employeeRepo.GetAll(x => x.UserID == billExp.SenderID).FirstOrDefault(); // Người nhận
+                Employee emReciver = _employeeRepo.GetAll(x => x.UserID == billExp.UserID).FirstOrDefault() ?? new Employee(); // Người giao
+                Employee emDeliver = _employeeRepo.GetAll(x => x.UserID == billExp.SenderID).FirstOrDefault() ?? new Employee(); // Người nhận
 
                 var checkPicDeliver = _employeeSignatureFileRepo.GetAll(x => x.EmployeeID == emDeliver.ID && x.IsDeleted != true).FirstOrDefault();
                 var checkPicReciver = _employeeSignatureFileRepo.GetAll(x => x.EmployeeID == emReciver.ID && x.IsDeleted != true).FirstOrDefault();
@@ -1635,7 +1635,7 @@ namespace RERPAPI.Controllers.Old.SaleWareHouseManagement
                         @"2. quy trình. quy định chung\1. quy trình mua hàng\phần mềm misa\ảnh import misa\signnonback"
                     );
 
-                    if (string.IsNullOrWhiteSpace(picDeliver))
+                    if (string.IsNullOrWhiteSpace(picDeliver) && !string.IsNullOrWhiteSpace(emDeliver.Code))
                     {
                         picDeliver = Path.Combine(
                             pathImage,
@@ -1643,7 +1643,7 @@ namespace RERPAPI.Controllers.Old.SaleWareHouseManagement
                         ) ?? "";
                     }
 
-                    if (string.IsNullOrWhiteSpace(picReciver))
+                    if (string.IsNullOrWhiteSpace(picReciver) && !string.IsNullOrWhiteSpace(emReciver.Code))
                     {
                         picReciver = Path.Combine(
                             pathImage,
