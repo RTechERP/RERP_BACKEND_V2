@@ -1197,9 +1197,12 @@ namespace RERPAPI.Controllers.HRM.HRRecruitment
                 {
                     HiringRequestID = hiringRequestID,
                     @UserRequestID = (currentUser.IsAdmin || currentUser.Permissions
-    .Split(',')
-    .Select(p => p.Trim())
-    .Contains("N2")) ? 0 : currentUser.EmployeeID
+                    .Split(',')
+                    .Select(p => p.Trim())
+                    .Contains("N2")||currentUser.Permissions
+                    .Split(',')
+                    .Select(p => p.Trim())
+                    .Contains("N94")) ? 0 : currentUser.EmployeeID
                 };
 
                 var data = await SqlDapper<object>.ProcedureToListAsync("spGetCandidateScoreMatrixByHiringRequest", param);
